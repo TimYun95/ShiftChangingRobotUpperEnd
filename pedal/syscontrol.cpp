@@ -5,8 +5,10 @@
 
 #include <iostream>
 #include <algorithm>
+#include <QtMath>
 
 #include <QMessageBox>
+#include <QtMath>
 
 #include "printf.h"
 
@@ -1004,6 +1006,7 @@ void SysControl::GetInitParams(double *params1,double *params2){
     Q_UNUSED(params2);
 }
 
+/* -------------------- 挡位离合控制 -------------------- */
 int SysControl::getnodeformanual(const int s)
 {
     switch (s)
@@ -1123,13 +1126,13 @@ bool SysControl::ifreachedshift(const bool ifmanual, const int aimindex)
 
     if (ifmanual)
     {
-        err[0] = Configuration::GetInstance()->angleErr_M[0];
-        err[1] = Configuration::GetInstance()->angleErr_M[1];
+        err[0] = Configuration::GetInstance()->angleErr_M[1];
+        err[1] = Configuration::GetInstance()->angleErr_M[2];
     }
     else
     {
-        err[0] = Configuration::GetInstance()->angleErr_A[0];
-        err[1] = Configuration::GetInstance()->angleErr_A[1];
+        err[0] = Configuration::GetInstance()->angleErr_A[1];
+        err[1] = Configuration::GetInstance()->angleErr_A[2];
     }
 
     if ( fabs(RobotParams::angleRealTime[3] - Configuration::GetInstance()->shiftAxisAngles1[aimindex]) < err[0] && fabs(RobotParams::angleRealTime[4] - Configuration::GetInstance()->shiftAxisAngles2[aimindex]) < err[1] )
@@ -1148,11 +1151,11 @@ bool SysControl::ifreachedclutch(const bool ifmanual, const int aimindex)
 
     if (ifmanual)
     {
-        err = Configuration::GetInstance()->angleErr_M[2];
+        err = Configuration::GetInstance()->angleErr_M[0];
     }
     else
     {
-        err = Configuration::GetInstance()->angleErr_A[2];
+        err = Configuration::GetInstance()->angleErr_A[0];
     }
 
     if ( fabs(RobotParams::angleRealTime[2] - Configuration::GetInstance()->clutchAngles[aimindex]) < err )
@@ -1163,4 +1166,140 @@ bool SysControl::ifreachedclutch(const bool ifmanual, const int aimindex)
     {
         return false;
     }
+}
+
+bool SysControl::getconSft(double *conparas, const unsigned int round)
+{
+    const int startindex = RobotParams::currentshiftindex;
+    const int stopindex = RobotParams::aimshiftindex;
+    const double startPos[2] = {Configuration::GetInstance()->shiftAxisAngles1[startindex], Configuration::GetInstance()->shiftAxisAngles2[startindex]};
+    const double stopPos[2] = {Configuration::GetInstance()->shiftAxisAngles1[stopindex], Configuration::GetInstance()->shiftAxisAngles2[stopindex]};
+
+    const double errPos[2] = {fabs(startPos[0] - stopPos[0]), fabs(startPos[1] - stopPos[1])};
+
+    // 两个轴运动都大 运动不解耦
+    if (errPos[0] > Configuration::GetInstance()->angleErr_A[1] && errPos[1] > Configuration::GetInstance()->angleErr_A[2])
+    {
+        PRINTF(LOG_ERR, "%s: No coupled motion.", __func__);
+        return false;
+    }
+
+    // 两个轴运动都小 直接到位置
+    if (errPos[0] < Configuration::GetInstance()->angleErr_A[1] && errPos[1] < Configuration::GetInstance()->angleErr_A[2])
+    {
+        PRINTF(LOG_INFO, "%s: Small motion.", __func__);
+        *conparas = stopPos[0];
+        *(conparas + 1) = stopPos[1];
+        return true;
+    }
+
+    // 判断哪个轴为主运动
+    int whichAxis;
+    if (errPos[0] > errPos[1])
+    {
+        whichAxis = 0;
+    }
+    else
+    {
+        whichAxis = 1;
+    }
+
+    // 计算主运动轴目标值
+//    const double actualPos[2] = {RobotParams::angleRealTime[3], RobotParams::angleRealTime[4]};
+//    double x_here = (actualPos[whichAxis] - startPos[whichAxis])/(stopPos[whichAxis] - startPos[whichAxis]);
+//    if (x_here < 0.005) x_here = 0;
+
+//    double t_next = Configuration::GetInstance()->curveMotionSpeed[whichAxis + 1];
+//    if (x_here != 0)
+//    {
+//        t_next = (5.5 - qLn(1/x_here - 1))/11 + Configuration::GetInstance()->curveMotionSpeed[whichAxis + 1];
+//    }
+//    double x_next = 1/(1 + qExp(5.5 - 11 * t_next));
+//    if (x_next > 0.995) x_next = 1; // 0.995 = 1/(1 + qExp(5.5 - 11 * 0.98))
+//    const double pos = x_next * (stopPos[whichAxis] - startPos[whichAxis]) + startPos[whichAxis];
+
+
+
+    /* 曲线运动 */
+//    const double speed = Configuration::GetInstance()->curveMotionSpeed[whichAxis + 1];
+//    const double t_next = round * speed;
+
+//    double x_next = 1/(1 + qExp(5.5 - 11 * t_next));
+//    if (x_next > 0.995) x_next = 1; // 0.995 = 1/(1 + qExp(5.5 - 11 * 0.98))
+
+//    const double pos = x_next * (stopPos[whichAxis] - startPos[whichAxis]) + startPos[whichAxis];
+    /* */
+
+    /* 分段线性*/
+    const double speed = Configuration::GetInstance()->curveMotionSpeed[whichAxis + 1];
+    double thresholdround = qCeil(0.9 * errPos[whichAxis] / speed);
+
+    double pos = startPos[whichAxis] + sgn(stopPos[whichAxis] - startPos[whichAxis]) * round * speed;
+    if ((pos - startPos[whichAxis])/(stopPos[whichAxis] - startPos[whichAxis]) > 1.0) pos = stopPos[whichAxis];
+    else if ((pos - startPos[whichAxis])/(stopPos[whichAxis] - startPos[whichAxis]) > 0.9)
+    {
+        pos = startPos[whichAxis] + sgn(stopPos[whichAxis] - startPos[whichAxis]) * thresholdround * speed + sgn(stopPos[whichAxis] - startPos[whichAxis]) * (round - thresholdround) * speed / 2;
+    }
+    /* */
+
+
+    // 返回计算结果
+    if (whichAxis == 0)
+    {
+        *conparas = pos;
+        *(conparas + 1) = stopPos[1];
+    }
+    else
+    {
+        *conparas = stopPos[0];
+        *(conparas + 1) = pos;
+    }
+
+    return true;
+}
+
+bool SysControl::getconClh(double *conparas, const unsigned int round)
+{
+    const int startindex = RobotParams::currentclutchindex;
+    const int stopindex = RobotParams::aimclutchindex;
+    const double startPos = Configuration::GetInstance()->clutchAngles[startindex];
+    const double stopPos = Configuration::GetInstance()->clutchAngles[stopindex];
+
+    const double errPos = fabs(startPos - stopPos);
+
+    // 运动小 直接到位置
+    if (errPos < Configuration::GetInstance()->angleErr_A[0])
+    {
+        PRINTF(LOG_INFO, "%s: Small motion.", __func__);
+        *conparas = stopPos;
+        return true;
+    }
+
+    // 计算运动目标值
+    /* 曲线运动 */
+//    const double speed = Configuration::GetInstance()->curveMotionSpeed[0];
+//    const double t_next = round * speed;
+
+//    double x_next = 1/(1 + qExp(5.5 - 11 * t_next));
+//    if (x_next > 0.995) x_next = 1; // 0.995 = 1/(1 + qExp(5.5 - 11 * 0.98))
+
+//    const double pos = x_next * (stopPos - startPos) + startPos;
+    /* */
+
+    /* 分段线性*/
+    const double speed = Configuration::GetInstance()->curveMotionSpeed[0];
+    double thresholdround = qCeil(0.9 * errPos / speed);
+
+    double pos = startPos + sgn(stopPos - startPos) * round * speed;
+    if ((pos - startPos)/(stopPos - startPos) > 1.0) pos = stopPos;
+    else if ((pos - startPos)/(stopPos - startPos) > 0.9)
+    {
+        pos = startPos + sgn(stopPos - startPos) * thresholdround * speed + sgn(stopPos - startPos) * (round - thresholdround) * speed / 2;
+    }
+    /* */
+    // 返回计算结果
+    *conparas = pos;
+
+    return true;
+
 }

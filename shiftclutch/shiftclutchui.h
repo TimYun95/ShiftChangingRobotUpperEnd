@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <pedal/syscontrol.h>
+#include <sys/time.h>
 
 namespace Ui {
 class ShiftClutchUI;
@@ -47,7 +48,12 @@ private slots:
     void on_pushButton_speed_clicked(); // 测试离合松开速度
     void on_pushButton_clutchpause_clicked(); // 暂停测试离合位置或速度
 
-    void on_lineEdit_type_returnPressed(); // 按下车型框更改车型
+    bool eventFilter(QObject *watched, QEvent *event); // 按下车型框更改车型
+
+    void on_pushButton_motor3minus_pressed(); // 四个槽控制离合运动
+    void on_pushButton_motor3plus_pressed();
+    void on_pushButton_motor3minus_released();
+    void on_pushButton_motor3plus_released();
 
 private:
     Ui::ShiftClutchUI *ui;
@@ -56,6 +62,8 @@ private:
     void initiallist(); // 初始化list1和list2
     void resetcomboBox(); // 重置comboBox_shift和comboBox_shiftaim
     void resetlist(); // 重置list1和list2，并重置相关变量
+
+    void SendMoveCommand(double clutch, double shift1, double shift2, bool run, bool ifboth, bool ifclutch); // 发送移动指令 供挡位离合测试用
 
 private:
     SysControl* mySCControl; // 控制逻辑
@@ -69,6 +77,13 @@ private:
 
     bool shiftexampause = false; // 换挡测试暂停
     bool clutchexampause = false; // 离合测试暂停
+
+    bool startexamtimeflag; // 开始计时标志位
+    timeval starttime; // 开始计时的时刻
+    timeval stoptime; // 停止计时的时刻
+
+    unsigned int round; // 速度控制轮数
+    unsigned int round2; // 速度控制轮数2
 
     /**
      * @brief examflag 测试标志位

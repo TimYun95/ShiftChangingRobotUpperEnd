@@ -1,6 +1,7 @@
 #include "autodriverobotapiclient.h"
 #include "robotparams.h"
 #include "printf.h"
+#include "sys/time.h"
 
 AutoDriveRobotApiClient *AutoDriveRobotApiClient::GetInstance()
 {

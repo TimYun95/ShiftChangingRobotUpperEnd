@@ -83,21 +83,34 @@ void PedalRobotUI::PedalTimerDone()
 
     // 软件倍频
     static int cnt = 0;
-    const int rem = ++cnt%RobotParams::UITimerMultiplier;// ++cnt%3 rem=0/1/2
+    const int rem = ++cnt%RobotParams::UITimerMultiplier;// ++cnt%6 rem=0/1/2...
+
+//    AutoDriveRobotApiClient::GetInstance()->Send_GetGoHomeResultMsg(); // 回原信息
+    AutoDriveRobotApiClient::GetInstance()->Send_GetRobotThetaMsg(); // 角度信息
+    AutoDriveRobotApiClient::GetInstance()->Send_GetPedalRobotDeviceDataMsg(); // CAN/MP412信息
+    AutoDriveRobotApiClient::GetInstance()->Send_GetStatusStringMsg(true, true); // 状态信息
 
     // 从服务器拿数据
-    AutoDriveRobotApiClient::GetInstance()->Send_GetGoHomeResultMsg(); // 回原信息
-    AutoDriveRobotApiClient::GetInstance()->Send_GetRobotThetaMsg(); // 角度信息
-    AutoDriveRobotApiClient::GetInstance()->Send_GetStatusStringMsg(true, true); // 状态信息
-    AutoDriveRobotApiClient::GetInstance()->Send_GetPedalRobotDeviceDataMsg(); // CAN/MP412信息
-
     if(rem != 0){
         switch(rem){
         case 1: // rem=1
-            // 暂时不用
+            pdRobot->UpdatePart1(); // 只校验时间差
+            // 判断是否发送了回原指令并且回原了
+            if (ifSendGoHome && RobotParams::ifGoHome)
+            {
+                RefreshOriginFile(); // 按照车型配置文件更新origin.txt
+                std::string fileContent = FileAssistantFunc::ReadFileContent(Configuration::originFilePath);
+                if(fileContent.empty()){
+                    PRINTF(LOG_WARNING, "%s: read file error.\n", __func__);
+                    return;
+                }
+                AutoDriveRobotApiClient::GetInstance()->Send_SwitchToActionMsg(fileContent);
+
+                ifSendGoHome = false;
+            }
             break;
         case 2: // rem=2
-            pdRobot->UpdatePart1(); // 只校验时间差
+            // 待用
             break;
         default:
             break;
@@ -111,20 +124,6 @@ void PedalRobotUI::PedalTimerDone()
         if(++cntUI%RobotParams::updateUIFrequency == 0){
             UpdateWidgets();
         }
-    }
-
-    // 判断是否发送了回原指令并且回原了
-    if (ifSendGoHome && RobotParams::ifGoHome)
-    {
-        RefreshOriginFile(); // 按照车型配置文件更新origin.txt
-        std::string fileContent = FileAssistantFunc::ReadFileContent(Configuration::originFilePath);
-        if(fileContent.empty()){
-            PRINTF(LOG_WARNING, "%s: read file error.\n", __func__);
-            return;
-        }
-        AutoDriveRobotApiClient::GetInstance()->Send_SwitchToActionMsg(fileContent);
-
-        ifSendGoHome = false;
     }
 
     UnlockMutex();
@@ -261,7 +260,12 @@ void PedalRobotUI::UpdateWidgets()
     ui->progressBar_accelerator->setValue( pdRobot->GetAcceleratorPosition() );
 
     // 挡位离合位置
-    ui->lineEdit_shiftcurrent->setText( QString::fromStdString(RobotParams::currentshiftvalue) );
+    QString shiftnow = QString::fromStdString(RobotParams::currentshiftvalue);
+    if (shiftnow == QString("N_1&2") || shiftnow == QString("N_3&4") || shiftnow == QString("N_5&6"))
+    {
+        shiftnow = QString("N");
+    }
+    ui->lineEdit_shiftcurrent->setText( shiftnow );
     ui->lineEdit_clutchcurrent->setText( QString::fromStdString(RobotParams::currentclutchvalue) );
     scui->UpdateSC();
 

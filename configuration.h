@@ -45,6 +45,8 @@ public:
     double clutchAngles[2]; // 离合电机轴两个位置的角度 踩下和松开
     double clutchUpSpeed; // 离合松开的速度
 
+    double curveMotionSpeed[3]; // 曲线运动速度 目标位置距离当前位置的距离 距离按照总距离的百分比计算 该速度即这个百分比
+
 private:
     const QString arrayPrefix;
     const size_t arrayPrefixLen;

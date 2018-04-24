@@ -1,7 +1,7 @@
 #include "unifiedrobotapiclient.h"
 
 UnifiedRobotApiClient::UnifiedRobotApiClient(QObject *parent)
-    : TcpClientDispatcher(parent)
+    : UnifiedRobotApiClientBase(parent)
 {
 
 }
@@ -11,10 +11,14 @@ UnifiedRobotApiClient::~UnifiedRobotApiClient()
 
 }
 
-bool UnifiedRobotApiClient::StartUnifiedRobotApiClient(const QString &serverUrl)
+bool UnifiedRobotApiClient::StartUnifiedRobotApiClient(const QString &serverUrl, int sendTimerIntervalMs)
 {
     InitClientMsgHandler();
-    return ConnectToServer(serverUrl, 25000);
+    bool connectSuccess = ConnectToServer(serverUrl, 25000);
+    if(connectSuccess){
+        StartSendTimer(sendTimerIntervalMs);
+    }
+    return connectSuccess;
 }
 
 void UnifiedRobotApiClient::StopUnifiedRobotApiClient()
@@ -153,16 +157,12 @@ bool UnifiedRobotApiClient::Send_GetStatusStringMsg(bool isRequestString, bool i
     return Send_ProtobufMsg(URMSG::Id_Rpc_GetStatusStringMsg_C2S, gssMsg);
 }
 
-bool UnifiedRobotApiClient::Send_ProtobufMsg(const TcpTypes::TcpPacketMsgId_t msgId, const google::protobuf::Message &protobufMsg)
+bool UnifiedRobotApiClient::Send_GetPositionLimitConfMsg()
 {
-    std::string msgString;
-    if( !protobufMsg.SerializePartialToString(&msgString) ){
-        qDebug()<< __func__ << "Serialize Error" << msgId;
-        return false;
-    }
+    URMSG::Rpc_GetPositionLimitConfMsg_C2S gplcMsg;
+    gplcMsg.add_positionlimitnegative(0.0);//空白填充
 
-    WriteMsg(msgId, msgString);
-    return true;
+    return Send_ProtobufMsg(URMSG::Id_Rpc_GetPositionLimitConfMsg_C2S, gplcMsg);
 }
 
 void UnifiedRobotApiClient::Process_PingMsg(URMSG::Rpc_PingMsg_C2S &pingMsg)

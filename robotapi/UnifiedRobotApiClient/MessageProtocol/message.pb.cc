@@ -90,6 +90,11 @@ class Rpc_GetPedalRobotDeviceDataMsg_C2SDefaultTypeInternal {
   ::google::protobuf::internal::ExplicitlyConstructed<Rpc_GetPedalRobotDeviceDataMsg_C2S>
       _instance;
 } _Rpc_GetPedalRobotDeviceDataMsg_C2S_default_instance_;
+class Rpc_GetPositionLimitConfMsg_C2SDefaultTypeInternal {
+ public:
+  ::google::protobuf::internal::ExplicitlyConstructed<Rpc_GetPositionLimitConfMsg_C2S>
+      _instance;
+} _Rpc_GetPositionLimitConfMsg_C2S_default_instance_;
 }  // namespace URMSG
 namespace protobuf_message_2eproto {
 void InitDefaultsPtc_ShowWidgetMsg_C2SImpl() {
@@ -386,7 +391,28 @@ void InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2S() {
   ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2SImpl);
 }
 
-::google::protobuf::Metadata file_level_metadata[14];
+void InitDefaultsRpc_GetPositionLimitConfMsg_C2SImpl() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
+#else
+  ::google::protobuf::internal::InitProtobufDefaults();
+#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
+  {
+    void* ptr = &::URMSG::_Rpc_GetPositionLimitConfMsg_C2S_default_instance_;
+    new (ptr) ::URMSG::Rpc_GetPositionLimitConfMsg_C2S();
+    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::URMSG::Rpc_GetPositionLimitConfMsg_C2S::InitAsDefaultInstance();
+}
+
+void InitDefaultsRpc_GetPositionLimitConfMsg_C2S() {
+  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
+  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsRpc_GetPositionLimitConfMsg_C2SImpl);
+}
+
+::google::protobuf::Metadata file_level_metadata[15];
 const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[1];
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
@@ -510,6 +536,15 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S, pulsedatavalue_),
   ~0u,
   0,
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::URMSG::Rpc_GetPositionLimitConfMsg_C2S, _has_bits_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::URMSG::Rpc_GetPositionLimitConfMsg_C2S, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::URMSG::Rpc_GetPositionLimitConfMsg_C2S, positionlimitpositive_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::URMSG::Rpc_GetPositionLimitConfMsg_C2S, positionlimitnegative_),
+  ~0u,
+  ~0u,
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 6, sizeof(::URMSG::Ptc_ShowWidgetMsg_C2S)},
@@ -526,6 +561,7 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 91, 97, sizeof(::URMSG::Rpc_GetRobotMatrixMsg_C2S)},
   { 98, 107, sizeof(::URMSG::Rpc_GetStatusStringMsg_C2S)},
   { 111, 118, sizeof(::URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S)},
+  { 120, 127, sizeof(::URMSG::Rpc_GetPositionLimitConfMsg_C2S)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -543,6 +579,7 @@ static ::google::protobuf::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::google::protobuf::Message*>(&::URMSG::_Rpc_GetRobotMatrixMsg_C2S_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::URMSG::_Rpc_GetStatusStringMsg_C2S_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::URMSG::_Rpc_GetPedalRobotDeviceDataMsg_C2S_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::URMSG::_Rpc_GetPositionLimitConfMsg_C2S_default_instance_),
 };
 
 void protobuf_AssignDescriptors() {
@@ -561,7 +598,7 @@ void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 14);
+  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 15);
 }
 
 void AddDescriptorsImpl() {
@@ -591,25 +628,29 @@ void AddDescriptorsImpl() {
       "String\030\002 \001(\t\022\034\n\024isRequestStringIndex\030\003 \001"
       "(\010\022\031\n\021statusStringIndex\030\004 \001(\005\"S\n\"Rpc_Get"
       "PedalRobotDeviceDataMsg_C2S\022\025\n\rcanDataVa"
-      "lues\030\001 \003(\001\022\026\n\016pulseDataValue\030\002 \001(\001*\326\004\n\tM"
-      "sgIdType\022\024\n\020Id_NoResponseMsg\020\001\022\037\n\032Id_Err"
-      "orMsgIdNotRegistered\020\321\017\022!\n\034Id_ErrorProto"
-      "bufParseFailure\020\322\017\022\035\n\030Id_Ptc_ShowWidgetM"
-      "sg_C2S\020\241\037\022\031\n\024Id_Ptc_GoHomeMsg_C2S\020\242\037\022!\n\034"
-      "Id_Ptc_StopSingleAxisMsg_C2S\020\243\037\022!\n\034Id_Pt"
-      "c_MoveSingleAxisMsg_C2S\020\244\037\022!\n\034Id_Ptc_Swi"
-      "tchToActionMsg_C2S\020\245\037\022(\n#Id_Ptc_SetMonit"
-      "orActionThetaMsg_C2S\020\246\037\022$\n\037Id_Ptc_Switch"
-      "ToIdleStateMsg_C2S\020\247\037\022*\n%Id_Ptc_SetPedal"
-      "RobotDeviceDataMsg_C2S\020\211\'\022\027\n\022Id_Rpc_Ping"
-      "Msg_C2S\020\361.\022\"\n\035Id_Rpc_GetGoHomeResultMsg_"
-      "C2S\020\362.\022 \n\033Id_Rpc_GetRobotThetaMsg_C2S\020\363."
-      "\022!\n\034Id_Rpc_GetRobotMatrixMsg_C2S\020\364.\022\"\n\035I"
-      "d_Rpc_GetStatusStringMsg_C2S\020\365.\022*\n%Id_Rp"
-      "c_GetPedalRobotDeviceDataMsg_C2S\020\3316"
+      "lues\030\001 \003(\001\022\026\n\016pulseDataValue\030\002 \001(\001\"_\n\037Rp"
+      "c_GetPositionLimitConfMsg_C2S\022\035\n\025positio"
+      "nLimitPositive\030\001 \003(\001\022\035\n\025positionLimitNeg"
+      "ative\030\002 \003(\001*\377\004\n\tMsgIdType\022\024\n\020Id_NoRespon"
+      "seMsg\020\001\022\037\n\032Id_ErrorMsgIdNotRegistered\020\321\017"
+      "\022!\n\034Id_ErrorProtobufParseFailure\020\322\017\022\035\n\030I"
+      "d_Ptc_ShowWidgetMsg_C2S\020\241\037\022\031\n\024Id_Ptc_GoH"
+      "omeMsg_C2S\020\242\037\022!\n\034Id_Ptc_StopSingleAxisMs"
+      "g_C2S\020\243\037\022!\n\034Id_Ptc_MoveSingleAxisMsg_C2S"
+      "\020\244\037\022!\n\034Id_Ptc_SwitchToActionMsg_C2S\020\245\037\022("
+      "\n#Id_Ptc_SetMonitorActionThetaMsg_C2S\020\246\037"
+      "\022$\n\037Id_Ptc_SwitchToIdleStateMsg_C2S\020\247\037\022*"
+      "\n%Id_Ptc_SetPedalRobotDeviceDataMsg_C2S\020"
+      "\211\'\022\027\n\022Id_Rpc_PingMsg_C2S\020\361.\022\"\n\035Id_Rpc_Ge"
+      "tGoHomeResultMsg_C2S\020\362.\022 \n\033Id_Rpc_GetRob"
+      "otThetaMsg_C2S\020\363.\022!\n\034Id_Rpc_GetRobotMatr"
+      "ixMsg_C2S\020\364.\022\"\n\035Id_Rpc_GetStatusStringMs"
+      "g_C2S\020\365.\022\'\n\"Id_Rpc_GetPositionLimitConfM"
+      "sg_C2S\020\366.\022*\n%Id_Rpc_GetPedalRobotDeviceD"
+      "ataMsg_C2S\020\3316"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 1595);
+      descriptor, 1733);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "message.proto", &protobuf_RegisterTypes);
 }
@@ -648,6 +689,7 @@ bool MsgIdType_IsValid(int value) {
     case 6003:
     case 6004:
     case 6005:
+    case 6006:
     case 7001:
       return true;
     default:
@@ -4608,6 +4650,294 @@ void Rpc_GetPedalRobotDeviceDataMsg_C2S::InternalSwap(Rpc_GetPedalRobotDeviceDat
 }
 
 ::google::protobuf::Metadata Rpc_GetPedalRobotDeviceDataMsg_C2S::GetMetadata() const {
+  protobuf_message_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_message_2eproto::file_level_metadata[kIndexInFileMessages];
+}
+
+
+// ===================================================================
+
+void Rpc_GetPositionLimitConfMsg_C2S::InitAsDefaultInstance() {
+}
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int Rpc_GetPositionLimitConfMsg_C2S::kPositionLimitPositiveFieldNumber;
+const int Rpc_GetPositionLimitConfMsg_C2S::kPositionLimitNegativeFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+Rpc_GetPositionLimitConfMsg_C2S::Rpc_GetPositionLimitConfMsg_C2S()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    ::protobuf_message_2eproto::InitDefaultsRpc_GetPositionLimitConfMsg_C2S();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+}
+Rpc_GetPositionLimitConfMsg_C2S::Rpc_GetPositionLimitConfMsg_C2S(const Rpc_GetPositionLimitConfMsg_C2S& from)
+  : ::google::protobuf::Message(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_),
+      _cached_size_(0),
+      positionlimitpositive_(from.positionlimitpositive_),
+      positionlimitnegative_(from.positionlimitnegative_) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::SharedCtor() {
+  _cached_size_ = 0;
+}
+
+Rpc_GetPositionLimitConfMsg_C2S::~Rpc_GetPositionLimitConfMsg_C2S() {
+  // @@protoc_insertion_point(destructor:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  SharedDtor();
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::SharedDtor() {
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Rpc_GetPositionLimitConfMsg_C2S::descriptor() {
+  ::protobuf_message_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_message_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
+}
+
+const Rpc_GetPositionLimitConfMsg_C2S& Rpc_GetPositionLimitConfMsg_C2S::default_instance() {
+  ::protobuf_message_2eproto::InitDefaultsRpc_GetPositionLimitConfMsg_C2S();
+  return *internal_default_instance();
+}
+
+Rpc_GetPositionLimitConfMsg_C2S* Rpc_GetPositionLimitConfMsg_C2S::New(::google::protobuf::Arena* arena) const {
+  Rpc_GetPositionLimitConfMsg_C2S* n = new Rpc_GetPositionLimitConfMsg_C2S;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::Clear() {
+// @@protoc_insertion_point(message_clear_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  positionlimitpositive_.Clear();
+  positionlimitnegative_.Clear();
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool Rpc_GetPositionLimitConfMsg_C2S::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated double positionLimitPositive = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(9u /* 9 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 1, 9u, input, this->mutable_positionlimitpositive())));
+        } else if (
+            static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, this->mutable_positionlimitpositive())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated double positionLimitNegative = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(17u /* 17 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 1, 17u, input, this->mutable_positionlimitnegative())));
+        } else if (
+            static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, this->mutable_positionlimitnegative())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  return false;
+#undef DO_
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated double positionLimitPositive = 1;
+  for (int i = 0, n = this->positionlimitpositive_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(
+      1, this->positionlimitpositive(i), output);
+  }
+
+  // repeated double positionLimitNegative = 2;
+  for (int i = 0, n = this->positionlimitnegative_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(
+      2, this->positionlimitnegative(i), output);
+  }
+
+  if (_internal_metadata_.have_unknown_fields()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        _internal_metadata_.unknown_fields(), output);
+  }
+  // @@protoc_insertion_point(serialize_end:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+}
+
+::google::protobuf::uint8* Rpc_GetPositionLimitConfMsg_C2S::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  (void)deterministic; // Unused
+  // @@protoc_insertion_point(serialize_to_array_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated double positionLimitPositive = 1;
+  target = ::google::protobuf::internal::WireFormatLite::
+    WriteDoubleToArray(1, this->positionlimitpositive_, target);
+
+  // repeated double positionLimitNegative = 2;
+  target = ::google::protobuf::internal::WireFormatLite::
+    WriteDoubleToArray(2, this->positionlimitnegative_, target);
+
+  if (_internal_metadata_.have_unknown_fields()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  return target;
+}
+
+size_t Rpc_GetPositionLimitConfMsg_C2S::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  size_t total_size = 0;
+
+  if (_internal_metadata_.have_unknown_fields()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        _internal_metadata_.unknown_fields());
+  }
+  // repeated double positionLimitPositive = 1;
+  {
+    unsigned int count = static_cast<unsigned int>(this->positionlimitpositive_size());
+    size_t data_size = 8UL * count;
+    total_size += 1 *
+                  ::google::protobuf::internal::FromIntSize(this->positionlimitpositive_size());
+    total_size += data_size;
+  }
+
+  // repeated double positionLimitNegative = 2;
+  {
+    unsigned int count = static_cast<unsigned int>(this->positionlimitnegative_size());
+    size_t data_size = 8UL * count;
+    total_size += 1 *
+                  ::google::protobuf::internal::FromIntSize(this->positionlimitnegative_size());
+    total_size += data_size;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  GOOGLE_DCHECK_NE(&from, this);
+  const Rpc_GetPositionLimitConfMsg_C2S* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const Rpc_GetPositionLimitConfMsg_C2S>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+    MergeFrom(*source);
+  }
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::MergeFrom(const Rpc_GetPositionLimitConfMsg_C2S& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  positionlimitpositive_.MergeFrom(from.positionlimitpositive_);
+  positionlimitnegative_.MergeFrom(from.positionlimitnegative_);
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::CopyFrom(const Rpc_GetPositionLimitConfMsg_C2S& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Rpc_GetPositionLimitConfMsg_C2S::IsInitialized() const {
+  return true;
+}
+
+void Rpc_GetPositionLimitConfMsg_C2S::Swap(Rpc_GetPositionLimitConfMsg_C2S* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void Rpc_GetPositionLimitConfMsg_C2S::InternalSwap(Rpc_GetPositionLimitConfMsg_C2S* other) {
+  using std::swap;
+  positionlimitpositive_.InternalSwap(&other->positionlimitpositive_);
+  positionlimitnegative_.InternalSwap(&other->positionlimitnegative_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_cached_size_, other->_cached_size_);
+}
+
+::google::protobuf::Metadata Rpc_GetPositionLimitConfMsg_C2S::GetMetadata() const {
   protobuf_message_2eproto::protobuf_AssignDescriptorsOnce();
   return ::protobuf_message_2eproto::file_level_metadata[kIndexInFileMessages];
 }

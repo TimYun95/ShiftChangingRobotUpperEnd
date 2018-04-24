@@ -154,7 +154,7 @@ void PedalRobot::StartQCustomPlot(const std::__cxx11::string &fileNameARM)
 
 void PedalRobot::UpdatePart1()
 {
-    CheckTimerAccuracy(); // 定时器准确性判断
+//    CheckTimerAccuracy(); // 定时器准确性判断
 }
 
 void PedalRobot::UpdatePart2()

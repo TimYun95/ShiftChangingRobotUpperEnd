@@ -17,7 +17,7 @@ public:
     static const std::string robotFolder; // 默认文件夹名称
 
     static const double singleAxisBtnRatio; // 单轴运动速度比例系数
-    static const double pedalLiftSpeed; // 踏板抬升速度
+    static const double singleAxisBtnRatioC; // 单轴运动速度比例系数 离合
 
     static double angleRealTime[axisNum]; // 实时各轴角度
     static bool ifGoHome; // 是否已经回原
@@ -39,6 +39,8 @@ public:
 
     static int currentclutchindex; // 当前离合索引
     static std::string currentclutchvalue; // 当前挡位值
+    static int aimclutchindex; // 目标挡位索引
+
 };
 
 #endif // ROBOTPARAMS_H

@@ -10,6 +10,7 @@
 #include "settingwidget/settingwidgetpedalrobotgetspeed.h"
 #include "settingwidget/settingwidgetpedalrobotstudy.h"
 #include "settingwidget/settingwidgetpedalrobotstudywltc.h"
+#include "settingwidget/settingwidgetscrobot.h"
 
 #ifndef ENABLE_LOGIN_PASSWORD
 #define ENABLE_LOGIN_PASSWORD
@@ -53,17 +54,18 @@ void SettingUI::InitSettingsWidgetWithRobots()
     QListWidgetItem* pdDeathZone=new QListWidgetItem(QObject::tr("死区"));
     settingMap[pdDeathZone]=new SettingWidgetPedalRobotDeathZone();
 
-    if(Configuration::GetInstance()->pedalRobotUsage == SettingWidgetPedalRobotGetSpeed::NedcControl){
-        QListWidgetItem* study=new QListWidgetItem(QObject::tr("学习"));
-        SettingWidgetPedalRobotStudy* studyWidget = new SettingWidgetPedalRobotStudy();
-        settingMap[study]=studyWidget;
-        connect(studyWidget, SIGNAL(UpdateNedcParamsSignal()), this, SLOT(on_pushButton_saveSettings_clicked()));
-    }else{
-        QListWidgetItem* studyWltc=new QListWidgetItem(QObject::tr("学习"));
-        SettingWidgetPedalRobotStudyWltc* studyWltcWidget = new SettingWidgetPedalRobotStudyWltc();
-        settingMap[studyWltc]=studyWltcWidget;
-        connect(studyWltcWidget, SIGNAL(UpdateWltcParamsSignal()), this, SLOT(on_pushButton_saveSettings_clicked()));
-    }
+    QListWidgetItem* study=new QListWidgetItem(QObject::tr("学习N"));
+    SettingWidgetPedalRobotStudy* studyWidget = new SettingWidgetPedalRobotStudy();
+    settingMap[study]=studyWidget;
+    connect(studyWidget, SIGNAL(UpdateNedcParamsSignal()), this, SLOT(on_pushButton_saveSettings_clicked()));
+
+    QListWidgetItem* studyWltc=new QListWidgetItem(QObject::tr("学习W"));
+    SettingWidgetPedalRobotStudyWltc* studyWltcWidget = new SettingWidgetPedalRobotStudyWltc();
+    settingMap[studyWltc]=studyWltcWidget;
+    connect(studyWltcWidget, SIGNAL(UpdateWltcParamsSignal()), this, SLOT(on_pushButton_saveSettings_clicked()));
+
+    QListWidgetItem* sc=new QListWidgetItem(QObject::tr("换挡"));
+    settingMap[sc]=new SettingWidgetSCRobot();
 
     // add widget
     for(std::map<QListWidgetItem*,SettingBase*>::iterator iter=settingMap.begin(); iter!=settingMap.end(); iter++){
@@ -138,7 +140,7 @@ void SettingUI::on_pushButton_readSettings_clicked()
     QString fileName = QFileDialog::getOpenFileName(this, tr("读取"), txtpath);
     std::string fn = NormalFile::GetFileName(fileName.toStdString().c_str());
 
-    Configuration::GetInstance()->carTypeName = fn.substr(0, fn.length() - 4);
+    Configuration::GetInstance()->carTypeName = fn;
 
     if(Configuration::GetInstance()->ReadFromFile() == 0){
         QMessageBox::information( this,"提示", tr( (QString("读取").toStdString() + Configuration::GetInstance()->carTypeName + QString("成功").toStdString()).c_str() ) );
@@ -194,7 +196,16 @@ void SettingUI::ShowSettings()
     for(std::map<QListWidgetItem*,SettingBase*>::iterator iter=settingMap.begin();iter!=settingMap.end();iter++){
         QListWidgetItem* lwi=iter->first;
 
-        ui->listWidget_settings->addItem(lwi);
+        if (Configuration::GetInstance()->pedalRobotUsage == SettingWidgetPedalRobotGetSpeed::NedcControl && lwi->text() != "学习W")
+        {
+            ui->listWidget_settings->addItem(lwi);
+        }
+
+        if (Configuration::GetInstance()->pedalRobotUsage == SettingWidgetPedalRobotGetSpeed::WltcControl && lwi->text() != "学习N")
+        {
+            ui->listWidget_settings->addItem(lwi);
+        }
+
     }
     ui->listWidget_settings->sortItems();
     ui->listWidget_settings->setCurrentRow(0);

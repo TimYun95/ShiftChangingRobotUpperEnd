@@ -89,6 +89,8 @@ int Configuration::ReadFromFile()
             LOAD_NUMBER_ARRAY(shiftAxisAngles2, 9);
             LOAD_NUMBER_ARRAY(clutchAngles, 2);
             LOAD_NUMBER_ELEMENT(clutchUpSpeed);
+
+            LOAD_NUMBER_ARRAY(curveMotionSpeed, 3);
         }
     }
     file.close();
@@ -125,6 +127,8 @@ int Configuration::SaveToFile()
     SAVE_NUMBER_ARRAY(shiftAxisAngles2, 9);
     SAVE_NUMBER_ARRAY(clutchAngles, 2);
     SAVE_NUMBER_ELEMENT(clutchUpSpeed);
+
+    SAVE_NUMBER_ARRAY(curveMotionSpeed, 3);
 
     doc.appendChild(root);
 
@@ -184,6 +188,8 @@ void Configuration::LoadDefaultConfiguration()
         clutchAngles[i] = 0.0;
     }
     clutchUpSpeed = 0.0;
+
+    curveMotionSpeed[0] = 0.1;curveMotionSpeed[1] = 0.1;curveMotionSpeed[2] = 0.1;
 
 }
 

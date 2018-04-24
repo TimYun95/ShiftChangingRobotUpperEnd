@@ -1,11 +1,10 @@
 #ifndef UNIFIEDROBOTAPICLIENT_H
 #define UNIFIEDROBOTAPICLIENT_H
 
-#include "TcpClient/tcpclientdispatcher.h"
-#include "MessageProtocol/message.pb.h"
+#include "unifiedrobotapiclientbase.h"
 #include "unifiedrobotapiclientdefines.h"
 
-class UnifiedRobotApiClient : public TcpClientDispatcher
+class UnifiedRobotApiClient : public UnifiedRobotApiClientBase
 {
     Q_OBJECT
 public:
@@ -20,7 +19,7 @@ public:
         MaxActionMethod
     };
 
-    bool StartUnifiedRobotApiClient(const QString &serverUrl);
+    bool StartUnifiedRobotApiClient(const QString &serverUrl, int sendTimerIntervalMs);
     void StopUnifiedRobotApiClient();
 
 protected:
@@ -44,9 +43,7 @@ public:
     bool Send_GetRobotThetaMsg();
     bool Send_GetRobotMatrixMsg();
     bool Send_GetStatusStringMsg(bool isRequestString, bool isRequestStringIndex);
-
-protected:
-    bool Send_ProtobufMsg(const TcpTypes::TcpPacketMsgId_t msgId, const google::protobuf::Message &protobufMsg);
+    bool Send_GetPositionLimitConfMsg();
 
     //Receive
 protected:

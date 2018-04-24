@@ -37,7 +37,7 @@ namespace protobuf_message_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[14];
+  static const ::google::protobuf::internal::ParseTable schema[15];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -71,6 +71,8 @@ void InitDefaultsRpc_GetStatusStringMsg_C2SImpl();
 void InitDefaultsRpc_GetStatusStringMsg_C2S();
 void InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2SImpl();
 void InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2S();
+void InitDefaultsRpc_GetPositionLimitConfMsg_C2SImpl();
+void InitDefaultsRpc_GetPositionLimitConfMsg_C2S();
 inline void InitDefaults() {
   InitDefaultsPtc_ShowWidgetMsg_C2S();
   InitDefaultsPtc_GoHomeMsg_C2S();
@@ -86,6 +88,7 @@ inline void InitDefaults() {
   InitDefaultsRpc_GetRobotMatrixMsg_C2S();
   InitDefaultsRpc_GetStatusStringMsg_C2S();
   InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2S();
+  InitDefaultsRpc_GetPositionLimitConfMsg_C2S();
 }
 }  // namespace protobuf_message_2eproto
 namespace URMSG {
@@ -119,6 +122,9 @@ extern Rpc_GetGoHomeResultMsg_C2SDefaultTypeInternal _Rpc_GetGoHomeResultMsg_C2S
 class Rpc_GetPedalRobotDeviceDataMsg_C2S;
 class Rpc_GetPedalRobotDeviceDataMsg_C2SDefaultTypeInternal;
 extern Rpc_GetPedalRobotDeviceDataMsg_C2SDefaultTypeInternal _Rpc_GetPedalRobotDeviceDataMsg_C2S_default_instance_;
+class Rpc_GetPositionLimitConfMsg_C2S;
+class Rpc_GetPositionLimitConfMsg_C2SDefaultTypeInternal;
+extern Rpc_GetPositionLimitConfMsg_C2SDefaultTypeInternal _Rpc_GetPositionLimitConfMsg_C2S_default_instance_;
 class Rpc_GetRobotMatrixMsg_C2S;
 class Rpc_GetRobotMatrixMsg_C2SDefaultTypeInternal;
 extern Rpc_GetRobotMatrixMsg_C2SDefaultTypeInternal _Rpc_GetRobotMatrixMsg_C2S_default_instance_;
@@ -151,6 +157,7 @@ enum MsgIdType {
   Id_Rpc_GetRobotThetaMsg_C2S = 6003,
   Id_Rpc_GetRobotMatrixMsg_C2S = 6004,
   Id_Rpc_GetStatusStringMsg_C2S = 6005,
+  Id_Rpc_GetPositionLimitConfMsg_C2S = 6006,
   Id_Rpc_GetPedalRobotDeviceDataMsg_C2S = 7001
 };
 bool MsgIdType_IsValid(int value);
@@ -1883,6 +1890,132 @@ class Rpc_GetPedalRobotDeviceDataMsg_C2S : public ::google::protobuf::Message /*
   friend struct ::protobuf_message_2eproto::TableStruct;
   friend void ::protobuf_message_2eproto::InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2SImpl();
 };
+// -------------------------------------------------------------------
+
+class Rpc_GetPositionLimitConfMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Rpc_GetPositionLimitConfMsg_C2S) */ {
+ public:
+  Rpc_GetPositionLimitConfMsg_C2S();
+  virtual ~Rpc_GetPositionLimitConfMsg_C2S();
+
+  Rpc_GetPositionLimitConfMsg_C2S(const Rpc_GetPositionLimitConfMsg_C2S& from);
+
+  inline Rpc_GetPositionLimitConfMsg_C2S& operator=(const Rpc_GetPositionLimitConfMsg_C2S& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Rpc_GetPositionLimitConfMsg_C2S(Rpc_GetPositionLimitConfMsg_C2S&& from) noexcept
+    : Rpc_GetPositionLimitConfMsg_C2S() {
+    *this = ::std::move(from);
+  }
+
+  inline Rpc_GetPositionLimitConfMsg_C2S& operator=(Rpc_GetPositionLimitConfMsg_C2S&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Rpc_GetPositionLimitConfMsg_C2S& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Rpc_GetPositionLimitConfMsg_C2S* internal_default_instance() {
+    return reinterpret_cast<const Rpc_GetPositionLimitConfMsg_C2S*>(
+               &_Rpc_GetPositionLimitConfMsg_C2S_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    14;
+
+  void Swap(Rpc_GetPositionLimitConfMsg_C2S* other);
+  friend void swap(Rpc_GetPositionLimitConfMsg_C2S& a, Rpc_GetPositionLimitConfMsg_C2S& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Rpc_GetPositionLimitConfMsg_C2S* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Rpc_GetPositionLimitConfMsg_C2S* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Rpc_GetPositionLimitConfMsg_C2S& from);
+  void MergeFrom(const Rpc_GetPositionLimitConfMsg_C2S& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Rpc_GetPositionLimitConfMsg_C2S* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated double positionLimitPositive = 1;
+  int positionlimitpositive_size() const;
+  void clear_positionlimitpositive();
+  static const int kPositionLimitPositiveFieldNumber = 1;
+  double positionlimitpositive(int index) const;
+  void set_positionlimitpositive(int index, double value);
+  void add_positionlimitpositive(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      positionlimitpositive() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_positionlimitpositive();
+
+  // repeated double positionLimitNegative = 2;
+  int positionlimitnegative_size() const;
+  void clear_positionlimitnegative();
+  static const int kPositionLimitNegativeFieldNumber = 2;
+  double positionlimitnegative(int index) const;
+  void set_positionlimitnegative(int index, double value);
+  void add_positionlimitnegative(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      positionlimitnegative() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_positionlimitnegative();
+
+  // @@protoc_insertion_point(class_scope:URMSG.Rpc_GetPositionLimitConfMsg_C2S)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedField< double > positionlimitpositive_;
+  ::google::protobuf::RepeatedField< double > positionlimitnegative_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsRpc_GetPositionLimitConfMsg_C2SImpl();
+};
 // ===================================================================
 
 
@@ -2768,9 +2901,75 @@ inline void Rpc_GetPedalRobotDeviceDataMsg_C2S::set_pulsedatavalue(double value)
   // @@protoc_insertion_point(field_set:URMSG.Rpc_GetPedalRobotDeviceDataMsg_C2S.pulseDataValue)
 }
 
+// -------------------------------------------------------------------
+
+// Rpc_GetPositionLimitConfMsg_C2S
+
+// repeated double positionLimitPositive = 1;
+inline int Rpc_GetPositionLimitConfMsg_C2S::positionlimitpositive_size() const {
+  return positionlimitpositive_.size();
+}
+inline void Rpc_GetPositionLimitConfMsg_C2S::clear_positionlimitpositive() {
+  positionlimitpositive_.Clear();
+}
+inline double Rpc_GetPositionLimitConfMsg_C2S::positionlimitpositive(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitPositive)
+  return positionlimitpositive_.Get(index);
+}
+inline void Rpc_GetPositionLimitConfMsg_C2S::set_positionlimitpositive(int index, double value) {
+  positionlimitpositive_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitPositive)
+}
+inline void Rpc_GetPositionLimitConfMsg_C2S::add_positionlimitpositive(double value) {
+  positionlimitpositive_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitPositive)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Rpc_GetPositionLimitConfMsg_C2S::positionlimitpositive() const {
+  // @@protoc_insertion_point(field_list:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitPositive)
+  return positionlimitpositive_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Rpc_GetPositionLimitConfMsg_C2S::mutable_positionlimitpositive() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitPositive)
+  return &positionlimitpositive_;
+}
+
+// repeated double positionLimitNegative = 2;
+inline int Rpc_GetPositionLimitConfMsg_C2S::positionlimitnegative_size() const {
+  return positionlimitnegative_.size();
+}
+inline void Rpc_GetPositionLimitConfMsg_C2S::clear_positionlimitnegative() {
+  positionlimitnegative_.Clear();
+}
+inline double Rpc_GetPositionLimitConfMsg_C2S::positionlimitnegative(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitNegative)
+  return positionlimitnegative_.Get(index);
+}
+inline void Rpc_GetPositionLimitConfMsg_C2S::set_positionlimitnegative(int index, double value) {
+  positionlimitnegative_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitNegative)
+}
+inline void Rpc_GetPositionLimitConfMsg_C2S::add_positionlimitnegative(double value) {
+  positionlimitnegative_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitNegative)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Rpc_GetPositionLimitConfMsg_C2S::positionlimitnegative() const {
+  // @@protoc_insertion_point(field_list:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitNegative)
+  return positionlimitnegative_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Rpc_GetPositionLimitConfMsg_C2S::mutable_positionlimitnegative() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Rpc_GetPositionLimitConfMsg_C2S.positionLimitNegative)
+  return &positionlimitnegative_;
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

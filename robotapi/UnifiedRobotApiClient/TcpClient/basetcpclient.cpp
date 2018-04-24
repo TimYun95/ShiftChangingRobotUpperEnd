@@ -84,7 +84,9 @@ qint64 BaseTcpClient::DoWriteMsg(const TcpTypes::TcpPacketMsgId_t msgId, const Q
     }
 
     //2. Tcp发送ByteArray的原始数据
-    return m_tcpSocket.write(sendBuff);
+    int ret = m_tcpSocket.write(sendBuff);
+    m_tcpSocket.flush();
+    return ret;
 }
 
 bool BaseTcpClient::DoReadMsg(TcpTypes::TcpPacketMsgId_t *msgId, QByteArray *msg)

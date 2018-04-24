@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // 检查配置等文件是否存在 不存在的要新建 // dolater
 
     robotclient = AutoDriveRobotApiClient::GetInstance(); // 首次实例化客户端
-    robotclient->StartUnifiedRobotApiClient("127.0.0.1");
+    robotclient->StartUnifiedRobotApiClient("127.0.0.1", 2);
 
     QFont ft;
     ft.setPointSize(20);
@@ -66,6 +66,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    robotclient->StopUnifiedRobotApiClient();
+
     delete hLayout;
     delete vLayout;
     delete statusLabel;
