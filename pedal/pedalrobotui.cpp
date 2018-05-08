@@ -285,8 +285,8 @@ void PedalRobotUI::UpdateWidgets()
     // 油门踏板位置
     ui->lineEdit_d1->setText( QString::number(RobotParams::angleRealTime[0], 'g', 4) );
     ui->lineEdit_d2->setText( QString::number(RobotParams::angleRealTime[1], 'g', 4) );
-    ui->progressBar_brake->setValue( pdRobot->GetBrakePosition() );
-    ui->progressBar_accelerator->setValue( pdRobot->GetAcceleratorPosition() );
+    ui->progressBar_brake->setValue( qRound(pdRobot->GetBrakePosition()) );
+    ui->progressBar_accelerator->setValue( qRound(pdRobot->GetAcceleratorPosition()) );
 
     // 挡位离合位置
     QString shiftnow = QString::fromStdString(RobotParams::currentshiftvalue);
@@ -614,6 +614,10 @@ void PedalRobotUI::on_pushButton_saveLoggerFile_clicked()
 
 void PedalRobotUI::on_pushButton_slowlybrake_clicked()
 {
+    // 停止
+    on_pushButton_softStop_clicked();
+
+    // 上抬踏板 缓踩刹车
     std::fstream sb(Configuration::slowlyBrakeFilePath.c_str(), std::fstream::out | std::fstream::binary);
     if(sb.fail()){
         PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, Configuration::slowlyBrakeFilePath.c_str());

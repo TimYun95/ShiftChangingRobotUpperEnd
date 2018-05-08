@@ -7,9 +7,7 @@ const unsigned int RobotParams::UITimerMultiplier = 3; // 控制指令发送周�
 const unsigned int RobotParams::updateUIFrequency = 3; // 界面更新周期 18*3*3=112ms
 const unsigned int RobotParams::waitForGoHomeRound = 30; // 发送了回原指令后30个界面更新周期后失效
 
-//const std::string RobotParams::robotType = "dof_6_autodrive"; // 机器人类型
-const std::string RobotParams::robotType = "dof_2_pedal"; // 机器人类型
-
+const std::string RobotParams::robotType = "dof_6_autodrive"; // 机器人类型
 const std::string RobotParams::robotFolder = "AutoDrivingRobot"; // 默认文件夹名称
 
 const double RobotParams::singleAxisBtnRatio = 2.0; // 单轴运动速度比例系数

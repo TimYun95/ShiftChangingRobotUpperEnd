@@ -202,7 +202,7 @@ void Configuration::LoadDefaultConfiguration()
 
     angleErr_M[0] = 3.0; angleErr_M[1] = 3.0; angleErr_M[2] = 3.0;
     angleErr_A[0] = 1.0; angleErr_A[1] = 1.0; angleErr_A[2] = 1.0;
-    angleErr_P[0] = 1.0; angleErr_P[1] = 1.0; angleErr_P[2] = 1.0;
+    angleErr_P[0] = 10.0; angleErr_P[1] = 10.0; angleErr_P[2] = 10.0;
 
     for (int i = 0; i<9; ++i)
     {

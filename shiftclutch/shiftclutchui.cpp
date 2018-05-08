@@ -462,13 +462,14 @@ void ShiftClutchUI::examtimer_timeout()
             return;
         }
 
-        if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+        if (RobotParams::shiftrunpointer + 1 == RobotParams::shiftrunlength - 1)
         {
-            RobotParams::shiftrunpointer++;
-
-            round = 1;
-            if (RobotParams::shiftrunpointer == RobotParams::shiftrunlength - 1)
+            if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
             {
+                RobotParams::shiftrunpointer++;
+
+                round = 1;
+
                 gettimeofday(&stoptime, NULL);
                 double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
                 ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0));
@@ -491,6 +492,27 @@ void ShiftClutchUI::examtimer_timeout()
             }
             else
             {
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
+
+                SendMoveCommand(0,*shiftaims,*(shiftaims + 1),true,false,false);
+                delete shiftaims;
+
+                round++;
+            }
+        }
+        else
+        {
+            if (mySCControl->ifreachedshiftprocess(RobotParams::shiftrunpath[RobotParams::shiftrunpointer], RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+            {
+                RobotParams::shiftrunpointer++;
+
+                round = 1;
+
                 gettimeofday(&stoptime, NULL);
                 double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
                 ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
@@ -508,20 +530,20 @@ void ShiftClutchUI::examtimer_timeout()
 
                 round++;
             }
-        }
-        else
-        {
-            RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-            RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
-            RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+            else
+            {
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
 
-            double *shiftaims = new double[2];
-            mySCControl->getconSft(shiftaims, round);
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
 
-            SendMoveCommand(0,*shiftaims,*(shiftaims + 1),true,false,false);
-            delete shiftaims;
+                SendMoveCommand(0,*shiftaims,*(shiftaims + 1),true,false,false);
+                delete shiftaims;
 
-            round++;
+                round++;
+            }
         }
     }
     else if (examflag == 3)
@@ -787,13 +809,14 @@ void ShiftClutchUI::examtimer_timeout()
         }
         else if (changeshiftprocess == 2)
         {
-            if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+            if (RobotParams::shiftrunpointer + 1 == RobotParams::shiftrunlength - 1)
             {
-                RobotParams::shiftrunpointer++;
-
-                round = 1;
-                if (RobotParams::shiftrunpointer == RobotParams::shiftrunlength - 1)
+                if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
                 {
+                    RobotParams::shiftrunpointer++;
+
+                    round = 1;
+
                     gettimeofday(&stoptime, NULL);
                     double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
                     ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
@@ -824,6 +847,30 @@ void ShiftClutchUI::examtimer_timeout()
                 }
                 else
                 {
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
+
+                    ifABS[3] = 1; ifABS[4] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+            }
+            else
+            {
+                if (mySCControl->ifreachedshiftprocess(RobotParams::shiftrunpath[RobotParams::shiftrunpointer], RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+                {
+                    RobotParams::shiftrunpointer++;
+
+                    round = 1;
+
                     gettimeofday(&stoptime, NULL);
                     double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
                     ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
@@ -844,23 +891,23 @@ void ShiftClutchUI::examtimer_timeout()
                     SendMoveCommandAll(values, ifABS);
                     return;
                 }
-            }
-            else
-            {
-                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
-                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+                else
+                {
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
 
-                double *shiftaims = new double[2];
-                mySCControl->getconSft(shiftaims, round);
-                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
-                delete shiftaims;
-                round++;
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
 
-                ifABS[3] = 1; ifABS[4] = 1;
+                    ifABS[3] = 1; ifABS[4] = 1;
 
-                SendMoveCommandAll(values, ifABS);
-                return;
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
             }
         }
         else if (changeshiftprocess == 3)
@@ -985,13 +1032,14 @@ void ShiftClutchUI::examtimer_timeout()
         }
         else if (changeshiftprocess == 1)
         {
-            if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+            if (RobotParams::shiftrunpointer + 1 == RobotParams::shiftrunlength - 1)
             {
-                RobotParams::shiftrunpointer++;
-
-                round = 1;
-                if (RobotParams::shiftrunpointer == RobotParams::shiftrunlength - 1)
+                if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
                 {
+                    RobotParams::shiftrunpointer++;
+
+                    round = 1;
+
                     gettimeofday(&stoptime, NULL);
                     double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
                     ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
@@ -1029,6 +1077,30 @@ void ShiftClutchUI::examtimer_timeout()
                 }
                 else
                 {
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
+
+                    ifABS[3] = 1; ifABS[4] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+            }
+            else
+            {
+                if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+                {
+                    RobotParams::shiftrunpointer++;
+
+                    round = 1;
+
                     gettimeofday(&stoptime, NULL);
                     double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
                     ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
@@ -1049,23 +1121,23 @@ void ShiftClutchUI::examtimer_timeout()
                     SendMoveCommandAll(values, ifABS);
                     return;
                 }
-            }
-            else
-            {
-                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
-                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+                else
+                {
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
 
-                double *shiftaims = new double[2];
-                mySCControl->getconSft(shiftaims, round);
-                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
-                delete shiftaims;
-                round++;
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
 
-                ifABS[3] = 1; ifABS[4] = 1;
+                    ifABS[3] = 1; ifABS[4] = 1;
 
-                SendMoveCommandAll(values, ifABS);
-                return;
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
             }
         }
         else if (changeshiftprocess == 2)
@@ -1197,13 +1269,14 @@ void ShiftClutchUI::examtimer_timeout()
         }
         else if (changeshiftprocess == 1)
         {
-            if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+            if (RobotParams::shiftrunpointer + 1 == RobotParams::shiftrunlength - 1)
             {
-                RobotParams::shiftrunpointer++;
-
-                round = 1;
-                if (RobotParams::shiftrunpointer == RobotParams::shiftrunlength - 1)
+                if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
                 {
+                    RobotParams::shiftrunpointer++;
+
+                    round = 1;
+
                     gettimeofday(&stoptime, NULL);
                     double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
                     ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
@@ -1242,6 +1315,30 @@ void ShiftClutchUI::examtimer_timeout()
                 }
                 else
                 {
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
+
+                    ifABS[3] = 1; ifABS[4] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+            }
+            else
+            {
+                if (mySCControl->ifreachedshiftprocess(RobotParams::shiftrunpath[RobotParams::shiftrunpointer], RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+                {
+                    RobotParams::shiftrunpointer++;
+
+                    round = 1;
+
                     gettimeofday(&stoptime, NULL);
                     double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
                     ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
@@ -1262,23 +1359,23 @@ void ShiftClutchUI::examtimer_timeout()
                     SendMoveCommandAll(values, ifABS);
                     return;
                 }
-            }
-            else
-            {
-                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
-                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+                else
+                {
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
 
-                double *shiftaims = new double[2];
-                mySCControl->getconSft(shiftaims, round);
-                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
-                delete shiftaims;
-                round++;
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
 
-                ifABS[3] = 1; ifABS[4] = 1;
+                    ifABS[3] = 1; ifABS[4] = 1;
 
-                SendMoveCommandAll(values, ifABS);
-                return;
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
             }
         }
         else if (changeshiftprocess == 2)
@@ -1344,14 +1441,14 @@ void ShiftClutchUI::examtimer_timeout()
     }
     else if (examflag == 9)
     {
-        if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+        if (RobotParams::shiftrunpointer + 1 == RobotParams::shiftrunlength - 1)
         {
-            RobotParams::shiftrunpointer++;
-
-            round = 1;
-
-            if (RobotParams::shiftrunpointer == RobotParams::shiftrunlength - 1)
+            if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
             {
+                RobotParams::shiftrunpointer++;
+
+                round = 1;
+
                 if (mySCControl->ifreachedclutch(false, 1))
                 {
                     RobotParams::currentshiftindex = 1;
@@ -1384,7 +1481,6 @@ void ShiftClutchUI::examtimer_timeout()
             }
             else
             {
-                RobotParams::lastshiftindex = RobotParams::currentshiftindex;
                 RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
                 RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
                 RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
@@ -1405,22 +1501,49 @@ void ShiftClutchUI::examtimer_timeout()
         }
         else
         {
-            RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-            RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
-            RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+            if (mySCControl->ifreachedshiftprocess(RobotParams::shiftrunpath[RobotParams::shiftrunpointer], RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+            {
+                RobotParams::shiftrunpointer++;
 
-            double *shiftaims = new double[2];
-            mySCControl->getconSft(shiftaims, round);
+                round = 1;
 
-            double *clutchaim = new double();
-            mySCControl->getconClh(clutchaim, round2);
+                RobotParams::lastshiftindex = RobotParams::currentshiftindex;
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
 
-            SendMoveCommand(*clutchaim,*shiftaims,*(shiftaims + 1),true,true,false);
-            delete clutchaim;
-            delete shiftaims;
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
 
-            round++;
-            round2++;
+                double *clutchaim = new double();
+                mySCControl->getconClh(clutchaim, round2);
+
+                SendMoveCommand(*clutchaim,*shiftaims,*(shiftaims + 1),true,true,false);
+                delete clutchaim;
+                delete shiftaims;
+
+                round++;
+                round2++;
+            }
+            else
+            {
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
+
+                double *clutchaim = new double();
+                mySCControl->getconClh(clutchaim, round2);
+
+                SendMoveCommand(*clutchaim,*shiftaims,*(shiftaims + 1),true,true,false);
+                delete clutchaim;
+                delete shiftaims;
+
+                round++;
+                round2++;
+            }
         }
     }
     else
@@ -1823,8 +1946,17 @@ void ShiftClutchUI::on_pushButton_startexam_clicked()
         return;
     }
 
+    if (!RobotParams::ifConfirmSC)
+    {
+        QMessageBox::warning(NULL, tr("警告"), tr("请确认挡位信息后再进行测试！"));
+        return;
+    }
+
     int ret = QMessageBox::information(NULL, tr("提示"), tr("请确认所有挡位离合信息采集完毕，\r\n再把挡位拨到空挡附近！"), tr("确认"), tr("取消"));
-    if(ret == 1) return;
+    if(ret == 1)
+    {
+        return;
+    }
 
     // 保证在空挡
     if (!mySCControl->ifreachedshift(true, 1))
@@ -2379,6 +2511,24 @@ void ShiftClutchUI::on_pushButton_stopnow_clicked()
 
 void ShiftClutchUI::on_pushButton_brakeslowly_clicked()
 {
+    shiftexampause = false;
+    clutchexampause = false;
+    exampause = false;
+    examflag = 0;
+    round = 1;
+    round2 = 1;
+
+    // 停止
+    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
+    PRINTF(LOG_WARNING, "%s: immediately stop.\n", __func__);
+    examtimer->stop();
+
+    // 界面设置
+    ui->pushButton_startexam->setEnabled(true);
+    ui->pushButton_stopexam->setEnabled(false);
+    ui->tabWidget2->setEnabled(false);
+
+    // 按照车型配置文件更新examslowlyBrake.txt
     std::fstream esb(Configuration::examslowlyBrakeFilePath.c_str(), std::fstream::out | std::fstream::binary);
     if(esb.fail()){
         PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, Configuration::examslowlyBrakeFilePath.c_str());
@@ -2452,8 +2602,28 @@ void ShiftClutchUI::on_pushButton_confirmSC_clicked()
     {
         RobotParams::ifConfirmSC = true;
 
-        // should be solved 发送挡位离合信息和车辆手自动挡信息
+        int emergencyStopType = !Configuration::GetInstance()->ifManualShift;
 
+        std::vector<double> emergencyStopTheta;
+        emergencyStopTheta.push_back( Configuration::GetInstance()->deathPos[0] );
+        emergencyStopTheta.push_back( Configuration::GetInstance()->deathPos[1] );
+
+        if (Configuration::GetInstance()->ifManualShift)
+        {
+            emergencyStopTheta.push_back( Configuration::GetInstance()->clutchAngles[0] );
+            emergencyStopTheta.push_back( 0.0 );
+            emergencyStopTheta.push_back( 0.0 );
+        }
+        else
+        {
+            emergencyStopTheta.push_back( 0.0 );
+            emergencyStopTheta.push_back( Configuration::GetInstance()->shiftAxisAngles1[1] );
+            emergencyStopTheta.push_back( Configuration::GetInstance()->shiftAxisAngles2[1] );
+        }
+
+        emergencyStopTheta.push_back( RobotParams::angleRealTime[5] );
+
+        AutoDriveRobotApiClient::GetInstance()->Send_SetPedalRobotEmergencyStopThetaMsg(emergencyStopType, emergencyStopTheta);
     }
 }
 
@@ -2508,5 +2678,30 @@ void ShiftClutchUI::on_pushButton_0to1_clicked()
 
 void ShiftClutchUI::on_pushButton_1to0_clicked()
 {
+    if (RobotParams::powerMode == 2)
+    {
+        if (RobotParams::currentshiftindex == 3)
+        {
+            if (RobotParams::currentclutchindex == 1)
+            {
+                // 测试起步
+                examflag = 8;
 
+                // 设置界面
+                ui->lineEdit_shifttime->setText("");
+            }
+            else
+            {
+                QMessageBox::information(NULL, tr("提示"), tr("起步测试前请保证离合踏板抬起！"));
+            }
+        }
+        else
+        {
+            QMessageBox::information(NULL, tr("提示"), tr("起步停止测试前请保证挡位在1挡！"));
+        }
+    }
+    else
+    {
+        QMessageBox::information(NULL, tr("提示"), tr("起步停止测试前请先发动车辆！"));
+    }
 }

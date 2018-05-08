@@ -35,6 +35,7 @@ public:
     /** 挡位和离合控制 **/
     void plantrace(); // 换挡路径规划
     bool ifreachedshift(const bool ifmanual, const int aimindex); // 是否到达目标挡位
+    bool ifreachedshiftprocess(const int startindex, const int aimindex); // 是否到达目标挡位 过程中使用
     bool ifreachedclutch(const bool ifmanual, const int aimindex); // 是否到达目标离合位置
     bool getconSft(double* conparas, const unsigned int round); // 计算下个目标的挡位
     bool getconClh(double* conparas, const unsigned int round); // 计算下个目标的离合

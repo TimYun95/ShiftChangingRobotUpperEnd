@@ -1147,6 +1147,20 @@ bool SysControl::ifreachedshift(const bool ifmanual, const int aimindex)
     }
 }
 
+bool SysControl::ifreachedshiftprocess(const int startindex, const int aimindex)
+{
+    double err = max(Configuration::GetInstance()->angleErr_P[1] * fabs(Configuration::GetInstance()->shiftAxisAngles1[aimindex] - Configuration::GetInstance()->shiftAxisAngles1[startindex]) / 100.0, Configuration::GetInstance()->angleErr_P[2] * fabs(Configuration::GetInstance()->shiftAxisAngles2[aimindex] - Configuration::GetInstance()->shiftAxisAngles2[startindex]) / 100.0);
+
+    if ( fabs(RobotParams::angleRealTime[3] - Configuration::GetInstance()->shiftAxisAngles1[aimindex]) < err && fabs(RobotParams::angleRealTime[4] - Configuration::GetInstance()->shiftAxisAngles2[aimindex]) < err )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool SysControl::ifreachedclutch(const bool ifmanual, const int aimindex)
 {
     double err = 0.0;

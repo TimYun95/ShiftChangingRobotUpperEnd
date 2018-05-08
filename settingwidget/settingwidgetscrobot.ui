@@ -237,7 +237,7 @@
           </font>
          </property>
          <property name="text">
-          <string>过程角度容差(deg)</string>
+          <string>过程角度容差(%)</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
