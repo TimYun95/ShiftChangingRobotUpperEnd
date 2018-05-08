@@ -40,12 +40,17 @@ public:
     bool ifGoBack; // 是否每次换挡先回零挡位
     double angleErr_M[3]; // 手动调整电机轴角度容差 相差该角度下认为到达该相应电机轴位置
     double angleErr_A[3]; // 自动调整电机轴角度容差 相差该角度下认为到达该相应电机轴位置
+    double angleErr_P[3]; // 过程调整电机轴角度容差 相差该角度下认为到达该相应电机轴位置
     double shiftAxisAngles1[9]; // 换挡电机轴1的各挡位角度
     double shiftAxisAngles2[9]; // 换挡电机轴2的各挡位角度
     double clutchAngles[2]; // 离合电机轴两个位置的角度 踩下和松开
     double clutchUpSpeed; // 离合松开的速度
+    bool ifAutoRecordMidN; // 是否自动补全中间空挡
 
     double curveMotionSpeed[3]; // 曲线运动速度 目标位置距离当前位置的距离 距离按照总距离的百分比计算 该速度即这个百分比
+
+    double changeShiftSpeed[8]; // 换挡速度
+    double startAccAngleValue; // 起步油门的最终开度
 
 private:
     const QString arrayPrefix;
@@ -66,8 +71,14 @@ public:
     static const std::string mainFolder;
     static const std::string carTypeFilePath;
     static const std::string softStopFilePath;
+    static const std::string examsoftStopFilePath;
+    static const std::string slowlyBrakeFilePath;
+    static const std::string examslowlyBrakeFilePath;
     static const std::string originFilePath;
     static const std::string logFilePath;
+    static const std::string logCurvePath;
+    static const std::string logCodePath;
+    static const std::string logCodeConfPath;
     static const std::string examFilePath;
 };
 

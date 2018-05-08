@@ -33,6 +33,8 @@ void UnifiedRobotApiClient::InitClientMsgHandler()
     REGISTER_MSG_HANDLER(URMSG::Id_Rpc_GetRobotThetaMsg_C2S, UnifiedRobotApiClient::On_GetRobotThetaMsg);
     REGISTER_MSG_HANDLER(URMSG::Id_Rpc_GetRobotMatrixMsg_C2S, UnifiedRobotApiClient::On_GetRobotMatrixMsg);
     REGISTER_MSG_HANDLER(URMSG::Id_Rpc_GetStatusStringMsg_C2S, UnifiedRobotApiClient::On_GetStatusStringMsg);
+
+    REGISTER_MSG_HANDLER(URMSG::Id_Pptc_ReceiveEmergencyStopSignalMsg_S2C, UnifiedRobotApiClient::On_ReceiveEmergencyStopSignalMsg);
 }
 
 bool UnifiedRobotApiClient::Send_ShowWidgetMsg(bool showFlag)
@@ -203,6 +205,15 @@ void UnifiedRobotApiClient::Process_GetStatusStringMsg(URMSG::Rpc_GetStatusStrin
     }
 }
 
+void UnifiedRobotApiClient::Process_ReceiveEmergencyStopSignalMsg(URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg)
+{
+    if(ressMsg.has_isstopsuccess()){
+        qDebug()<< __func__ << "isStopSuccess=" << ressMsg.isstopsuccess();
+    }else{
+        qDebug()<< __func__ << "no isStopSuccess";
+    }
+}
+
 void UnifiedRobotApiClient::On_PingMsg(const std::__cxx11::string &requestMsg)
 {
     URMSG::Rpc_PingMsg_C2S pingMsg;
@@ -241,4 +252,12 @@ void UnifiedRobotApiClient::On_GetStatusStringMsg(const std::__cxx11::string &re
     PARSE_PROTOBUF_MSG(requestMsg, gssMsg);
 
     Process_GetStatusStringMsg(gssMsg);
+}
+
+void UnifiedRobotApiClient::On_ReceiveEmergencyStopSignalMsg(const std::__cxx11::string &requestMsg)
+{
+    URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C ressMsg;
+    PARSE_PROTOBUF_MSG(requestMsg, ressMsg);
+
+    Process_ReceiveEmergencyStopSignalMsg(ressMsg);
 }

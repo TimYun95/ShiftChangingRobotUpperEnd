@@ -136,8 +136,9 @@ void SettingUI::on_pushButton_saveSettings_clicked()
 
 void SettingUI::on_pushButton_readSettings_clicked()
 {
-    const QString txtpath = QString::fromStdString(Configuration::GetInstance()->carTypeFilePath);
-    QString fileName = QFileDialog::getOpenFileName(this, tr("读取"), txtpath);
+    const QString txtpath = QString::fromStdString(Configuration::carTypeFilePath);
+    QString fileName = QFileDialog::getOpenFileName(this, tr("读取"), txtpath, tr("XML Files(*.xml)"));
+    if (fileName == "") return;
     std::string fn = NormalFile::GetFileName(fileName.toStdString().c_str());
 
     Configuration::GetInstance()->carTypeName = fn;

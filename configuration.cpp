@@ -21,8 +21,14 @@
 const std::string Configuration::mainFolder = QDir::homePath().toStdString()+QString("/Documents/").toStdString()+RobotParams::robotFolder;
 const std::string Configuration::carTypeFilePath = Configuration::mainFolder + "/system_files/";
 const std::string Configuration::softStopFilePath = Configuration::mainFolder + "/system_files/softStop.txt";
+const std::string Configuration::examsoftStopFilePath = Configuration::mainFolder + "/system_files/examsoftStop.txt";
+const std::string Configuration::slowlyBrakeFilePath = Configuration::mainFolder + "/system_files/slowlyBrake.txt";
+const std::string Configuration::examslowlyBrakeFilePath = Configuration::mainFolder + "/system_files/examslowlyBrake.txt";
 const std::string Configuration::originFilePath = Configuration::mainFolder + "/system_files/origin.txt";
 const std::string Configuration::logFilePath = Configuration::mainFolder + "/log_files/";
+const std::string Configuration::logCurvePath = Configuration::mainFolder + "/log_files/log_curve/";
+const std::string Configuration::logCodePath = Configuration::mainFolder + "/log_files/log_code/";
+const std::string Configuration::logCodeConfPath = Configuration::mainFolder + "/system_files/log4qt.properties";
 const std::string Configuration::examFilePath = Configuration::mainFolder + "/stdand_files/";
 
 Configuration *Configuration::GetInstance()
@@ -71,6 +77,7 @@ int Configuration::ReadFromFile()
             LOAD_STRING_ELEMENT(defaultFile);
             LOAD_STRING_ELEMENT(normalPassword);
             LOAD_NUMBER_ELEMENT(translateSpeed);
+
             LOAD_NUMBER_ARRAY(deathPos, RobotParams::axisNum);
             LOAD_NUMBER_ARRAY(limPos, RobotParams::axisNum);
             LOAD_NUMBER_ELEMENT(brakeThetaAfterGoHome);
@@ -85,12 +92,17 @@ int Configuration::ReadFromFile()
             LOAD_NUMBER_ELEMENT(ifGoBack);
             LOAD_NUMBER_ARRAY(angleErr_M, 3);
             LOAD_NUMBER_ARRAY(angleErr_A, 3);
+            LOAD_NUMBER_ARRAY(angleErr_P, 3);
             LOAD_NUMBER_ARRAY(shiftAxisAngles1, 9);
             LOAD_NUMBER_ARRAY(shiftAxisAngles2, 9);
             LOAD_NUMBER_ARRAY(clutchAngles, 2);
             LOAD_NUMBER_ELEMENT(clutchUpSpeed);
+            LOAD_NUMBER_ELEMENT(ifAutoRecordMidN);
 
             LOAD_NUMBER_ARRAY(curveMotionSpeed, 3);
+
+            LOAD_NUMBER_ARRAY(changeShiftSpeed, 8);
+            LOAD_NUMBER_ELEMENT(startAccAngleValue);
         }
     }
     file.close();
@@ -109,6 +121,7 @@ int Configuration::SaveToFile()
     SAVE_STRING_ELEMENT(defaultFile);
     SAVE_STRING_ELEMENT(normalPassword);
     SAVE_NUMBER_ELEMENT(translateSpeed);
+
     SAVE_NUMBER_ARRAY(deathPos, RobotParams::axisNum);
     SAVE_NUMBER_ARRAY(limPos, RobotParams::axisNum);
     SAVE_NUMBER_ELEMENT(brakeThetaAfterGoHome);
@@ -123,12 +136,17 @@ int Configuration::SaveToFile()
     SAVE_NUMBER_ELEMENT(ifGoBack);
     SAVE_NUMBER_ARRAY(angleErr_M, 3);
     SAVE_NUMBER_ARRAY(angleErr_A, 3);
+    SAVE_NUMBER_ARRAY(angleErr_P, 3);
     SAVE_NUMBER_ARRAY(shiftAxisAngles1, 9);
     SAVE_NUMBER_ARRAY(shiftAxisAngles2, 9);
     SAVE_NUMBER_ARRAY(clutchAngles, 2);
     SAVE_NUMBER_ELEMENT(clutchUpSpeed);
+    SAVE_NUMBER_ELEMENT(ifAutoRecordMidN);
 
     SAVE_NUMBER_ARRAY(curveMotionSpeed, 3);
+
+    SAVE_NUMBER_ARRAY(changeShiftSpeed, 8);
+    SAVE_NUMBER_ELEMENT(startAccAngleValue);
 
     doc.appendChild(root);
 
@@ -156,27 +174,35 @@ void Configuration::LoadDefaultConfiguration()
         limPos[i] = 80.0;
     }
 
-    brakeThetaAfterGoHome = 50.0;
+    brakeThetaAfterGoHome = 75.0;
     getSpeedMethod = 0;
     calcSpeedErrorMethod = 0;
     pedalRobotUsage = 0;
 
-    for(int i=0; i<7; ++i)
-    {
-        sysControlParams[i] = 0.1;
-    }
-    for(int i=0; i<5; ++i)
-    {
-        sysControlParamsWltc[i] = 0.1;
-    }
+    sysControlParams[0] = 0.1;
+    sysControlParams[1] = 40;
+    sysControlParams[2] = 40;
+    sysControlParams[3] = 1;
+    sysControlParams[4] = 1;
+    sysControlParams[5] = 1.2;
+    sysControlParams[6] = 0.5;
+
+    sysControlParamsWltc[0] = 50;
+    sysControlParamsWltc[1] = 1;
+    sysControlParamsWltc[2] = 0;
+    sysControlParamsWltc[3] = 1;
+    sysControlParamsWltc[4] = 1.5;
+    sysControlParamsWltc[5] = 0.8;
+    sysControlParamsWltc[6] = 0;
 
     pedalStartTimeS = 0.0;
 
     ifManualShift = false;
     ifGoBack = false;
 
-    angleErr_M[0] = 1.0; angleErr_M[1] = 1.0; angleErr_M[2] = 1.0;
+    angleErr_M[0] = 3.0; angleErr_M[1] = 3.0; angleErr_M[2] = 3.0;
     angleErr_A[0] = 1.0; angleErr_A[1] = 1.0; angleErr_A[2] = 1.0;
+    angleErr_P[0] = 1.0; angleErr_P[1] = 1.0; angleErr_P[2] = 1.0;
 
     for (int i = 0; i<9; ++i)
     {
@@ -188,9 +214,21 @@ void Configuration::LoadDefaultConfiguration()
         clutchAngles[i] = 0.0;
     }
     clutchUpSpeed = 0.0;
+    ifAutoRecordMidN = false;
 
     curveMotionSpeed[0] = 0.1;curveMotionSpeed[1] = 0.1;curveMotionSpeed[2] = 0.1;
 
+    changeShiftSpeed[0] = 20;
+    changeShiftSpeed[1] = 40;
+    changeShiftSpeed[2] = 60;
+    changeShiftSpeed[3] = 80;
+
+    changeShiftSpeed[4] = 25;
+    changeShiftSpeed[5] = 45;
+    changeShiftSpeed[6] = 65;
+    changeShiftSpeed[7] = 85;
+
+    startAccAngleValue = 10;
 }
 
 /*********************************Load*********************************/

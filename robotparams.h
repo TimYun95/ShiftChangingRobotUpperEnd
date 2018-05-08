@@ -2,6 +2,8 @@
 #define ROBOTPARAMS_H
 
 #include <string>
+#include <vector>
+#include <sys/time.h>
 
 class RobotParams
 {
@@ -11,6 +13,7 @@ public:
     static const unsigned int UITimerMs; // 基准定时器
     static const unsigned int UITimerMultiplier; // 控制指令发送周期
     static const unsigned int updateUIFrequency; // 界面更新周期
+    static const unsigned int waitForGoHomeRound; // 发送了回原指令后多少个界面更新周期后失效
     static const unsigned int axisNum = 6; // 共6轴可动 刹车1个 油门1个 挡位2个 离合1个 （方向盘1个）
 
     static const std::string robotType; // 机器人类型
@@ -41,6 +44,29 @@ public:
     static std::string currentclutchvalue; // 当前挡位值
     static int aimclutchindex; // 目标挡位索引
 
+    static bool askGoHomeatstart; // 是否已经在程序开始时询问了回原信息
+    static unsigned int askGoHomeatstartresult; // 在开始询问回原信息的结果 0--还没问 1--回原了 100--没回原
+
+    typedef std::vector<std::pair<double, int> > PairData; // pair=<time, aimshiftindex>
+    static PairData changeshiftlist; // 换挡时刻表
+    static int checkshiftlist; // 换挡时刻表的初始index
+    static bool changeshiftstart; // 开始换挡标志位
+    static bool changeshiftend; // 刚完成换挡
+    static unsigned int round; // 换挡过程控制轮数1
+    static unsigned int round2; // 换挡过程控制轮数2
+    static unsigned int changeshiftprocess; // 换挡过程进度控制
+    static bool startchangeshifttimeflag; // 换挡开始时刻记录标志位
+    static timeval starttime; // 换挡开始时刻
+    static timeval stoptime; // 换挡中断时刻
+
+    // 手动和自动挡位的值
+    static std::string manulShiftValues[9];
+    static std::string autoShiftValues[3];
+
+    static double tempVars[10]; // 预留的变量 含义人为赋值
+
+    static bool ifConfirmSC; // 是否确认了挡位离合信息
+    static bool ifConfirmCS; // 是否确认了换挡时刻
 };
 
 #endif // ROBOTPARAMS_H

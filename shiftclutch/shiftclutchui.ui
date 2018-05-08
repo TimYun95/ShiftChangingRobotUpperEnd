@@ -153,11 +153,11 @@
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,4">
+          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1,1">
            <item>
             <widget class="QLabel" name="label_7">
              <property name="text">
-              <string>挡 位</string>
+              <string>挡位</string>
              </property>
             </widget>
            </item>
@@ -208,6 +208,13 @@
                <string>6</string>
               </property>
              </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBox_autoset">
+             <property name="text">
+              <string>自动补齐</string>
+             </property>
             </widget>
            </item>
           </layout>
@@ -559,7 +566,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_10">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="1,2,1,2,1">
+        <layout class="QHBoxLayout" name="horizontalLayout_15">
          <item>
           <spacer name="horizontalSpacer_15">
            <property name="orientation">
@@ -576,7 +583,7 @@
          <item>
           <widget class="QPushButton" name="pushButton_startexam">
            <property name="text">
-            <string> 开 始 测 试 </string>
+            <string> 开始测试 </string>
            </property>
           </widget>
          </item>
@@ -596,12 +603,72 @@
          <item>
           <widget class="QPushButton" name="pushButton_stopexam">
            <property name="text">
-            <string> 结 束 测 试 </string>
+            <string> 结束测试 </string>
            </property>
           </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer_17">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_stopnow">
+           <property name="text">
+            <string> 立即停止 </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_29">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_brakeslowly">
+           <property name="text">
+            <string> 缓踩刹车 </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_30">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_confirmSC">
+           <property name="text">
+            <string> 确认信息 </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_31">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -817,6 +884,120 @@
              </item>
             </layout>
            </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_21" stretch="1,1,1,1,1">
+             <item>
+              <spacer name="horizontalSpacer_27">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_run">
+               <property name="text">
+                <string> 换 挡 测 试 </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_26">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_pause">
+               <property name="text">
+                <string> 暂 停 </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_28">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_22" stretch="1,1,1,1,1">
+             <item>
+              <spacer name="horizontalSpacer_32">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_0to1">
+               <property name="text">
+                <string> 起 步 </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_34">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_1to0">
+               <property name="text">
+                <string> 停 止 </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_33">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="tab_examclutch">
@@ -998,11 +1179,6 @@
         </widget>
        </item>
       </layout>
-     </widget>
-     <widget class="QWidget" name="tab">
-      <attribute name="title">
-       <string> 参 数 </string>
-      </attribute>
      </widget>
     </widget>
    </item>

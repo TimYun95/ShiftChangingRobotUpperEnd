@@ -47,18 +47,26 @@ public:
 
     //Receive
 protected:
+    //Unified Rpc msg
     virtual void Process_PingMsg(URMSG::Rpc_PingMsg_C2S &pingMsg);
     virtual void Process_GetGoHomeResultMsg(URMSG::Rpc_GetGoHomeResultMsg_C2S &gghrMsg);
     virtual void Process_GetRobotThetaMsg(URMSG::Rpc_GetRobotThetaMsg_C2S &grtMsg);
     virtual void Process_GetRobotMatrixMsg(URMSG::Rpc_GetRobotMatrixMsg_C2S &grmMsg);
     virtual void Process_GetStatusStringMsg(URMSG::Rpc_GetStatusStringMsg_C2S &gssMsg);
 
+    //Unified Pptc msg
+    virtual void Process_ReceiveEmergencyStopSignalMsg(URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg);
+
 protected:
+    //Unified Rpc msg
     void On_PingMsg(const std::string &requestMsg);
     void On_GetGoHomeResultMsg(const std::string &requestMsg);
     void On_GetRobotThetaMsg(const std::string &requestMsg);
     void On_GetRobotMatrixMsg(const std::string &requestMsg);
     void On_GetStatusStringMsg(const std::string &requestMsg);
+
+    //Unified Pptc msg
+    void On_ReceiveEmergencyStopSignalMsg(const std::string &requestMsg);
 };
 
 #endif // UNIFIEDROBOTAPICLIENT_H

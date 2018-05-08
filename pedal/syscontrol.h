@@ -20,6 +20,8 @@ public:
     typedef std::vector<std::pair<double, double> > PairData; // pair=<time,speed>
     void Init(const PairData& vp_data, const Configuration* conf);
 
+    double sgn(double x);
+
     //输入 控制模型
     void calCon(double time, double speedNow, double brakeOpen0, double accOpen0);
     void calConW(double time, double speedNow, double brakeOpen0, double accOpen0);
@@ -36,6 +38,11 @@ public:
     bool ifreachedclutch(const bool ifmanual, const int aimindex); // 是否到达目标离合位置
     bool getconSft(double* conparas, const unsigned int round); // 计算下个目标的挡位
     bool getconClh(double* conparas, const unsigned int round); // 计算下个目标的离合
+    bool ifreachedatinitial(const double angle_err = 0.2); // 开始运行挡位时的调校 误差相对较小
+
+
+
+
 
 
     /** ----------- **/
@@ -53,7 +60,6 @@ private:
 	double changeHoldon();
     void onlineTraining(),onlineTraining2();
     double slidingAdjustion();
-	double sgn(double x);
 
     /** 挡位和离合控制 **/
     //      1       3       5 ----------------
@@ -92,6 +98,12 @@ private:
     size_t indexNow;
 
     int sysControlMethod;
+
+
+
+
+
+
 
 
 };

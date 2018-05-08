@@ -5,6 +5,7 @@ const unsigned int RobotParams::UIAxisNum = 6; // UI界面支持的轴数
 const unsigned int RobotParams::UITimerMs = 18; // 基准定时器 18ms
 const unsigned int RobotParams::UITimerMultiplier = 3; // 控制指令发送周期 18*3=54m
 const unsigned int RobotParams::updateUIFrequency = 3; // 界面更新周期 18*3*3=112ms
+const unsigned int RobotParams::waitForGoHomeRound = 30; // 发送了回原指令后30个界面更新周期后失效
 
 //const std::string RobotParams::robotType = "dof_6_autodrive"; // 机器人类型
 const std::string RobotParams::robotType = "dof_2_pedal"; // 机器人类型
@@ -37,3 +38,27 @@ int RobotParams::shiftrunpointer; // 换挡路径进行到的状态
 
 int RobotParams::currentclutchindex; // 当前离合索引
 int RobotParams::aimclutchindex; // 目标挡位索引
+
+bool RobotParams::askGoHomeatstart = false; // 是否已经在程序开始时询问了回原信息
+unsigned int RobotParams::askGoHomeatstartresult = 0; // 在开始询问回原信息的结果
+
+RobotParams::PairData RobotParams::changeshiftlist; // 换挡时刻表
+int RobotParams::checkshiftlist = 0; // 换挡时刻表的初始index
+
+bool RobotParams::changeshiftstart = false; // 开始换挡标志位
+bool RobotParams::changeshiftend = false; // 刚完成换挡
+unsigned int RobotParams::round = 1; // 换挡过程控制轮数1
+unsigned int RobotParams::round2 = 1; // 换挡过程控制轮数2
+unsigned int RobotParams::changeshiftprocess = 0; // 换挡过程进度控制
+bool RobotParams::startchangeshifttimeflag = false; // 换挡开始时刻记录标志位
+timeval RobotParams::starttime; // 换挡开始时刻
+timeval RobotParams::stoptime; // 换挡中断时刻
+
+// 手动和自动挡位的值
+std::string RobotParams::manulShiftValues[9] = {"N_1&2", "N_3&4", "N_5&6", "1", "2", "3", "4", "5", "6"};
+std::string RobotParams::autoShiftValues[3] = {"P", "N", "D"};
+
+double RobotParams::tempVars[10] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};  // 预留的变量 含义人为赋值
+
+bool RobotParams::ifConfirmSC = false; // 是否确认了挡位离合信息
+bool RobotParams::ifConfirmCS = false; // 是否确认了换挡时刻

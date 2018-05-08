@@ -32,13 +32,12 @@ private slots:
     void PedalTimerDone(); // 定时器函数
     void SingleAxisPressed(); // 单轴按下
     void SingleAxisReleased(); // 单轴弹起
-    void EmergencyStopSlot(); // 急停 should be solved
 
     void on_pushButton_origin_clicked(); // “回原”按下
     void on_pushButton_softStop_clicked(); // “停止”按下
-    void on_pushButton_confirmEmergencyStop_clicked(); // “确认急停”按下
 
     void on_pushButton_softStop_liftPedals_clicked(); // “停止回抬”按下
+    void on_pushButton_slowlybrake_clicked(); // “缓踩刹车”按下
     void on_pushButton_startAction_clicked(); // “曲线运行”按下
     void on_pushButton_saveLoggerFile_clicked(); // “保存日志”按下
 
@@ -48,7 +47,6 @@ protected:
     void UpdateCarTypeWidget(); // 更新车型相关控件
     void UpdateGetSpeedWidget(); // 更新车速获得方式相关控件
     void EnableButtonsForGoHome(bool enable); // 回原前后的控件使能变化
-    void EnableButtonsForEmergencyStop(bool enable); // 急停前后的控件使能变化
 
     bool eventFilter(QObject *watched, QEvent *event); // 事件过滤 作快捷键用
     bool FilterTabSwitchKey(QEvent *event); // 切换TAB快捷键
@@ -76,6 +74,7 @@ protected:
     bool m_enableMutex; // 是否使用mutex
 
     bool ifSendGoHome; // 是否发送了回原指令
+    unsigned int GoHomeRound; // 回原指令发送失效的界面周期轮数
 };
 
 #endif // PEDALROBOTUI_H

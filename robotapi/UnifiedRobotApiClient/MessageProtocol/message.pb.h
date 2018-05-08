@@ -37,7 +37,7 @@ namespace protobuf_message_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[15];
+  static const ::google::protobuf::internal::ParseTable schema[17];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -59,6 +59,8 @@ void InitDefaultsPtc_SwitchToIdleStateMsg_C2SImpl();
 void InitDefaultsPtc_SwitchToIdleStateMsg_C2S();
 void InitDefaultsPtc_SetPedalRobotDeviceDataMsg_C2SImpl();
 void InitDefaultsPtc_SetPedalRobotDeviceDataMsg_C2S();
+void InitDefaultsPtc_SetPedalRobotEmergencyStopThetaMsg_C2SImpl();
+void InitDefaultsPtc_SetPedalRobotEmergencyStopThetaMsg_C2S();
 void InitDefaultsRpc_PingMsg_C2SImpl();
 void InitDefaultsRpc_PingMsg_C2S();
 void InitDefaultsRpc_GetGoHomeResultMsg_C2SImpl();
@@ -73,6 +75,8 @@ void InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2SImpl();
 void InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2S();
 void InitDefaultsRpc_GetPositionLimitConfMsg_C2SImpl();
 void InitDefaultsRpc_GetPositionLimitConfMsg_C2S();
+void InitDefaultsPptc_ReceiveEmergencyStopSignalMsg_S2CImpl();
+void InitDefaultsPptc_ReceiveEmergencyStopSignalMsg_S2C();
 inline void InitDefaults() {
   InitDefaultsPtc_ShowWidgetMsg_C2S();
   InitDefaultsPtc_GoHomeMsg_C2S();
@@ -82,6 +86,7 @@ inline void InitDefaults() {
   InitDefaultsPtc_SetMonitorActionThetaMsg_C2S();
   InitDefaultsPtc_SwitchToIdleStateMsg_C2S();
   InitDefaultsPtc_SetPedalRobotDeviceDataMsg_C2S();
+  InitDefaultsPtc_SetPedalRobotEmergencyStopThetaMsg_C2S();
   InitDefaultsRpc_PingMsg_C2S();
   InitDefaultsRpc_GetGoHomeResultMsg_C2S();
   InitDefaultsRpc_GetRobotThetaMsg_C2S();
@@ -89,9 +94,13 @@ inline void InitDefaults() {
   InitDefaultsRpc_GetStatusStringMsg_C2S();
   InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2S();
   InitDefaultsRpc_GetPositionLimitConfMsg_C2S();
+  InitDefaultsPptc_ReceiveEmergencyStopSignalMsg_S2C();
 }
 }  // namespace protobuf_message_2eproto
 namespace URMSG {
+class Pptc_ReceiveEmergencyStopSignalMsg_S2C;
+class Pptc_ReceiveEmergencyStopSignalMsg_S2CDefaultTypeInternal;
+extern Pptc_ReceiveEmergencyStopSignalMsg_S2CDefaultTypeInternal _Pptc_ReceiveEmergencyStopSignalMsg_S2C_default_instance_;
 class Ptc_GoHomeMsg_C2S;
 class Ptc_GoHomeMsg_C2SDefaultTypeInternal;
 extern Ptc_GoHomeMsg_C2SDefaultTypeInternal _Ptc_GoHomeMsg_C2S_default_instance_;
@@ -104,6 +113,9 @@ extern Ptc_SetMonitorActionThetaMsg_C2SDefaultTypeInternal _Ptc_SetMonitorAction
 class Ptc_SetPedalRobotDeviceDataMsg_C2S;
 class Ptc_SetPedalRobotDeviceDataMsg_C2SDefaultTypeInternal;
 extern Ptc_SetPedalRobotDeviceDataMsg_C2SDefaultTypeInternal _Ptc_SetPedalRobotDeviceDataMsg_C2S_default_instance_;
+class Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S;
+class Ptc_SetPedalRobotEmergencyStopThetaMsg_C2SDefaultTypeInternal;
+extern Ptc_SetPedalRobotEmergencyStopThetaMsg_C2SDefaultTypeInternal _Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S_default_instance_;
 class Ptc_ShowWidgetMsg_C2S;
 class Ptc_ShowWidgetMsg_C2SDefaultTypeInternal;
 extern Ptc_ShowWidgetMsg_C2SDefaultTypeInternal _Ptc_ShowWidgetMsg_C2S_default_instance_;
@@ -152,17 +164,19 @@ enum MsgIdType {
   Id_Ptc_SetMonitorActionThetaMsg_C2S = 4006,
   Id_Ptc_SwitchToIdleStateMsg_C2S = 4007,
   Id_Ptc_SetPedalRobotDeviceDataMsg_C2S = 5001,
+  Id_Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S = 5002,
   Id_Rpc_PingMsg_C2S = 6001,
   Id_Rpc_GetGoHomeResultMsg_C2S = 6002,
   Id_Rpc_GetRobotThetaMsg_C2S = 6003,
   Id_Rpc_GetRobotMatrixMsg_C2S = 6004,
   Id_Rpc_GetStatusStringMsg_C2S = 6005,
   Id_Rpc_GetPositionLimitConfMsg_C2S = 6006,
-  Id_Rpc_GetPedalRobotDeviceDataMsg_C2S = 7001
+  Id_Rpc_GetPedalRobotDeviceDataMsg_C2S = 7001,
+  Id_Pptc_ReceiveEmergencyStopSignalMsg_S2C = 8001
 };
 bool MsgIdType_IsValid(int value);
 const MsgIdType MsgIdType_MIN = Id_NoResponseMsg;
-const MsgIdType MsgIdType_MAX = Id_Rpc_GetPedalRobotDeviceDataMsg_C2S;
+const MsgIdType MsgIdType_MAX = Id_Pptc_ReceiveEmergencyStopSignalMsg_S2C;
 const int MsgIdType_ARRAYSIZE = MsgIdType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* MsgIdType_descriptor();
@@ -1144,6 +1158,129 @@ class Ptc_SetPedalRobotDeviceDataMsg_C2S : public ::google::protobuf::Message /*
 };
 // -------------------------------------------------------------------
 
+class Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S) */ {
+ public:
+  Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S();
+  virtual ~Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S();
+
+  Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S(const Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& from);
+
+  inline Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& operator=(const Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S(Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S&& from) noexcept
+    : Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S() {
+    *this = ::std::move(from);
+  }
+
+  inline Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& operator=(Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S* internal_default_instance() {
+    return reinterpret_cast<const Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S*>(
+               &_Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    8;
+
+  void Swap(Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S* other);
+  friend void swap(Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& a, Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& from);
+  void MergeFrom(const Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated double emergencyStopTheta = 2;
+  int emergencystoptheta_size() const;
+  void clear_emergencystoptheta();
+  static const int kEmergencyStopThetaFieldNumber = 2;
+  double emergencystoptheta(int index) const;
+  void set_emergencystoptheta(int index, double value);
+  void add_emergencystoptheta(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      emergencystoptheta() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_emergencystoptheta();
+
+  // optional int32 emergencyStopType = 1;
+  bool has_emergencystoptype() const;
+  void clear_emergencystoptype();
+  static const int kEmergencyStopTypeFieldNumber = 1;
+  ::google::protobuf::int32 emergencystoptype() const;
+  void set_emergencystoptype(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S)
+ private:
+  void set_has_emergencystoptype();
+  void clear_has_emergencystoptype();
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedField< double > emergencystoptheta_;
+  ::google::protobuf::int32 emergencystoptype_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPtc_SetPedalRobotEmergencyStopThetaMsg_C2SImpl();
+};
+// -------------------------------------------------------------------
+
 class Rpc_PingMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Rpc_PingMsg_C2S) */ {
  public:
   Rpc_PingMsg_C2S();
@@ -1186,7 +1323,7 @@ class Rpc_PingMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion
                &_Rpc_PingMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    9;
 
   void Swap(Rpc_PingMsg_C2S* other);
   friend void swap(Rpc_PingMsg_C2S& a, Rpc_PingMsg_C2S& b) {
@@ -1327,7 +1464,7 @@ class Rpc_GetGoHomeResultMsg_C2S : public ::google::protobuf::Message /* @@proto
                &_Rpc_GetGoHomeResultMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    9;
+    10;
 
   void Swap(Rpc_GetGoHomeResultMsg_C2S* other);
   friend void swap(Rpc_GetGoHomeResultMsg_C2S& a, Rpc_GetGoHomeResultMsg_C2S& b) {
@@ -1437,7 +1574,7 @@ class Rpc_GetRobotThetaMsg_C2S : public ::google::protobuf::Message /* @@protoc_
                &_Rpc_GetRobotThetaMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    10;
+    11;
 
   void Swap(Rpc_GetRobotThetaMsg_C2S* other);
   friend void swap(Rpc_GetRobotThetaMsg_C2S& a, Rpc_GetRobotThetaMsg_C2S& b) {
@@ -1550,7 +1687,7 @@ class Rpc_GetRobotMatrixMsg_C2S : public ::google::protobuf::Message /* @@protoc
                &_Rpc_GetRobotMatrixMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    11;
+    12;
 
   void Swap(Rpc_GetRobotMatrixMsg_C2S* other);
   friend void swap(Rpc_GetRobotMatrixMsg_C2S& a, Rpc_GetRobotMatrixMsg_C2S& b) {
@@ -1663,7 +1800,7 @@ class Rpc_GetStatusStringMsg_C2S : public ::google::protobuf::Message /* @@proto
                &_Rpc_GetStatusStringMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    12;
+    13;
 
   void Swap(Rpc_GetStatusStringMsg_C2S* other);
   friend void swap(Rpc_GetStatusStringMsg_C2S& a, Rpc_GetStatusStringMsg_C2S& b) {
@@ -1811,7 +1948,7 @@ class Rpc_GetPedalRobotDeviceDataMsg_C2S : public ::google::protobuf::Message /*
                &_Rpc_GetPedalRobotDeviceDataMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    13;
+    14;
 
   void Swap(Rpc_GetPedalRobotDeviceDataMsg_C2S* other);
   friend void swap(Rpc_GetPedalRobotDeviceDataMsg_C2S& a, Rpc_GetPedalRobotDeviceDataMsg_C2S& b) {
@@ -1934,7 +2071,7 @@ class Rpc_GetPositionLimitConfMsg_C2S : public ::google::protobuf::Message /* @@
                &_Rpc_GetPositionLimitConfMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    14;
+    15;
 
   void Swap(Rpc_GetPositionLimitConfMsg_C2S* other);
   friend void swap(Rpc_GetPositionLimitConfMsg_C2S& a, Rpc_GetPositionLimitConfMsg_C2S& b) {
@@ -2015,6 +2152,116 @@ class Rpc_GetPositionLimitConfMsg_C2S : public ::google::protobuf::Message /* @@
   ::google::protobuf::RepeatedField< double > positionlimitnegative_;
   friend struct ::protobuf_message_2eproto::TableStruct;
   friend void ::protobuf_message_2eproto::InitDefaultsRpc_GetPositionLimitConfMsg_C2SImpl();
+};
+// -------------------------------------------------------------------
+
+class Pptc_ReceiveEmergencyStopSignalMsg_S2C : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Pptc_ReceiveEmergencyStopSignalMsg_S2C) */ {
+ public:
+  Pptc_ReceiveEmergencyStopSignalMsg_S2C();
+  virtual ~Pptc_ReceiveEmergencyStopSignalMsg_S2C();
+
+  Pptc_ReceiveEmergencyStopSignalMsg_S2C(const Pptc_ReceiveEmergencyStopSignalMsg_S2C& from);
+
+  inline Pptc_ReceiveEmergencyStopSignalMsg_S2C& operator=(const Pptc_ReceiveEmergencyStopSignalMsg_S2C& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Pptc_ReceiveEmergencyStopSignalMsg_S2C(Pptc_ReceiveEmergencyStopSignalMsg_S2C&& from) noexcept
+    : Pptc_ReceiveEmergencyStopSignalMsg_S2C() {
+    *this = ::std::move(from);
+  }
+
+  inline Pptc_ReceiveEmergencyStopSignalMsg_S2C& operator=(Pptc_ReceiveEmergencyStopSignalMsg_S2C&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Pptc_ReceiveEmergencyStopSignalMsg_S2C& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Pptc_ReceiveEmergencyStopSignalMsg_S2C* internal_default_instance() {
+    return reinterpret_cast<const Pptc_ReceiveEmergencyStopSignalMsg_S2C*>(
+               &_Pptc_ReceiveEmergencyStopSignalMsg_S2C_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    16;
+
+  void Swap(Pptc_ReceiveEmergencyStopSignalMsg_S2C* other);
+  friend void swap(Pptc_ReceiveEmergencyStopSignalMsg_S2C& a, Pptc_ReceiveEmergencyStopSignalMsg_S2C& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Pptc_ReceiveEmergencyStopSignalMsg_S2C* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Pptc_ReceiveEmergencyStopSignalMsg_S2C* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Pptc_ReceiveEmergencyStopSignalMsg_S2C& from);
+  void MergeFrom(const Pptc_ReceiveEmergencyStopSignalMsg_S2C& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Pptc_ReceiveEmergencyStopSignalMsg_S2C* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional bool isStopSuccess = 1;
+  bool has_isstopsuccess() const;
+  void clear_isstopsuccess();
+  static const int kIsStopSuccessFieldNumber = 1;
+  bool isstopsuccess() const;
+  void set_isstopsuccess(bool value);
+
+  // @@protoc_insertion_point(class_scope:URMSG.Pptc_ReceiveEmergencyStopSignalMsg_S2C)
+ private:
+  void set_has_isstopsuccess();
+  void clear_has_isstopsuccess();
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  bool isstopsuccess_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPptc_ReceiveEmergencyStopSignalMsg_S2CImpl();
 };
 // ===================================================================
 
@@ -2485,6 +2732,64 @@ inline void Ptc_SetPedalRobotDeviceDataMsg_C2S::set_pulsedatavalue(double value)
   set_has_pulsedatavalue();
   pulsedatavalue_ = value;
   // @@protoc_insertion_point(field_set:URMSG.Ptc_SetPedalRobotDeviceDataMsg_C2S.pulseDataValue)
+}
+
+// -------------------------------------------------------------------
+
+// Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S
+
+// optional int32 emergencyStopType = 1;
+inline bool Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::has_emergencystoptype() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::set_has_emergencystoptype() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::clear_has_emergencystoptype() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::clear_emergencystoptype() {
+  emergencystoptype_ = 0;
+  clear_has_emergencystoptype();
+}
+inline ::google::protobuf::int32 Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::emergencystoptype() const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S.emergencyStopType)
+  return emergencystoptype_;
+}
+inline void Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::set_emergencystoptype(::google::protobuf::int32 value) {
+  set_has_emergencystoptype();
+  emergencystoptype_ = value;
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S.emergencyStopType)
+}
+
+// repeated double emergencyStopTheta = 2;
+inline int Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::emergencystoptheta_size() const {
+  return emergencystoptheta_.size();
+}
+inline void Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::clear_emergencystoptheta() {
+  emergencystoptheta_.Clear();
+}
+inline double Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::emergencystoptheta(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S.emergencyStopTheta)
+  return emergencystoptheta_.Get(index);
+}
+inline void Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::set_emergencystoptheta(int index, double value) {
+  emergencystoptheta_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S.emergencyStopTheta)
+}
+inline void Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::add_emergencystoptheta(double value) {
+  emergencystoptheta_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S.emergencyStopTheta)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::emergencystoptheta() const {
+  // @@protoc_insertion_point(field_list:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S.emergencyStopTheta)
+  return emergencystoptheta_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S::mutable_emergencystoptheta() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S.emergencyStopTheta)
+  return &emergencystoptheta_;
 }
 
 // -------------------------------------------------------------------
@@ -2965,9 +3270,41 @@ Rpc_GetPositionLimitConfMsg_C2S::mutable_positionlimitnegative() {
   return &positionlimitnegative_;
 }
 
+// -------------------------------------------------------------------
+
+// Pptc_ReceiveEmergencyStopSignalMsg_S2C
+
+// optional bool isStopSuccess = 1;
+inline bool Pptc_ReceiveEmergencyStopSignalMsg_S2C::has_isstopsuccess() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Pptc_ReceiveEmergencyStopSignalMsg_S2C::set_has_isstopsuccess() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Pptc_ReceiveEmergencyStopSignalMsg_S2C::clear_has_isstopsuccess() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Pptc_ReceiveEmergencyStopSignalMsg_S2C::clear_isstopsuccess() {
+  isstopsuccess_ = false;
+  clear_has_isstopsuccess();
+}
+inline bool Pptc_ReceiveEmergencyStopSignalMsg_S2C::isstopsuccess() const {
+  // @@protoc_insertion_point(field_get:URMSG.Pptc_ReceiveEmergencyStopSignalMsg_S2C.isStopSuccess)
+  return isstopsuccess_;
+}
+inline void Pptc_ReceiveEmergencyStopSignalMsg_S2C::set_isstopsuccess(bool value) {
+  set_has_isstopsuccess();
+  isstopsuccess_ = value;
+  // @@protoc_insertion_point(field_set:URMSG.Pptc_ReceiveEmergencyStopSignalMsg_S2C.isStopSuccess)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

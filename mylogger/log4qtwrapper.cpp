@@ -40,7 +40,7 @@ void Log4QTWrapper::Start()
         LogStartup();
         std::cout<<"log is started!"<<std::endl;
     }else{
-        std::cout<<"log has alread been started!"<<std::endl;
+//        std::cout<<"log has alread been started!"<<std::endl;
     }
 }
 

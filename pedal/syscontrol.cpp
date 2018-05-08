@@ -170,14 +170,14 @@ void SysControl::onlineTraining() {
     double dw1=0;
     double dw2=0;
     double dw3=0;
-	double x1=error[2] - error[1];
-	double x2=error[2];
-	double x3=error[2] - 2*error[1]+error[0];
+    double x1=error[2] - error[1];
+    double x2=error[2];
+    double x3=error[2] - 2*error[1]+error[0];
 	
-	/*
-	w1 = w1_1 + xitep*accOpen*(error[2] - error[1]);
-	w2 = w2_1 + xitei*accOpen*(error[2] );
-	w3 = w3_1 + xited*accOpen*(error[2] - 2*error[1]+error[0]);
+    /*
+    w1 = w1_1 + xitep*accOpen*(error[2] - error[1]);
+    w2 = w2_1 + xitei*accOpen*(error[2] );
+    w3 = w3_1 + xited*accOpen*(error[2] - 2*error[1]+error[0]);
     */
 
     dw1=xitep*sqrt(accOpen)*error[2]*x1;
@@ -189,34 +189,34 @@ void SysControl::onlineTraining() {
     else if(dw3<-0.01) dw3=-0.01;
     //dw1=std::max(dw1,-0.002);
     //dw1=std::min(dw1,0.002);
-	//dw3= std::max(dw3, -0.001);
-	//dw3= std::min(dw3, 0.001);
+    //dw3= std::max(dw3, -0.001);
+    //dw3= std::min(dw3, 0.001);
     w1 = w1_1 + dw1;
     w2 = w2_1 + dw2;
     w3 = w3_1 + dw3;
     //K=(60-40)*(fabs(error[2])-0.0)*(fabs(error[2])-0.0)/((1.5-0.0)*(1.5-0.0))+40;
 	
     /*
-	//调1
-	Tv_2=Tv_1;//初值为1
-	K_2=K_1;//初值为K
-	w1 = w1_1 + xitep*sqrt(accOpen)*error[2]*(2*error[2] - error[1]);
+    //调1
+    Tv_2=Tv_1;//初值为1
+    K_2=K_1;//初值为K
+    w1 = w1_1 + xitep*sqrt(accOpen)*error[2]*(2*error[2] - error[1]);
     w2 = w2_1 + xitei*sqrt(accOpen)*error[2]*(2*error[2] - error[1]);
     w3 = w3_1 + xited*sqrt(accOpen)*error[2]*(2*error[2] - error[1]);
-	if(error[2]*error[1]>0) K_1=K_2+0.02*K_2/Tv_2;
-	else K_1=0.75*K_2;
-	Tv_1=Tv_2+0.05*sgn(fabs(error[2] - error[1])-Tv_2*fabs(error[2] - 2*error[1]+error[0]));
-	//调2
-	dw1=xitep*sqrt(accOpen)*error[2]*x1;
+    if(error[2]*error[1]>0) K_1=K_2+0.02*K_2/Tv_2;
+    else K_1=0.75*K_2;
+    Tv_1=Tv_2+0.05*sgn(fabs(error[2] - error[1])-Tv_2*fabs(error[2] - 2*error[1]+error[0]));
+    //调2
+    dw1=xitep*sqrt(accOpen)*error[2]*x1;
     dw2=xitei*sqrt(accOpen)*error[2]*x2;
     dw3=xited*sqrt(accOpen)*error[2]*x3;
-	w1 = w1_1 + dw1;
+    w1 = w1_1 + dw1;
     w2 = w2_1 + dw2;
-	w3 = w3_1 + dw3;
-	if(fabs(error[2])>1.5) K=20;
-	else if(fabs(error[2])<0.5) K=5;
-	else K=(20-5)*(fabse(error[2])-0.5)*(fabse(error[2])-0.5)/((1.5-0.5)*(1.5-0.5))+5；
-	//二次型
+    w3 = w3_1 + dw3;
+    if(fabs(error[2])>1.5) K=20;
+    else if(fabs(error[2])<0.5) K=5;
+    else K=(20-5)*(fabse(error[2])-0.5)*(fabse(error[2])-0.5)/((1.5-0.5)*(1.5-0.5))+5；
+    //二次型
     double K1=10;
     double K2=1;
     double K3=0.1;
@@ -231,20 +231,20 @@ void SysControl::onlineTraining() {
     w1 = w1_1 + dw1;
     w2 = w2_1 + dw2;
     w3 = w3_1 + dw3;
-	*/
+    */
 
     w1 = std::max(w1, 0.0);
-	w2 = std::max(w2, 0.0);
-	w3 = std::max(w3, 0.0);
+    w2 = std::max(w2, 0.0);
+    w3 = std::max(w3, 0.0);
     wtotal = fabs(w1) + fabs(w2) + fabs(w3);
     wtotal=std::max(wtotal,1.00);
-	pid[0][0] =K* w1 / wtotal;
-	pid[0][1] =K* w2 / wtotal;
-	pid[0][2] =K* w3 / wtotal;
+    pid[0][0] =K* w1 / wtotal;
+    pid[0][1] =K* w2 / wtotal;
+    pid[0][2] =K* w3 / wtotal;
     qDebug()<<wtotal;
-	w1_1 = w1;
-	w2_1 = w2;
-	w3_1 = w3;
+    w1_1 = w1;
+    w2_1 = w2;
+    w3_1 = w3;
     isTrain=1;
 }
 
@@ -463,7 +463,7 @@ void SysControl::calCon(double time, double speedNow, double brakeOpen0, double 
     brakeOpen=brakeOpen0;
     accOpen=accOpen0;
     getSpeedDv(time,speedNow);
-    printf("%f  %f  %f  %f %f  %f %f %f\n",error[2],accOpen,speed[3],conAcc[1],conBrake[1],timeGap,maxAccRecorder,time);
+//    printf("%f  %f  %f  %f %f  %f %f %f\n",error[2],accOpen,speed[3],conAcc[1],conBrake[1],timeGap,maxAccRecorder,time);
 
     getError();
 	if (lineSpeed[3] == 0) {
@@ -589,7 +589,7 @@ void SysControl::calConW(double time, double speedNow, double brakeOpen0, double
     brakeOpen=brakeOpen0;
     accOpen=accOpen0;
     getSpeedDv(time,speedNow);
-    printf("%f  %f  %f %f  %f  %f %f  %f\n",error[2],accOpen,speed[3],conAcc[1],conBrake[1],timeGap,maxAccRecorder,time);
+//    printf("%f  %f  %f %f  %f  %f %f  %f\n",error[2],accOpen,speed[3],conAcc[1],conBrake[1],timeGap,maxAccRecorder,time);
 
     getError();
     if (lineSpeed[3] == 0) {
@@ -1118,6 +1118,8 @@ void SysControl::plantrace()
             }
         }
     }
+
+    RobotParams::shiftrunpointer = 0;
 }
 
 bool SysControl::ifreachedshift(const bool ifmanual, const int aimindex)
@@ -1180,14 +1182,14 @@ bool SysControl::getconSft(double *conparas, const unsigned int round)
     // 两个轴运动都大 运动不解耦
     if (errPos[0] > Configuration::GetInstance()->angleErr_A[1] && errPos[1] > Configuration::GetInstance()->angleErr_A[2])
     {
-        PRINTF(LOG_ERR, "%s: No coupled motion.", __func__);
+        PRINTF(LOG_ERR, "%s: No coupled motion.\n", __func__);
         return false;
     }
 
     // 两个轴运动都小 直接到位置
     if (errPos[0] < Configuration::GetInstance()->angleErr_A[1] && errPos[1] < Configuration::GetInstance()->angleErr_A[2])
     {
-        PRINTF(LOG_INFO, "%s: Small motion.", __func__);
+        PRINTF(LOG_INFO, "%s: Small motion.\n", __func__);
         *conparas = stopPos[0];
         *(conparas + 1) = stopPos[1];
         return true;
@@ -1205,21 +1207,6 @@ bool SysControl::getconSft(double *conparas, const unsigned int round)
     }
 
     // 计算主运动轴目标值
-//    const double actualPos[2] = {RobotParams::angleRealTime[3], RobotParams::angleRealTime[4]};
-//    double x_here = (actualPos[whichAxis] - startPos[whichAxis])/(stopPos[whichAxis] - startPos[whichAxis]);
-//    if (x_here < 0.005) x_here = 0;
-
-//    double t_next = Configuration::GetInstance()->curveMotionSpeed[whichAxis + 1];
-//    if (x_here != 0)
-//    {
-//        t_next = (5.5 - qLn(1/x_here - 1))/11 + Configuration::GetInstance()->curveMotionSpeed[whichAxis + 1];
-//    }
-//    double x_next = 1/(1 + qExp(5.5 - 11 * t_next));
-//    if (x_next > 0.995) x_next = 1; // 0.995 = 1/(1 + qExp(5.5 - 11 * 0.98))
-//    const double pos = x_next * (stopPos[whichAxis] - startPos[whichAxis]) + startPos[whichAxis];
-
-
-
     /* 曲线运动 */
 //    const double speed = Configuration::GetInstance()->curveMotionSpeed[whichAxis + 1];
 //    const double t_next = round * speed;
@@ -1270,7 +1257,7 @@ bool SysControl::getconClh(double *conparas, const unsigned int round)
     // 运动小 直接到位置
     if (errPos < Configuration::GetInstance()->angleErr_A[0])
     {
-        PRINTF(LOG_INFO, "%s: Small motion.", __func__);
+        PRINTF(LOG_INFO, "%s: Small motion.\n", __func__);
         *conparas = stopPos;
         return true;
     }
@@ -1302,4 +1289,30 @@ bool SysControl::getconClh(double *conparas, const unsigned int round)
 
     return true;
 
+}
+
+bool SysControl::ifreachedatinitial(const double angle_err)
+{
+    if ( fabs(RobotParams::angleRealTime[2] - Configuration::GetInstance()->clutchAngles[1]) < angle_err )
+    {
+        if ( fabs(RobotParams::angleRealTime[3] - Configuration::GetInstance()->shiftAxisAngles1[1]) < angle_err && fabs(RobotParams::angleRealTime[4] - Configuration::GetInstance()->shiftAxisAngles2[1]) < angle_err )
+        {
+            if ( fabs(RobotParams::angleRealTime[0] - Configuration::GetInstance()->deathPos[0]) < angle_err * 2.0 && fabs(RobotParams::angleRealTime[1] - Configuration::GetInstance()->deathPos[1]) < angle_err * 2.0 )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
 }

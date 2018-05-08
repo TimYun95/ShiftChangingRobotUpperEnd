@@ -29,7 +29,7 @@ public:
 
     void SoftStop(); // 退出曲线跟踪 保存日志
 
-    void SelectSpeedCurve(const bool selectFile); // 选择跟踪的曲线
+    bool SelectSpeedCurve(const bool selectFile); // 选择跟踪的曲线
     void StartQCustomPlot(const std::string& fileNameARM); // 开始绘制曲线
     void UpdateQCustomPlot(); // 更新绘制曲线
     void FinishQCustomPlot(bool showMessageBox=true); // 完成更新曲线
@@ -73,7 +73,7 @@ private:
 
     double GetCarSpeed(); // 获取车速
 
-    void SendMoveCommand(double deltaBrake, double deltaAcc); // 发送踏板控制指令
+    void SendMoveCommand(double deltaBrake, double deltaAcc, bool *overmax, bool *overmin, bool ifclutchadded, double aimclutch = 0.0); // 发送踏板控制指令
     void LoggerStudySamples(); // 添加日志
     double GetCurrentTargetSpeed(); //获取当前目标速度
 
@@ -101,6 +101,7 @@ private:
     //控制运动
     void InitControlMethod(); // 初始化系统控制方法
     void PedalControl(); // 踏板控制逻辑
+    void SendMoveCommandAll(double *values, int *ifABS); // 发送联动命令
 };
 
 #endif // PEDAL_H

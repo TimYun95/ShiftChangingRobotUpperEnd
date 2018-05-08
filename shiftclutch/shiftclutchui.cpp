@@ -8,6 +8,9 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QTimer>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
 #include "printf.h"
 #include "robotparams.h"
 #include "autodriverobotapiclient.h"
@@ -52,6 +55,8 @@ void ShiftClutchUI::UpdateSC()
 
 void ShiftClutchUI::UpdateCar()
 {
+    RobotParams::ifConfirmSC = false;
+
     resetcomboBox();
     initiallist();
 
@@ -64,23 +69,30 @@ void ShiftClutchUI::UpdateCar()
     ifenablebackzeroeventhappen = true;
 
     QPixmapCache::clear();
+
+    ui->checkBox_autoset->setEnabled(Configuration::GetInstance()->ifAutoRecordMidN);
+
     if (Configuration::GetInstance()->ifManualShift)
     {
-        const QString picpath = QString::fromStdString(Configuration::GetInstance()->mainFolder) + "/manualshift.png";
+        const QString picpath = QString::fromStdString(Configuration::mainFolder) + "/manualshift.png";
         pic.load(picpath);
         ui->label_pic->setPixmap(pic);
 
         ui->tab_clutch->setEnabled(true);
         ui->tab_exam->setEnabled(true);
+
+        ui->checkBox_autoset->setEnabled(true);
     }
     else
     {
-        const QString picpath = QString::fromStdString(Configuration::GetInstance()->mainFolder) + "/autoshift.png";
+        const QString picpath = QString::fromStdString(Configuration::mainFolder) + "/autoshift.png";
         pic.load(picpath);
         ui->label_pic->setPixmap(pic);
 
         ui->tab_clutch->setEnabled(false);
         ui->tab_exam->setEnabled(false);
+
+        ui->checkBox_autoset->setEnabled(false);
     }
 }
 
@@ -90,7 +102,7 @@ void ShiftClutchUI::initialui()
     QPixmapCache::clear();
     if (Configuration::GetInstance()->ifManualShift)
     {
-        const QString picpath = QString::fromStdString(Configuration::GetInstance()->mainFolder) + "/manualshift.png";
+        const QString picpath = QString::fromStdString(Configuration::mainFolder) + "/manualshift.png";
         pic.load(picpath);
         ui->label_pic->setPixmap(pic);
 
@@ -99,7 +111,7 @@ void ShiftClutchUI::initialui()
     }
     else
     {
-        const QString picpath = QString::fromStdString(Configuration::GetInstance()->mainFolder) + "/autoshift.png";
+        const QString picpath = QString::fromStdString(Configuration::mainFolder) + "/autoshift.png";
         pic.load(picpath);
         ui->label_pic->setPixmap(pic);
 
@@ -261,14 +273,163 @@ void ShiftClutchUI::examtimer_timeout()
     }
     else if (examflag == 1)
     {
-        if (mySCControl->ifreachedshift(false, 1) && mySCControl->ifreachedclutch(false, 1))
+        if (mySCControl->ifreachedatinitial(0.2))
         {
             examflag = 0;
-            PRINTF(LOG_INFO, "%s: be ready to exam.", __func__);
+            round = 1;
+            PRINTF(LOG_INFO, "%s: be ready to exam.\n", __func__);
+
+            // 界面设置
+            ui->pushButton_startexam->setEnabled(false);
+            ui->pushButton_stopexam->setEnabled(true);
+            ui->tabWidget2->setEnabled(true);
+            ui->tab_examshift->setEnabled(true);
+            ui->tab_examclutch->setEnabled(true);
+
+            ui->pushButton_shiftrun->setEnabled(true);
+            ui->pushButton_shiftpause->setEnabled(false);
+            ui->pushButton_run->setEnabled(true);
+            ui->pushButton_pause->setEnabled(false);
+            ui->pushButton_0to1->setEnabled(true);
+            ui->pushButton_1to0->setEnabled(false);
+            ui->pushButton_bottom->setEnabled(true);
+            ui->pushButton_top->setEnabled(false);
+            ui->pushButton_speed->setEnabled(false);
+            ui->pushButton_clutchpause->setEnabled(false);
         }
         else
         {
-            SendMoveCommand(Configuration::GetInstance()->clutchAngles[1],Configuration::GetInstance()->shiftAxisAngles1[1],Configuration::GetInstance()->shiftAxisAngles2[1],true,true,false);
+            double brakeaim = 0, accaim = 0;
+            double brakespeed = 1, accspeed = 1;
+            int brakesgn = 0, accsgn = 0;
+
+            brakesgn = mySCControl->sgn(Configuration::GetInstance()->deathPos[0] - RobotParams::tempVars[5]);
+            accsgn = mySCControl->sgn(Configuration::GetInstance()->deathPos[1] - RobotParams::tempVars[6]);
+
+            if (brakesgn > 0)
+            {
+                if ((brakeaim = RobotParams::tempVars[5] + round * brakespeed) > Configuration::GetInstance()->deathPos[0])
+                {
+                    brakeaim = Configuration::GetInstance()->deathPos[0];
+                }
+            }
+            else if (brakesgn < 0)
+            {
+                if ((brakeaim = RobotParams::tempVars[5] - round * brakespeed) < Configuration::GetInstance()->deathPos[0])
+                {
+                    brakeaim = Configuration::GetInstance()->deathPos[0];
+                }
+            }
+            else
+            {
+                brakeaim = Configuration::GetInstance()->deathPos[0];
+            }
+
+            if (accsgn > 0)
+            {
+                if ((accaim = RobotParams::tempVars[6] + round * accspeed) > Configuration::GetInstance()->deathPos[1])
+                {
+                    accaim = Configuration::GetInstance()->deathPos[1];
+                }
+            }
+            else if (accsgn < 0)
+            {
+                if ((accaim = RobotParams::tempVars[6] - round * accspeed) < Configuration::GetInstance()->deathPos[1])
+                {
+                    accaim = Configuration::GetInstance()->deathPos[1];
+                }
+            }
+            else
+            {
+                accaim = Configuration::GetInstance()->deathPos[1];
+            }
+
+            double shiftaim1 = 0, shiftaim2 = 0, clutchaim = 0;
+            double shiftspeed1 = 0.2, shiftspeed2 = 0.2, clutchspeed = 1.0;
+            int shiftsgn1 = 0, shiftsgn2 = 0, clutchsgn = 0;
+
+            clutchsgn = mySCControl->sgn(Configuration::GetInstance()->clutchAngles[1] - RobotParams::tempVars[0]);
+            shiftsgn1 = mySCControl->sgn(Configuration::GetInstance()->shiftAxisAngles1[1] - RobotParams::tempVars[1]);
+            shiftsgn2 = mySCControl->sgn(Configuration::GetInstance()->shiftAxisAngles2[1] - RobotParams::tempVars[2]);
+
+            if (clutchsgn > 0)
+            {
+                if ((clutchaim = RobotParams::tempVars[0] + round * clutchspeed) > Configuration::GetInstance()->clutchAngles[1])
+                {
+                    clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                }
+            }
+            else if (clutchsgn < 0)
+            {
+                if ((clutchaim = RobotParams::tempVars[0] - round * clutchspeed) < Configuration::GetInstance()->clutchAngles[1])
+                {
+                    clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                }
+            }
+            else
+            {
+                clutchaim = Configuration::GetInstance()->clutchAngles[1];
+            }
+
+            if (shiftsgn1 > 0)
+            {
+                if ((shiftaim1 = RobotParams::tempVars[1] + round * shiftspeed1) > Configuration::GetInstance()->shiftAxisAngles1[1])
+                {
+                    shiftaim1 = Configuration::GetInstance()->shiftAxisAngles1[1];
+                }
+            }
+            else if (shiftsgn1 < 0)
+            {
+                if ((shiftaim1 = RobotParams::tempVars[1] - round * shiftspeed1) < Configuration::GetInstance()->shiftAxisAngles1[1])
+                {
+                    shiftaim1 = Configuration::GetInstance()->shiftAxisAngles1[1];
+                }
+            }
+            else
+            {
+                shiftaim1 = Configuration::GetInstance()->shiftAxisAngles1[1];
+            }
+
+            if (shiftsgn2 > 0)
+            {
+                if ((shiftaim2 = RobotParams::tempVars[2] + round * shiftspeed2) > Configuration::GetInstance()->shiftAxisAngles2[1])
+                {
+                    shiftaim2 = Configuration::GetInstance()->shiftAxisAngles2[1];
+                }
+            }
+            else if (shiftsgn2 < 0)
+            {
+                if ((shiftaim2 = RobotParams::tempVars[2] - round * shiftspeed2) < Configuration::GetInstance()->shiftAxisAngles2[1])
+                {
+                    shiftaim2 = Configuration::GetInstance()->shiftAxisAngles2[1];
+                }
+            }
+            else
+            {
+                shiftaim2 = Configuration::GetInstance()->shiftAxisAngles2[1];
+            }
+
+            double values[RobotParams::axisNum];
+            int ifABS[RobotParams::axisNum];
+            for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+            {
+                values[i] = 0; ifABS[i] = 0;
+            }
+
+            values[0] = brakeaim;
+            values[1] = accaim;
+            values[2] = clutchaim;
+            values[3] = shiftaim1;
+            values[4] = shiftaim2;
+            ifABS[0] = 1;
+            ifABS[1] = 1;
+            ifABS[2] = 1;
+            ifABS[3] = 1;
+            ifABS[4] = 1;
+
+            SendMoveCommandAll(values, ifABS);
+
+            round++;
         }
     }
     else if (examflag == 2)
@@ -288,8 +449,13 @@ void ShiftClutchUI::examtimer_timeout()
         if (RobotParams::currentshiftindex == RobotParams::aimshiftindex)
         {
             examflag = 0;
+            startexamtimeflag = false;
             ui->pushButton_shiftrun->setEnabled(true);
             ui->pushButton_shiftpause->setEnabled(false);
+            ui->pushButton_run->setEnabled(true);
+            ui->pushButton_pause->setEnabled(false);
+            ui->pushButton_0to1->setEnabled(true);
+            ui->pushButton_1to0->setEnabled(false);
             ui->tab_examclutch->setEnabled(true);
             PRINTF(LOG_INFO, "%s: this shift exam alreay done.\n", __func__);
             SendMoveCommand(0,0,0,false,true,false);
@@ -315,6 +481,10 @@ void ShiftClutchUI::examtimer_timeout()
                 startexamtimeflag = false;
                 ui->pushButton_shiftrun->setEnabled(true);
                 ui->pushButton_shiftpause->setEnabled(false);
+                ui->pushButton_run->setEnabled(true);
+                ui->pushButton_pause->setEnabled(false);
+                ui->pushButton_0to1->setEnabled(true);
+                ui->pushButton_1to0->setEnabled(false);
                 ui->tab_examclutch->setEnabled(true);
                 PRINTF(LOG_INFO, "%s: this shift exam finishes.\n", __func__);
                 SendMoveCommand(0,0,0,false,true,false);
@@ -335,6 +505,8 @@ void ShiftClutchUI::examtimer_timeout()
 
                 SendMoveCommand(0,*shiftaims,*(shiftaims + 1),true,false,false);
                 delete shiftaims;
+
+                round++;
             }
         }
         else
@@ -495,6 +667,683 @@ void ShiftClutchUI::examtimer_timeout()
     }
     else if (examflag == 6)
     {
+        double values[RobotParams::axisNum];
+        int ifABS[RobotParams::axisNum];
+        for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+        {
+            values[i] = 0; ifABS[i] = 0;
+        }
+
+        if (exampause)
+        {
+            SendMoveCommandAll(values, ifABS);
+            return;
+        }
+
+        if (changeshiftprocess == 0 && RobotParams::currentshiftindex == RobotParams::aimshiftindex)
+        {
+            examflag = 0;
+            startexamtimeflag = false;
+            ui->pushButton_shiftrun->setEnabled(true);
+            ui->pushButton_shiftpause->setEnabled(false);
+            ui->pushButton_run->setEnabled(true);
+            ui->pushButton_pause->setEnabled(false);
+            ui->pushButton_0to1->setEnabled(true);
+            ui->pushButton_1to0->setEnabled(false);
+            ui->tab_examclutch->setEnabled(true);
+            PRINTF(LOG_INFO, "%s: this exam alreay done.\n", __func__);
+            SendMoveCommandAll(values, ifABS);
+            return;
+        }
+
+        if (changeshiftprocess == 0)
+        {
+            if (fabs(RobotParams::angleRealTime[0]-Configuration::GetInstance()->limPos[0]) < 1.0 && fabs(RobotParams::angleRealTime[1]-Configuration::GetInstance()->limPos[1]) < 1.0)
+            {
+                if (!startexamtimeflag)
+                {
+                    startexamtimeflag = true;
+                    gettimeofday(&starttime, NULL);
+                }
+
+                round = 1;
+                changeshiftprocess = 1;
+                values[0] = Configuration::GetInstance()->deathPos[0];
+                values[1] = Configuration::GetInstance()->deathPos[1];
+
+                RobotParams::aimclutchindex = 0;
+                double *clutchaim = new double();
+                mySCControl->getconClh(clutchaim, round);
+                values[2] = *clutchaim;
+                delete clutchaim;
+                round++;
+
+                ifABS[0] = 1; ifABS[1] = 1; ifABS[2] = 1;
+
+                PRINTF(LOG_INFO, "%s: ready to exam.\n", __func__);
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+            else
+            {
+                values[0] = Configuration::GetInstance()->limPos[0];
+                values[1] = Configuration::GetInstance()->limPos[1];
+                ifABS[0] = 1; ifABS[1] = 1;
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else if (changeshiftprocess == 1)
+        {
+            if (mySCControl->ifreachedclutch(false, 0)&& fabs(RobotParams::angleRealTime[0]-Configuration::GetInstance()->deathPos[0]) < 1.0 && fabs(RobotParams::angleRealTime[1]-Configuration::GetInstance()->deathPos[1]) < 1.0)
+            {
+                gettimeofday(&stoptime, NULL);
+                double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                RobotParams::currentclutchindex = 0;
+                RobotParams::currentclutchvalue = "踩下";
+
+                round = 1;
+                changeshiftprocess = 2;
+
+                // 规划路径
+                RobotParams::aimshiftindex = ui->comboBox_shiftaim->currentIndex();
+                mySCControl->plantrace();
+
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
+                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                delete shiftaims;
+                round++;
+
+                ifABS[3] = 1; ifABS[4] = 1;
+
+                PRINTF(LOG_INFO, "%s: clutch has been trodden.\n", __func__);
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+            else
+            {
+                values[0] = Configuration::GetInstance()->deathPos[0];
+                values[1] = Configuration::GetInstance()->deathPos[1];
+
+                RobotParams::aimclutchindex = 0;
+                double *clutchaim = new double();
+                mySCControl->getconClh(clutchaim, round);
+                values[2] = *clutchaim;
+                delete clutchaim;
+                round++;
+
+                ifABS[0] = 1; ifABS[1] = 1; ifABS[2] = 1;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else if (changeshiftprocess == 2)
+        {
+            if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+            {
+                RobotParams::shiftrunpointer++;
+
+                round = 1;
+                if (RobotParams::shiftrunpointer == RobotParams::shiftrunlength - 1)
+                {
+                    gettimeofday(&stoptime, NULL);
+                    double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                    ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::lastshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer - 1];
+                    RobotParams::shiftrunpointer = 0;
+
+                    changeshiftprocess = 3;
+
+                    RobotParams::currentclutchindex = 2;
+                    RobotParams::currentclutchvalue = "抬升";
+
+                    double clutchaim = 0;
+                    if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                    {
+                        clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                    }
+                    values[2] = clutchaim;
+                    round++;
+
+                    ifABS[2] = 1;
+
+                    PRINTF(LOG_INFO, "%s: shift change has been done.\n", __func__);
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+                else
+                {
+                    gettimeofday(&stoptime, NULL);
+                    double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                    ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                    RobotParams::lastshiftindex = RobotParams::currentshiftindex;
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
+
+                    ifABS[3] = 1; ifABS[4] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+            }
+            else
+            {
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
+                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                delete shiftaims;
+                round++;
+
+                ifABS[3] = 1; ifABS[4] = 1;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else if (changeshiftprocess == 3)
+        {
+            if (mySCControl->ifreachedclutch(false, 1))
+            {
+                gettimeofday(&stoptime, NULL);
+                double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0));
+
+                RobotParams::currentclutchindex = 1;
+                RobotParams::currentclutchvalue = "松开";
+
+                examflag = 0;
+                startexamtimeflag = false;
+                changeshiftprocess = 0;
+                ui->pushButton_shiftrun->setEnabled(true);
+                ui->pushButton_shiftpause->setEnabled(false);
+                ui->pushButton_run->setEnabled(true);
+                ui->pushButton_pause->setEnabled(false);
+                ui->pushButton_0to1->setEnabled(true);
+                ui->pushButton_1to0->setEnabled(false);
+                ui->tab_examclutch->setEnabled(true);
+                round = 1;
+
+                PRINTF(LOG_INFO, "%s: exam finishes.\n", __func__);
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+            else
+            {
+                RobotParams::currentclutchindex = 2;
+                RobotParams::currentclutchvalue = "抬升";
+
+                double clutchaim = 0;
+                if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                {
+                    clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                }
+                values[2] = clutchaim;
+                round++;
+
+                ifABS[2] = 1;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else
+        {
+            PRINTF(LOG_WARNING, "%s: no such exam process.\n", __func__);
+            SendMoveCommandAll(values, ifABS);
+            return;
+        }
+    }
+    else if (examflag == 7)
+    {
+        double values[RobotParams::axisNum];
+        int ifABS[RobotParams::axisNum];
+        for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+        {
+            values[i] = 0; ifABS[i] = 0;
+        }
+
+        if (changeshiftprocess == 0)
+        {
+            if (!startexamtimeflag)
+            {
+                startexamtimeflag = true;
+                gettimeofday(&starttime, NULL);
+            }
+
+            if (mySCControl->ifreachedclutch(false, 0)&& fabs(RobotParams::angleRealTime[0]-Configuration::GetInstance()->deathPos[0]) < 1.0 && fabs(RobotParams::angleRealTime[1]-Configuration::GetInstance()->deathPos[1]) < 1.0)
+            {
+                gettimeofday(&stoptime, NULL);
+                double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                RobotParams::currentclutchindex = 0;
+                RobotParams::currentclutchvalue = "踩下";
+
+                round = 1;
+                changeshiftprocess = 1;
+
+                // 规划路径 切到1挡
+                RobotParams::aimshiftindex = 3;
+                mySCControl->plantrace();
+
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
+                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                delete shiftaims;
+                round++;
+
+                ifABS[3] = 1; ifABS[4] = 1;
+
+                PRINTF(LOG_INFO, "%s: clutch has been trodden.\n", __func__);
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+            else
+            {
+                values[0] = Configuration::GetInstance()->deathPos[0];
+                values[1] = Configuration::GetInstance()->deathPos[1];
+
+                RobotParams::aimclutchindex = 0;
+                double *clutchaim = new double();
+                mySCControl->getconClh(clutchaim, round);
+                values[2] = *clutchaim;
+                delete clutchaim;
+                round++;
+
+                ifABS[0] = 1; ifABS[1] = 1; ifABS[2] = 1;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else if (changeshiftprocess == 1)
+        {
+            if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+            {
+                RobotParams::shiftrunpointer++;
+
+                round = 1;
+                if (RobotParams::shiftrunpointer == RobotParams::shiftrunlength - 1)
+                {
+                    gettimeofday(&stoptime, NULL);
+                    double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                    ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::lastshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer - 1];
+                    RobotParams::shiftrunpointer = 0;
+
+                    changeshiftprocess = 2;
+
+                    RobotParams::currentclutchindex = 2;
+                    RobotParams::currentclutchvalue = "抬升";
+
+                    double clutchaim = 0, accaim = 0;
+                    if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                    {
+                        clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                    }
+                    values[2] = clutchaim;
+
+                    if ( ( accaim = Configuration::GetInstance()->deathPos[1] + round * ( Configuration::GetInstance()->clutchUpSpeed / (Configuration::GetInstance()->clutchAngles[0] - Configuration::GetInstance()->clutchAngles[1]) * (Configuration::GetInstance()->startAccAngleValue - Configuration::GetInstance()->deathPos[1]) ) ) > Configuration::GetInstance()->startAccAngleValue)
+                    {
+                        accaim = Configuration::GetInstance()->startAccAngleValue;
+                    }
+                    values[1] = accaim;
+                    ifABS[1] = 1;
+                    ifABS[2] = 1;
+
+                    round++;
+
+                    PRINTF(LOG_INFO, "%s: shift change has been done.\n", __func__);
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+                else
+                {
+                    gettimeofday(&stoptime, NULL);
+                    double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                    ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                    RobotParams::lastshiftindex = RobotParams::currentshiftindex;
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
+
+                    ifABS[3] = 1; ifABS[4] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+            }
+            else
+            {
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
+                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                delete shiftaims;
+                round++;
+
+                ifABS[3] = 1; ifABS[4] = 1;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else if (changeshiftprocess == 2)
+        {
+            if (mySCControl->ifreachedclutch(false, 1)&& fabs(RobotParams::angleRealTime[1] - Configuration::GetInstance()->startAccAngleValue) < 1.0)
+            {
+                gettimeofday(&stoptime, NULL);
+                double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0));
+
+                RobotParams::currentclutchindex = 1;
+                RobotParams::currentclutchvalue = "松开";
+
+                examflag = 0;
+                startexamtimeflag = false;
+                changeshiftprocess = 0;
+                ui->pushButton_shiftrun->setEnabled(false);
+                ui->pushButton_shiftpause->setEnabled(false);
+                ui->pushButton_run->setEnabled(false);
+                ui->pushButton_pause->setEnabled(false);
+                ui->pushButton_0to1->setEnabled(false);
+                ui->pushButton_1to0->setEnabled(true);
+                ui->tab_examclutch->setEnabled(false);
+                round = 1;
+
+                PRINTF(LOG_INFO, "%s: car start finishes.\n", __func__);
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+            else
+            {
+                RobotParams::currentclutchindex = 2;
+                RobotParams::currentclutchvalue = "抬升";
+
+                double clutchaim = 0, accaim = 0;
+                if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                {
+                    clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                }
+                values[2] = clutchaim;
+
+                if ( ( accaim = Configuration::GetInstance()->deathPos[1] + round * (Configuration::GetInstance()->clutchUpSpeed / (Configuration::GetInstance()->clutchAngles[0] - Configuration::GetInstance()->clutchAngles[1]) * (Configuration::GetInstance()->startAccAngleValue - Configuration::GetInstance()->deathPos[1]) ) ) > Configuration::GetInstance()->startAccAngleValue)
+                {
+                    accaim = Configuration::GetInstance()->startAccAngleValue;
+                }
+                values[1] = accaim;
+                ifABS[1] = 1;
+                ifABS[2] = 1;
+
+                round++;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else
+        {
+            PRINTF(LOG_WARNING, "%s: no such exam process.\n", __func__);
+            SendMoveCommandAll(values, ifABS);
+            return;
+        }
+    }
+    else if (examflag == 8)
+    {
+        double values[RobotParams::axisNum];
+        int ifABS[RobotParams::axisNum];
+        for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+        {
+            values[i] = 0; ifABS[i] = 0;
+        }
+
+        if (changeshiftprocess == 0)
+        {
+            if (!startexamtimeflag)
+            {
+                startexamtimeflag = true;
+                gettimeofday(&starttime, NULL);
+            }
+
+            if (mySCControl->ifreachedclutch(false, 0)&& fabs(RobotParams::angleRealTime[0]-Configuration::GetInstance()->deathPos[0]) < 1.0 && fabs(RobotParams::angleRealTime[1]-Configuration::GetInstance()->deathPos[1]) < 1.0)
+            {
+                gettimeofday(&stoptime, NULL);
+                double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                RobotParams::currentclutchindex = 0;
+                RobotParams::currentclutchvalue = "踩下";
+
+                round = 1;
+                changeshiftprocess = 1;
+
+                // 规划路径 切到N挡
+                RobotParams::aimshiftindex = 1;
+                mySCControl->plantrace();
+
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
+                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                delete shiftaims;
+                round++;
+
+                ifABS[3] = 1; ifABS[4] = 1;
+
+                PRINTF(LOG_INFO, "%s: clutch has been trodden.\n", __func__);
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+            else
+            {
+                values[0] = Configuration::GetInstance()->deathPos[0];
+                values[1] = Configuration::GetInstance()->deathPos[1];
+
+                RobotParams::aimclutchindex = 0;
+                double *clutchaim = new double();
+                mySCControl->getconClh(clutchaim, round);
+                values[2] = *clutchaim;
+                delete clutchaim;
+                round++;
+
+                ifABS[0] = 1; ifABS[1] = 1; ifABS[2] = 1;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else if (changeshiftprocess == 1)
+        {
+            if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+            {
+                RobotParams::shiftrunpointer++;
+
+                round = 1;
+                if (RobotParams::shiftrunpointer == RobotParams::shiftrunlength - 1)
+                {
+                    gettimeofday(&stoptime, NULL);
+                    double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                    ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::lastshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer - 1];
+                    RobotParams::shiftrunpointer = 0;
+
+                    changeshiftprocess = 2;
+
+                    RobotParams::currentclutchindex = 2;
+                    RobotParams::currentclutchvalue = "抬升";
+
+                    double clutchaim = 0, brakeaim = 0;
+                    if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                    {
+                        clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                    }
+                    values[2] = clutchaim;
+
+                    double brakespeed = 1.0;
+                    if ( ( brakeaim = Configuration::GetInstance()->deathPos[0] + round * brakespeed ) > Configuration::GetInstance()->brakeThetaAfterGoHome)
+                    {
+                        brakeaim = Configuration::GetInstance()->brakeThetaAfterGoHome;
+                    }
+                    values[0] = brakeaim;
+                    ifABS[0] = 1;
+                    ifABS[2] = 1;
+
+                    round++;
+
+                    PRINTF(LOG_INFO, "%s: shift change has been done.\n", __func__);
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+                else
+                {
+                    gettimeofday(&stoptime, NULL);
+                    double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                    ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0) + QString("|"));
+
+                    RobotParams::lastshiftindex = RobotParams::currentshiftindex;
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                    double *shiftaims = new double[2];
+                    mySCControl->getconSft(shiftaims, round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    round++;
+
+                    ifABS[3] = 1; ifABS[4] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+                    return;
+                }
+            }
+            else
+            {
+                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                RobotParams::currentshiftvalue = ui->comboBox_shift->itemText(RobotParams::currentshiftindex).toStdString();
+                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                double *shiftaims = new double[2];
+                mySCControl->getconSft(shiftaims, round);
+                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                delete shiftaims;
+                round++;
+
+                ifABS[3] = 1; ifABS[4] = 1;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else if (changeshiftprocess == 2)
+        {
+            if (mySCControl->ifreachedclutch(false, 1)&& fabs(RobotParams::angleRealTime[0] - Configuration::GetInstance()->brakeThetaAfterGoHome) < 1.0)
+            {
+                gettimeofday(&stoptime, NULL);
+                double timeduring = (stoptime.tv_sec-starttime.tv_sec)*1000.0 + (stoptime.tv_usec-starttime.tv_usec)/1000.0;
+                ui->lineEdit_shifttime->setText(ui->lineEdit_shifttime->text() + QString::number(timeduring, 'f', 0));
+
+                RobotParams::currentclutchindex = 1;
+                RobotParams::currentclutchvalue = "松开";
+
+                examflag = 0;
+                startexamtimeflag = false;
+                changeshiftprocess = 0;
+                ui->pushButton_shiftrun->setEnabled(true);
+                ui->pushButton_shiftpause->setEnabled(false);
+                ui->pushButton_run->setEnabled(true);
+                ui->pushButton_pause->setEnabled(false);
+                ui->pushButton_0to1->setEnabled(true);
+                ui->pushButton_1to0->setEnabled(false);
+                ui->tab_examclutch->setEnabled(true);
+                round = 1;
+
+                PRINTF(LOG_INFO, "%s: car start stops.\n", __func__);
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+            else
+            {
+                RobotParams::currentclutchindex = 2;
+                RobotParams::currentclutchvalue = "抬升";
+
+                double clutchaim = 0, brakeaim = 0;
+                if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                {
+                    clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                }
+                values[2] = clutchaim;
+
+                double brakespeed = 1.0;
+                if ( ( brakeaim = Configuration::GetInstance()->deathPos[0] + round * brakespeed ) > Configuration::GetInstance()->brakeThetaAfterGoHome)
+                {
+                    brakeaim = Configuration::GetInstance()->brakeThetaAfterGoHome;
+                }
+                values[0] = brakeaim;
+                ifABS[0] = 1;
+                ifABS[2] = 1;
+
+                round++;
+
+                SendMoveCommandAll(values, ifABS);
+                return;
+            }
+        }
+        else
+        {
+            PRINTF(LOG_WARNING, "%s: no such exam process.\n", __func__);
+            SendMoveCommandAll(values, ifABS);
+            return;
+        }
+    }
+    else if (examflag == 9)
+    {
         if (mySCControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
         {
             RobotParams::shiftrunpointer++;
@@ -512,6 +1361,7 @@ void ShiftClutchUI::examtimer_timeout()
 
                     shiftexampause = false;
                     clutchexampause = false;
+                    exampause = false;
                     examflag = 0;
                     AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
                     round = 1;
@@ -524,7 +1374,7 @@ void ShiftClutchUI::examtimer_timeout()
                     RobotParams::shiftrunpointer--;
 
                     double *clutchaim = new double();
-                    mySCControl->getconClh(clutchaim, round);
+                    mySCControl->getconClh(clutchaim, round2);
 
                     SendMoveCommand(*clutchaim,0,0,true,false,true);
                     delete clutchaim;
@@ -543,12 +1393,14 @@ void ShiftClutchUI::examtimer_timeout()
                 mySCControl->getconSft(shiftaims, round);
 
                 double *clutchaim = new double();
-                mySCControl->getconClh(clutchaim, round);
+                mySCControl->getconClh(clutchaim, round2);
 
                 SendMoveCommand(*clutchaim,*shiftaims,*(shiftaims + 1),true,true,false);
                 delete clutchaim;
                 delete shiftaims;
 
+                round++;
+                round2++;
             }
         }
         else
@@ -561,7 +1413,7 @@ void ShiftClutchUI::examtimer_timeout()
             mySCControl->getconSft(shiftaims, round);
 
             double *clutchaim = new double();
-            mySCControl->getconClh(clutchaim, round);
+            mySCControl->getconClh(clutchaim, round2);
 
             SendMoveCommand(*clutchaim,*shiftaims,*(shiftaims + 1),true,true,false);
             delete clutchaim;
@@ -581,13 +1433,17 @@ void ShiftClutchUI::on_comboBox_way_currentIndexChanged(int index)
 {
     if (ifenablewaychangedeventhappen)
     {
+        ui->checkBox_autoset->setChecked(false);
+        RobotParams::ifConfirmSC = false;
+        Configuration::GetInstance()->ifAutoRecordMidN = false;
+
         if (index == 0)
         {
             Configuration::GetInstance()->ifManualShift = true;
 
             // 改变图像
             QPixmapCache::clear();
-            const QString picpath = QString::fromStdString(Configuration::GetInstance()->mainFolder) + "/manualshift.png";
+            const QString picpath = QString::fromStdString(Configuration::mainFolder) + "/manualshift.png";
             pic.load(picpath);
             ui->label_pic->setPixmap(pic);
 
@@ -596,6 +1452,9 @@ void ShiftClutchUI::on_comboBox_way_currentIndexChanged(int index)
 
             // 设定测试界面
             ui->tab_exam->setEnabled(true);
+
+            // 设置自动补齐可用性
+            ui->checkBox_autoset->setEnabled(true);
         }
         else
         {
@@ -603,7 +1462,7 @@ void ShiftClutchUI::on_comboBox_way_currentIndexChanged(int index)
 
             // 改变图像
             QPixmapCache::clear();
-            const QString picpath = QString::fromStdString(Configuration::GetInstance()->mainFolder) + "/autoshift.png";
+            const QString picpath = QString::fromStdString(Configuration::mainFolder) + "/autoshift.png";
             pic.load(picpath);
             ui->label_pic->setPixmap(pic);
 
@@ -612,6 +1471,9 @@ void ShiftClutchUI::on_comboBox_way_currentIndexChanged(int index)
 
             // 设定测试界面
             ui->tab_exam->setEnabled(false);
+
+            // 设置自动补齐可用性
+            ui->checkBox_autoset->setEnabled(false);
         }
 
         // 重置comboBox
@@ -626,6 +1488,8 @@ void ShiftClutchUI::on_checkBox_zero_stateChanged(int arg1)
 {
     if (ifenablebackzeroeventhappen)
     {
+        RobotParams::ifConfirmSC = false;
+
         if (arg1)
         {
             Configuration::GetInstance()->ifGoBack = true;
@@ -648,17 +1512,21 @@ void ShiftClutchUI::on_pushButton_save_clicked()
 
 void ShiftClutchUI::on_pushButton_read_clicked()
 {
-    const QString txtpath = QString::fromStdString(Configuration::GetInstance()->carTypeFilePath);
-    QString fileName = QFileDialog::getOpenFileName(this, tr("读取"), txtpath);
+    const QString txtpath = QString::fromStdString(Configuration::carTypeFilePath);
+    QString fileName = QFileDialog::getOpenFileName(this, tr("读取"), txtpath, tr("XML Files(*.xml)"));
+    if (fileName == "") return;
     std::string fn = NormalFile::GetFileName(fileName.toStdString().c_str());
 
+    std::string tempcarname = Configuration::GetInstance()->carTypeName;
     Configuration::GetInstance()->carTypeName = fn;
 
     if(Configuration::GetInstance()->ReadFromFile() == 0){
         QMessageBox::information( this,"提示", tr( (QString("读取").toStdString() + Configuration::GetInstance()->carTypeName + QString("成功").toStdString()).c_str() ) );
+        RobotParams::ifConfirmSC = false;
         haveReadXML = true;
     }else{
         QMessageBox::information(this,"提示", tr( (QString("!!!读取").toStdString() + Configuration::GetInstance()->carTypeName + QString("失败!!!").toStdString()).c_str() ) );
+        Configuration::GetInstance()->carTypeName = tempcarname;
         return;
     }
 
@@ -674,28 +1542,37 @@ void ShiftClutchUI::on_pushButton_read_clicked()
     ifenablebackzeroeventhappen = true;
 
     QPixmapCache::clear();
+
+    ui->checkBox_autoset->setEnabled(Configuration::GetInstance()->ifAutoRecordMidN);
+
     if (Configuration::GetInstance()->ifManualShift)
     {
-        const QString picpath = QString::fromStdString(Configuration::GetInstance()->mainFolder) + "/manualshift.png";
+        const QString picpath = QString::fromStdString(Configuration::mainFolder) + "/manualshift.png";
         pic.load(picpath);
         ui->label_pic->setPixmap(pic);
 
         ui->tab_clutch->setEnabled(true);
         ui->tab_exam->setEnabled(true);
+
+        ui->checkBox_autoset->setEnabled(true);
     }
     else
     {
-        const QString picpath = QString::fromStdString(Configuration::GetInstance()->mainFolder) + "/autoshift.png";
+        const QString picpath = QString::fromStdString(Configuration::mainFolder) + "/autoshift.png";
         pic.load(picpath);
         ui->label_pic->setPixmap(pic);
 
         ui->tab_clutch->setEnabled(false);
         ui->tab_exam->setEnabled(false);
+
+        ui->checkBox_autoset->setEnabled(false);
     }
 }
 
 void ShiftClutchUI::on_pushButton_record1_clicked()
 {
+    RobotParams::ifConfirmSC = false;
+
     const int jg = ui->comboBox_shift->currentIndex();
     Configuration::GetInstance()->shiftAxisAngles1[jg] = RobotParams::angleRealTime[3];
     Configuration::GetInstance()->shiftAxisAngles2[jg] = RobotParams::angleRealTime[4];
@@ -705,13 +1582,27 @@ void ShiftClutchUI::on_pushButton_record1_clicked()
         switch (jg)
         {
         case 0:
-            ui->list1->item(jg + 1)->setText("N_1&2\t\t\t\t " + QString::number(RobotParams::angleRealTime[3], 'f', 2) + "\t\t\t\t " + QString::number(RobotParams::angleRealTime[4], 'f', 2));
+            if (Configuration::GetInstance()->ifAutoRecordMidN)
+            {
+                QMessageBox::information(NULL, tr("提示"), tr("该挡位会自动补齐！"));
+            }
+            else
+            {
+                ui->list1->item(jg + 1)->setText("N_1&2\t\t\t\t " + QString::number(RobotParams::angleRealTime[3], 'f', 2) + "\t\t\t\t " + QString::number(RobotParams::angleRealTime[4], 'f', 2));
+            }
             break;
         case 1:
             ui->list1->item(jg + 1)->setText("N_3&4\t\t\t\t " + QString::number(RobotParams::angleRealTime[3], 'f', 2) + "\t\t\t\t " + QString::number(RobotParams::angleRealTime[4], 'f', 2));
             break;
         case 2:
-            ui->list1->item(jg + 1)->setText("N_5&6\t\t\t\t " + QString::number(RobotParams::angleRealTime[3], 'f', 2) + "\t\t\t\t " + QString::number(RobotParams::angleRealTime[4], 'f', 2));
+            if (Configuration::GetInstance()->ifAutoRecordMidN)
+            {
+                QMessageBox::information(NULL, tr("提示"), tr("该挡位会自动补齐！"));
+            }
+            else
+            {
+                ui->list1->item(jg + 1)->setText("N_5&6\t\t\t\t " + QString::number(RobotParams::angleRealTime[3], 'f', 2) + "\t\t\t\t " + QString::number(RobotParams::angleRealTime[4], 'f', 2));
+            }
             break;
         case 3:
             ui->list1->item(jg + 1)->setText("1    \t\t\t\t " + QString::number(RobotParams::angleRealTime[3], 'f', 2) + "\t\t\t\t " + QString::number(RobotParams::angleRealTime[4], 'f', 2));
@@ -733,6 +1624,18 @@ void ShiftClutchUI::on_pushButton_record1_clicked()
             break;
         default:
             break;
+        }
+
+        // 自动补齐
+        if (Configuration::GetInstance()->ifAutoRecordMidN)
+        {
+            Configuration::GetInstance()->shiftAxisAngles1[0] = 0.5 * ( Configuration::GetInstance()->shiftAxisAngles1[3] + Configuration::GetInstance()->shiftAxisAngles1[4] );
+            Configuration::GetInstance()->shiftAxisAngles2[0] = Configuration::GetInstance()->shiftAxisAngles2[1];
+            Configuration::GetInstance()->shiftAxisAngles1[2] = Configuration::GetInstance()->shiftAxisAngles1[7];
+            Configuration::GetInstance()->shiftAxisAngles2[2] = Configuration::GetInstance()->shiftAxisAngles2[1];
+
+            ui->list1->item(1)->setText("N_1&2\t\t\t\t " + QString::number(Configuration::GetInstance()->shiftAxisAngles1[0], 'f', 2) + "\t\t\t\t " + QString::number(Configuration::GetInstance()->shiftAxisAngles2[0], 'f', 2));
+            ui->list1->item(3)->setText("N_5&6\t\t\t\t " + QString::number(Configuration::GetInstance()->shiftAxisAngles1[2], 'f', 2) + "\t\t\t\t " + QString::number(Configuration::GetInstance()->shiftAxisAngles2[2], 'f', 2));
         }
     }
     else
@@ -756,6 +1659,8 @@ void ShiftClutchUI::on_pushButton_record1_clicked()
 
 void ShiftClutchUI::on_pushButton_reset1_clicked()
 {
+    RobotParams::ifConfirmSC = false;
+
     const int jg = ui->comboBox_shift->currentIndex();
     Configuration::GetInstance()->shiftAxisAngles1[jg] = 0.0;
     Configuration::GetInstance()->shiftAxisAngles2[jg] = 0.0;
@@ -828,6 +1733,8 @@ void ShiftClutchUI::on_comboBox_clutch_currentIndexChanged(int index)
 
 void ShiftClutchUI::on_pushButton_record2_clicked()
 {
+    RobotParams::ifConfirmSC = false;
+
     const int jg = ui->comboBox_clutch->currentIndex();
 
     switch (jg)
@@ -851,6 +1758,8 @@ void ShiftClutchUI::on_pushButton_record2_clicked()
 
 void ShiftClutchUI::on_pushButton_reset2_clicked()
 {
+    RobotParams::ifConfirmSC = false;
+
     const int jg = ui->comboBox_clutch->currentIndex();
 
     switch (jg)
@@ -874,12 +1783,53 @@ void ShiftClutchUI::on_pushButton_reset2_clicked()
 
 void ShiftClutchUI::on_pushButton_startexam_clicked()
 {
-    QMessageBox::information(NULL, tr("提示"), tr("请确认所有挡位离合信息采集完毕，\r\n再把挡位拨到空挡附近！\r\n再把离合抬升到松开位置附近！"));
-
-    // 保证在空挡 离合松开
-    if (!mySCControl->ifreachedshift(true, 1) || !mySCControl->ifreachedclutch(true, 1))
+    // 检查挡位规范性
+    bool ifshiftcanbeused = true;
+    if ( fabs(Configuration::GetInstance()->shiftAxisAngles1[0] - Configuration::GetInstance()->shiftAxisAngles1[3]) > Configuration::GetInstance()->angleErr_A[1] )
     {
-        QMessageBox::warning(NULL, tr("警告"), tr("挡位不在空挡附近，或者离合不在松开位置附近\r\n请手动调整！"));
+        ifshiftcanbeused = false;
+    }
+    if ( fabs(Configuration::GetInstance()->shiftAxisAngles1[0] - Configuration::GetInstance()->shiftAxisAngles1[4]) > Configuration::GetInstance()->angleErr_A[1] )
+    {
+        ifshiftcanbeused = false;
+    }
+
+    if ( fabs(Configuration::GetInstance()->shiftAxisAngles1[1] - Configuration::GetInstance()->shiftAxisAngles1[5]) > Configuration::GetInstance()->angleErr_A[1] )
+    {
+        ifshiftcanbeused = false;
+    }
+    if ( fabs(Configuration::GetInstance()->shiftAxisAngles1[1] - Configuration::GetInstance()->shiftAxisAngles1[6]) > Configuration::GetInstance()->angleErr_A[1] )
+    {
+        ifshiftcanbeused = false;
+    }
+
+    if ( fabs(Configuration::GetInstance()->shiftAxisAngles1[2] - Configuration::GetInstance()->shiftAxisAngles1[7]) > Configuration::GetInstance()->angleErr_A[1] )
+    {
+        ifshiftcanbeused = false;
+    }
+
+    if ( fabs(Configuration::GetInstance()->shiftAxisAngles2[1] - Configuration::GetInstance()->shiftAxisAngles2[0]) > Configuration::GetInstance()->angleErr_A[2] )
+    {
+        ifshiftcanbeused = false;
+    }
+    if ( fabs(Configuration::GetInstance()->shiftAxisAngles2[1] - Configuration::GetInstance()->shiftAxisAngles2[2]) > Configuration::GetInstance()->angleErr_A[2] )
+    {
+        ifshiftcanbeused = false;
+    }
+
+    if (!ifshiftcanbeused)
+    {
+        QMessageBox::warning(NULL, tr("警告"), tr("挡位之间差别过大\r\n请手动调整！"));
+        return;
+    }
+
+    int ret = QMessageBox::information(NULL, tr("提示"), tr("请确认所有挡位离合信息采集完毕，\r\n再把挡位拨到空挡附近！"), tr("确认"), tr("取消"));
+    if(ret == 1) return;
+
+    // 保证在空挡
+    if (!mySCControl->ifreachedshift(true, 1))
+    {
+        QMessageBox::warning(NULL, tr("警告"), tr("挡位不在空挡附近\r\n请手动调整！"));
         return;
     }
 
@@ -913,6 +1863,7 @@ void ShiftClutchUI::on_pushButton_startexam_clicked()
 
     shiftexampause = false;
     clutchexampause = false;
+    exampause = false;
 
     ui->pushButton_shiftpause->setText(" 暂 停 ");
     ui->pushButton_clutchpause->setText(" 暂 停 ");
@@ -932,6 +1883,15 @@ void ShiftClutchUI::on_pushButton_startexam_clicked()
     }
     AutoDriveRobotApiClient::GetInstance()->Send_SwitchToActionMsg(fileContent);
 
+    // 将当前的离合和挡位保存到预留变量中
+    RobotParams::tempVars[0] = RobotParams::angleRealTime[2];
+    RobotParams::tempVars[1] = RobotParams::angleRealTime[3];
+    RobotParams::tempVars[2] = RobotParams::angleRealTime[4];
+
+    // 将当前的刹车和油门保存到预留变量中
+    RobotParams::tempVars[5] = RobotParams::angleRealTime[0];
+    RobotParams::tempVars[6] = RobotParams::angleRealTime[1];
+
     // 定时器打开
     examflag = 0;
     examtimer->start(RobotParams::UITimerMs);
@@ -939,18 +1899,6 @@ void ShiftClutchUI::on_pushButton_startexam_clicked()
     // 纠正到空挡 抬起离合
     // 开始测试
     examflag = 1;
-
-    // 界面设置
-    ui->pushButton_startexam->setEnabled(false);
-    ui->pushButton_stopexam->setEnabled(true);
-    ui->tabWidget2->setEnabled(true);
-
-    ui->pushButton_shiftrun->setEnabled(true);
-    ui->pushButton_shiftpause->setEnabled(false);
-    ui->pushButton_bottom->setEnabled(true);
-    ui->pushButton_top->setEnabled(false);
-    ui->pushButton_speed->setEnabled(false);
-    ui->pushButton_clutchpause->setEnabled(false);
 }
 
 void ShiftClutchUI::on_pushButton_stopexam_clicked()
@@ -964,7 +1912,10 @@ void ShiftClutchUI::on_pushButton_stopexam_clicked()
 
         shiftexampause = false;
         clutchexampause = false;
+        exampause = false;
         examflag = 0;
+        round = 1;
+        round2 = 1;
 
         // 停止
         AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
@@ -981,7 +1932,7 @@ void ShiftClutchUI::on_pushButton_stopexam_clicked()
         RobotParams::aimclutchindex = 1;
 
         // 退出测试
-        examflag = 6;
+        examflag = 9;
     }
 
     // 界面设置
@@ -1000,6 +1951,7 @@ void ShiftClutchUI::on_comboBox_shiftaim_currentIndexChanged(int index)
         {
             ui->lineEdit_shifttrace->setText(" ----- ----- ");
             ui->pushButton_shiftrun->setEnabled(false);
+            ui->pushButton_run->setEnabled(false);
             QMessageBox::information(NULL, tr("提示"), tr("已经到达位置！"));
             return;
         }
@@ -1007,6 +1959,7 @@ void ShiftClutchUI::on_comboBox_shiftaim_currentIndexChanged(int index)
         {
             ui->lineEdit_shifttrace->setText(" ----- ----- ");
             ui->pushButton_shiftrun->setEnabled(false);
+            ui->pushButton_run->setEnabled(false);
             QMessageBox::information(NULL, tr("提示"), tr("不能选择中间挡位！"));
             return;
         }
@@ -1021,19 +1974,50 @@ void ShiftClutchUI::on_comboBox_shiftaim_currentIndexChanged(int index)
 
         ui->lineEdit_shifttrace->setText(str);
         ui->pushButton_shiftrun->setEnabled(true);
+        ui->pushButton_run->setEnabled(true);
+        ui->pushButton_0to1->setEnabled(true);
     }
 }
 
 void ShiftClutchUI::on_pushButton_shiftrun_clicked()
 {
-    // 测试生成的换挡路径
-    examflag = 2;
+    if (RobotParams::powerMode == 0 || RobotParams::powerMode == 1)
+    {
+        // 测试生成的换挡路径
+        examflag = 2;
 
-    // 设置界面
-    ui->pushButton_shiftrun->setEnabled(false);
-    ui->pushButton_shiftpause->setEnabled(true);
-    ui->tab_examclutch->setEnabled(false);
-    ui->lineEdit_shifttime->setText("");
+        // 设置界面
+        ui->pushButton_shiftrun->setEnabled(false);
+        ui->pushButton_shiftpause->setEnabled(true);
+        ui->pushButton_run->setEnabled(false);
+        ui->pushButton_pause->setEnabled(false);
+        ui->pushButton_0to1->setEnabled(false);
+        ui->pushButton_1to0->setEnabled(false);
+        ui->tab_examclutch->setEnabled(false);
+        ui->lineEdit_shifttime->setText("");
+    }
+    else
+    {
+        if (RobotParams::currentclutchindex == 0)
+        {
+            // 测试生成的换挡路径
+            examflag = 2;
+
+            // 设置界面
+            ui->pushButton_shiftrun->setEnabled(false);
+            ui->pushButton_shiftpause->setEnabled(true);
+            ui->pushButton_run->setEnabled(false);
+            ui->pushButton_pause->setEnabled(false);
+            ui->pushButton_0to1->setEnabled(false);
+            ui->pushButton_1to0->setEnabled(false);
+            ui->tab_examclutch->setEnabled(false);
+            ui->lineEdit_shifttime->setText("");
+        }
+        else
+        {
+            QMessageBox::information(NULL, tr("提示"), tr("车辆已发动，必须踩下离合才能测试挡位！"));
+        }
+    }
 }
 
 void ShiftClutchUI::on_pushButton_shiftpause_clicked()
@@ -1068,31 +2052,60 @@ void ShiftClutchUI::on_pushButton_bottom_clicked()
 
 void ShiftClutchUI::on_pushButton_top_clicked()
 {
-    // 离合目标
-    RobotParams::aimclutchindex = 1;
+    if (RobotParams::powerMode == 0 || RobotParams::powerMode == 1)
+    {
+        // 离合目标
+        RobotParams::aimclutchindex = 1;
 
-    // 测试离合位置 松开
-    examflag = 4;
+        // 测试离合位置 松开
+        examflag = 4;
 
-    // 设置界面
-    ui->pushButton_bottom->setEnabled(false);
-    ui->pushButton_top->setEnabled(false);
-    ui->pushButton_speed->setEnabled(false);
-    ui->pushButton_clutchpause->setEnabled(true);
-    ui->tab_examshift->setEnabled(false);
+        // 设置界面
+        ui->pushButton_bottom->setEnabled(false);
+        ui->pushButton_top->setEnabled(false);
+        ui->pushButton_speed->setEnabled(false);
+        ui->pushButton_clutchpause->setEnabled(true);
+        ui->tab_examshift->setEnabled(false);
+    }
+    else
+    {
+        QMessageBox::information(NULL, tr("提示"), tr("车辆已发动，不能直接抬起离合踏板！"));
+    }
 }
 
 void ShiftClutchUI::on_pushButton_speed_clicked()
 {
-    // 测试离合速度
-    examflag = 5;
+    if (RobotParams::powerMode == 0 || RobotParams::powerMode == 1)
+    {
+        // 测试离合速度
+        examflag = 5;
 
-    // 设置界面
-    ui->pushButton_bottom->setEnabled(false);
-    ui->pushButton_top->setEnabled(false);
-    ui->pushButton_speed->setEnabled(false);
-    ui->pushButton_clutchpause->setEnabled(true);
-    ui->tab_examshift->setEnabled(false);
+        // 设置界面
+        ui->pushButton_bottom->setEnabled(false);
+        ui->pushButton_top->setEnabled(false);
+        ui->pushButton_speed->setEnabled(false);
+        ui->pushButton_clutchpause->setEnabled(true);
+        ui->tab_examshift->setEnabled(false);
+    }
+    else
+    {
+        if (RobotParams::currentshiftindex == 1)
+        {
+            // 测试离合速度
+            examflag = 5;
+
+            // 设置界面
+            ui->pushButton_bottom->setEnabled(false);
+            ui->pushButton_top->setEnabled(false);
+            ui->pushButton_speed->setEnabled(false);
+            ui->pushButton_clutchpause->setEnabled(true);
+            ui->tab_examshift->setEnabled(false);
+        }
+        else
+        {
+            QMessageBox::information(NULL, tr("提示"), tr("车辆已发动，只有在空挡才能缓慢抬起离合踏板！"));
+        }
+    }
 }
 
 void ShiftClutchUI::on_pushButton_clutchpause_clicked()
@@ -1100,12 +2113,12 @@ void ShiftClutchUI::on_pushButton_clutchpause_clicked()
     if (clutchexampause)
     {
         clutchexampause = false;
-        ui->pushButton_clutchpause->setText(tr("暂停"));
+        ui->pushButton_clutchpause->setText(tr(" 暂 停 "));
     }
     else
     {
         clutchexampause = true;
-        ui->pushButton_clutchpause->setText(tr("继续"));
+        ui->pushButton_clutchpause->setText(tr(" 继 续 "));
     }
 }
 
@@ -1239,4 +2252,261 @@ void ShiftClutchUI::on_pushButton_motor3plus_released()
     }
 
     AutoDriveRobotApiClient::GetInstance()->Send_StopSingleAxisMsg(stopAxes);
+}
+
+void ShiftClutchUI::on_pushButton_run_clicked()
+{
+    if (RobotParams::powerMode == 0 || RobotParams::powerMode == 1)
+    {
+        // 测试生成的换挡路径
+        examflag = 6;
+
+        // 设置界面
+        ui->pushButton_shiftrun->setEnabled(false);
+        ui->pushButton_shiftpause->setEnabled(false);
+        ui->pushButton_run->setEnabled(false);
+        ui->pushButton_pause->setEnabled(true);
+        ui->pushButton_0to1->setEnabled(false);
+        ui->pushButton_1to0->setEnabled(false);
+        ui->tab_examclutch->setEnabled(false);
+        ui->lineEdit_shifttime->setText("");
+    }
+    else
+    {
+        QMessageBox::information(NULL, tr("提示"), tr("车辆已发动，不能进行换挡测试！"));
+    }
+}
+
+void ShiftClutchUI::on_pushButton_pause_clicked()
+{
+    if (exampause)
+    {
+        exampause = false;
+        ui->pushButton_pause->setText(tr(" 暂 停 "));
+    }
+    else
+    {
+        exampause = true;
+        ui->pushButton_pause->setText(tr(" 继 续 "));
+    }
+}
+
+void ShiftClutchUI::SendMoveCommandAll(double *values, int *ifABS)
+{
+    std::vector<int> actionMethod;
+    std::vector<int> actionAxes;
+    std::vector<double> actionTheta;
+
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        actionAxes.push_back(i);
+        actionTheta.push_back(values[i]);
+
+        if (ifABS[i] == 1)
+        {
+            actionMethod.push_back(AutoDriveRobotApiClient::AbsControlMethod);
+        }
+        else
+        {
+            actionMethod.push_back(AutoDriveRobotApiClient::DeltaControlMethod);
+        }
+    }
+
+    AutoDriveRobotApiClient::GetInstance()->Send_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta);
+}
+
+void ShiftClutchUI::on_pushButton_stopnow_clicked()
+{
+    shiftexampause = false;
+    clutchexampause = false;
+    exampause = false;
+    examflag = 0;
+    round = 1;
+    round2 = 1;
+
+    // 停止
+    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
+    PRINTF(LOG_WARNING, "%s: immediately stop.\n", __func__);
+    examtimer->stop();
+
+    // 界面设置
+    ui->pushButton_startexam->setEnabled(true);
+    ui->pushButton_stopexam->setEnabled(false);
+    ui->tabWidget2->setEnabled(false);
+
+    // 按照车型配置文件更新examsoftStop.txt
+    std::fstream essf(Configuration::examsoftStopFilePath.c_str(), std::fstream::out | std::fstream::binary);
+    if(essf.fail()){
+        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, Configuration::examsoftStopFilePath.c_str());
+        return;
+    }
+    essf << RobotParams::robotType << "\n";
+    essf << 'R' << "\n";
+    essf << std::right << std::setw(15) << 0;
+    essf << std::right << std::setw(15) << 0;
+    essf << std::right << std::setw(15) << 2000;
+    essf << std::right << std::setw(15) << 0;
+    essf << std::right << std::setw(15) << 0 << "\n";
+    essf << 'T' << "\n";
+    essf << Configuration::GetInstance()->translateSpeed << "\n";
+    essf << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[0];
+    essf << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
+
+    if (Configuration::GetInstance()->ifManualShift)
+    {
+        essf << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[0];
+        essf << std::right << std::setw(15) << RobotParams::angleRealTime[3];
+        essf << std::right << std::setw(15) << RobotParams::angleRealTime[4];
+        essf << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+    }
+    else
+    {
+        essf << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[1];
+        essf << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles1[1];
+        essf << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles2[1];
+        essf << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+    }
+
+    essf.close();
+
+    std::string fileContent = FileAssistantFunc::ReadFileContent(Configuration::examsoftStopFilePath);
+    if(fileContent.empty()){
+        PRINTF(LOG_WARNING, "%s: read file error.\n", __func__);
+        return;
+    }
+    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToActionMsg(fileContent);
+}
+
+void ShiftClutchUI::on_pushButton_brakeslowly_clicked()
+{
+    std::fstream esb(Configuration::examslowlyBrakeFilePath.c_str(), std::fstream::out | std::fstream::binary);
+    if(esb.fail()){
+        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, Configuration::examslowlyBrakeFilePath.c_str());
+        return;
+    }
+    esb << RobotParams::robotType << "\n";
+    esb << 'R' << "\n";
+    esb << std::right << std::setw(15) << 0;
+    esb << std::right << std::setw(15) << 0;
+    esb << std::right << std::setw(15) << 2000;
+    esb << std::right << std::setw(15) << 0;
+    esb << std::right << std::setw(15) << 0 << "\n";
+    esb << 'T' << "\n";
+    esb << Configuration::GetInstance()->translateSpeed << "\n";
+    esb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[0];
+    esb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
+
+    if (Configuration::GetInstance()->ifManualShift)
+    {
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[0];
+        esb << std::right << std::setw(15) << RobotParams::angleRealTime[3];
+        esb << std::right << std::setw(15) << RobotParams::angleRealTime[4];
+        esb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+
+        // 踩刹车
+        esb << 'T' << "\n";
+        esb << Configuration::GetInstance()->translateSpeed/4 << "\n";
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->brakeThetaAfterGoHome;
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[0];
+        esb << std::right << std::setw(15) << RobotParams::angleRealTime[3];
+        esb << std::right << std::setw(15) << RobotParams::angleRealTime[4];
+        esb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+    }
+    else
+    {
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[1];
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles1[1];;
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles2[1];;
+        esb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+
+        // 踩刹车
+        esb << 'T' << "\n";
+        esb << Configuration::GetInstance()->translateSpeed/4 << "\n";
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->brakeThetaAfterGoHome;
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[1];
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles1[1];;
+        esb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles2[1];;
+        esb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+    }
+
+    esb.close();
+
+    std::string fileContent = FileAssistantFunc::ReadFileContent(Configuration::examslowlyBrakeFilePath);
+    if(fileContent.empty()){
+        PRINTF(LOG_WARNING, "%s: read file error.\n", __func__);
+        return;
+    }
+    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToActionMsg(fileContent);
+}
+
+void ShiftClutchUI::on_pushButton_confirmSC_clicked()
+{
+    int ret = QMessageBox::information(NULL, tr("提示"), tr("请确认挡位离合信息！"), tr("确认"), tr("取消"));
+    if(ret == 1)
+    {
+        RobotParams::ifConfirmSC = false;
+    }
+    else
+    {
+        RobotParams::ifConfirmSC = true;
+
+        // should be solved 发送挡位离合信息和车辆手自动挡信息
+
+    }
+}
+
+void ShiftClutchUI::on_checkBox_autoset_stateChanged(int arg1)
+{
+    if (arg1)
+    {
+        Configuration::GetInstance()->ifAutoRecordMidN = true;
+    }
+    else
+    {
+        Configuration::GetInstance()->ifAutoRecordMidN = false;
+    }
+}
+
+void ShiftClutchUI::on_pushButton_0to1_clicked()
+{
+    if (RobotParams::powerMode == 2)
+    {
+        if (RobotParams::currentshiftindex == 1)
+        {
+            if (RobotParams::currentclutchindex == 1)
+            {
+                // 测试起步
+                examflag = 7;
+
+                // 设置界面
+                ui->pushButton_shiftrun->setEnabled(false);
+                ui->pushButton_shiftpause->setEnabled(false);
+                ui->pushButton_run->setEnabled(false);
+                ui->pushButton_pause->setEnabled(false);
+                ui->pushButton_0to1->setEnabled(false);
+                ui->pushButton_1to0->setEnabled(false);
+                ui->tab_examclutch->setEnabled(false);
+                ui->lineEdit_shifttime->setText("");
+            }
+            else
+            {
+                QMessageBox::information(NULL, tr("提示"), tr("起步测试前请保证离合踏板抬起！"));
+            }
+        }
+        else
+        {
+            QMessageBox::information(NULL, tr("提示"), tr("起步测试前请保证挡位在空挡！"));
+        }
+    }
+    else
+    {
+        QMessageBox::information(NULL, tr("提示"), tr("起步测试前请先发动车辆！"));
+    }
+}
+
+void ShiftClutchUI::on_pushButton_1to0_clicked()
+{
+
 }

@@ -23,6 +23,13 @@ public:
         MaxCanDataSize,
     };
 
+    enum eEmergencyStopType{
+        ManualShiftGearType,
+        AutomaticShiftGearType,
+
+        MaxEmergencyStopType
+    };
+
 protected:
     void InitClientMsgHandler() Q_DECL_OVERRIDE;
 
@@ -30,6 +37,7 @@ protected:
 public:
     //Specific Ptc msg
     bool Send_SetPedalRobotDeviceDataMsg(const std::vector<double> &canDataValues);
+    bool Send_SetPedalRobotEmergencyStopThetaMsg(int emergencyStopType, const std::vector<double> &emergencyStopTheta);
 
     //Specific Rpc msg
     bool Send_GetPedalRobotDeviceDataMsg();

@@ -38,6 +38,9 @@ private slots:
 
     void on_pushButton_startexam_clicked(); // 开始测试
     void on_pushButton_stopexam_clicked(); // 结束测试
+    void on_pushButton_stopnow_clicked(); // 立即停止
+    void on_pushButton_brakeslowly_clicked(); // 缓踩刹车
+    void on_pushButton_confirmSC_clicked(); // 确认信息
 
     void on_pushButton_shiftrun_clicked(); // 测试换挡路径
     void on_comboBox_shiftaim_currentIndexChanged(int index); // 更改目标挡位
@@ -55,6 +58,15 @@ private slots:
     void on_pushButton_motor3minus_released();
     void on_pushButton_motor3plus_released();
 
+    void on_pushButton_run_clicked(); // 测试换挡整体过程
+    void on_pushButton_pause_clicked(); // 暂停测试换挡整体过程
+
+    void on_checkBox_autoset_stateChanged(int arg1); // 自动补齐开关
+
+    void on_pushButton_0to1_clicked(); // 起步
+    void on_pushButton_1to0_clicked(); // 停止
+
+
 private:
     Ui::ShiftClutchUI *ui;
 
@@ -64,6 +76,7 @@ private:
     void resetlist(); // 重置list1和list2，并重置相关变量
 
     void SendMoveCommand(double clutch, double shift1, double shift2, bool run, bool ifboth, bool ifclutch); // 发送移动指令 供挡位离合测试用
+    void SendMoveCommandAll(double *values, int *ifABS); // 发送移动指令 供换挡测试用
 
 private:
     SysControl* mySCControl; // 控制逻辑
@@ -75,8 +88,9 @@ private:
     bool ifenablebackzeroeventhappen; // 是否允许回零方式的改变
     bool ifenablecomboBoxchangedeventhappen; // 是否允许comboBox改变事件发生
 
-    bool shiftexampause = false; // 换挡测试暂停
+    bool shiftexampause = false; // 挡位测试暂停
     bool clutchexampause = false; // 离合测试暂停
+    bool exampause = false; // 换挡测试暂停
 
     bool startexamtimeflag; // 开始计时标志位
     timeval starttime; // 开始计时的时刻
@@ -85,15 +99,20 @@ private:
     unsigned int round; // 速度控制轮数
     unsigned int round2; // 速度控制轮数2
 
+    unsigned int changeshiftprocess = 0; // 换挡进度
+
     /**
      * @brief examflag 测试标志位
      * 0 ---> 空闲状态
      * 1 ---> 开始测试
-     * 2 ---> 换挡测试
+     * 2 ---> 挡位测试
      * 3 ---> 离合位置测试 踩住
      * 4 ---> 离合位置测试 松开
      * 5 ---> 离合速度测试
-     * 6 ---> 退出测试
+     * 6 ---> 换挡整体测试
+     * 7 ---> 起步测试
+     * 8 ---> 起步测试结束
+     * 9 ---> 退出测试
      */
     int examflag = 0;
 

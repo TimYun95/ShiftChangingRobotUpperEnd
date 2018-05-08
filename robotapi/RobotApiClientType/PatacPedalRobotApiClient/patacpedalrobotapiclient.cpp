@@ -34,6 +34,17 @@ bool PatacPedalRobotApiClient::Send_SetPedalRobotDeviceDataMsg(const std::vector
     return Send_ProtobufMsg(URMSG::Id_Ptc_SetPedalRobotDeviceDataMsg_C2S, sprddMsg);
 }
 
+bool PatacPedalRobotApiClient::Send_SetPedalRobotEmergencyStopThetaMsg(int emergencyStopType, const std::vector<double> &emergencyStopTheta)
+{
+    URMSG::Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S sprestMsg;
+    sprestMsg.set_emergencystoptype(emergencyStopType);
+    for(const double &theta : emergencyStopTheta){
+        sprestMsg.add_emergencystoptheta(theta);
+    }
+
+    return Send_ProtobufMsg(URMSG::Id_Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S, sprestMsg);
+}
+
 bool PatacPedalRobotApiClient::Send_GetPedalRobotDeviceDataMsg()
 {
     URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S gprddMsg;
