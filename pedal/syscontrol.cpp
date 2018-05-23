@@ -1311,13 +1311,27 @@ bool SysControl::ifreachedatinitial(const double angle_err)
     {
         if ( fabs(RobotParams::angleRealTime[3] - Configuration::GetInstance()->shiftAxisAngles1[1]) < angle_err && fabs(RobotParams::angleRealTime[4] - Configuration::GetInstance()->shiftAxisAngles2[1]) < angle_err )
         {
-            if ( fabs(RobotParams::angleRealTime[0] - Configuration::GetInstance()->deathPos[0]) < angle_err * 2.0 && fabs(RobotParams::angleRealTime[1] - Configuration::GetInstance()->deathPos[1]) < angle_err * 2.0 )
+            if (Configuration::GetInstance()->ifManualShift)
             {
-                return true;
+                if ( fabs(RobotParams::angleRealTime[0] - Configuration::GetInstance()->deathPos[0]) < angle_err * 2.0 && fabs(RobotParams::angleRealTime[1] - Configuration::GetInstance()->deathPos[1]) < angle_err * 2.0 )
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             else
             {
-                return false;
+                if ( fabs(RobotParams::angleRealTime[0] - Configuration::GetInstance()->brakeThetaAfterGoHome) < angle_err * 2.0 && fabs(RobotParams::angleRealTime[1] - Configuration::GetInstance()->deathPos[1]) < angle_err * 2.0 )
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
         else

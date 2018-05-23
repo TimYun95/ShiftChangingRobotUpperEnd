@@ -218,7 +218,7 @@ void Configuration::LoadDefaultConfiguration()
 
     curveMotionSpeed[0] = 0.1;curveMotionSpeed[1] = 0.1;curveMotionSpeed[2] = 0.1;
 
-    changeShiftSpeed[0] = 20;
+    changeShiftSpeed[0] = 15;
     changeShiftSpeed[1] = 40;
     changeShiftSpeed[2] = 60;
     changeShiftSpeed[3] = 80;

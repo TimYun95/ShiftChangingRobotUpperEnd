@@ -19,6 +19,7 @@ public:
 
     void UpdateSC(); // 更新挡位离合界面
     void UpdateCar(); // 更新车辆及换挡信息
+    void UpdateUsage(); // 更新车辆使用用途
 
 private slots:
     void on_comboBox_way_currentIndexChanged(int index); // 改变换挡的方式“手动”或者“自动”
@@ -66,6 +67,10 @@ private slots:
     void on_pushButton_0to1_clicked(); // 起步
     void on_pushButton_1to0_clicked(); // 停止
 
+    void on_tabWidget_NW_currentChanged(int index); // 禁止鼠标点击切换Tab
+
+    void on_pushButton_generate_clicked(); // 生成换挡时刻
+    void on_pushButton_confirmCS_clicked(); // 确认换挡时刻
 
 private:
     Ui::ShiftClutchUI *ui;
@@ -77,6 +82,9 @@ private:
 
     void SendMoveCommand(double clutch, double shift1, double shift2, bool run, bool ifboth, bool ifclutch); // 发送移动指令 供挡位离合测试用
     void SendMoveCommandAll(double *values, int *ifABS); // 发送移动指令 供换挡测试用
+
+    int ReadDatas(SysControl::PairData& datas); // 读取曲线数据
+    void PlotCST(SysControl::PairData& data_o); // 绘制曲线和换挡时刻
 
 private:
     SysControl* mySCControl; // 控制逻辑

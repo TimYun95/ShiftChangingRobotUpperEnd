@@ -17,7 +17,7 @@ public:
 
 	void train(const std::string& filename);
 
-    typedef std::vector<std::pair<double, double> > PairData; // pair=<time,speed>
+    typedef std::vector< std::pair<double, double> > PairData; // pair=<time,speed>
     void Init(const PairData& vp_data, const Configuration* conf);
 
     double sgn(double x);

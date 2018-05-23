@@ -20,8 +20,10 @@ void TcpPacketer::UnpacketTcpData(QByteArray *buff, TcpTypes::TcpPacketMsgId_t *
     if(buffSize < MsgHeaderLen){//不足消息头的固定长度
         return;
     }
-    QDataStream inStream(buff, QIODevice::ReadOnly);
+    QByteArray msgHeaderBuff = buff->left(MsgHeaderLen);
+    QDataStream inStream(&msgHeaderBuff, QIODevice::ReadOnly);
     inStream.setByteOrder(QDataStream::BigEndian);
+
     TcpTypes::TcpPacketMsgLen_t msgLen;
     inStream >> msgLen >> *msgId;
 
@@ -29,14 +31,12 @@ void TcpPacketer::UnpacketTcpData(QByteArray *buff, TcpTypes::TcpPacketMsgId_t *
     if(buffSize < msgLen){//数据没有全部接收完成
         return;
     }
-    QByteArray leftByteArray;
-    inStream >> leftByteArray;
 
     //3. 截取msg
-    *msg = leftByteArray.left(msgLen - MsgHeaderLen);
+    *msg = buff->mid(MsgHeaderLen, msgLen - MsgHeaderLen);
 
     //4. 下一条消息的MsgLen...部分继续保存
-    *buff = leftByteArray.mid( msg->size() );
+    *buff = buff->right( buff->size() - msgLen );
 }
 
 void TcpPacketer::PacketTcpPayload(const TcpTypes::TcpPacketMsgId_t msgId, const QByteArray &msg, QByteArray *buff)
@@ -44,11 +44,14 @@ void TcpPacketer::PacketTcpPayload(const TcpTypes::TcpPacketMsgId_t msgId, const
     buff->clear();
 
     //写入msgLen和msgId组成的消息头
-    QDataStream outStream(buff, QIODevice::WriteOnly);
+    QByteArray msgHeaderBuff;
+    QDataStream outStream(&msgHeaderBuff, QIODevice::WriteOnly);
     outStream.setByteOrder(QDataStream::BigEndian);
+
     TcpTypes::TcpPacketMsgLen_t msgLen = MsgHeaderLen + msg.size();
     outStream << msgLen << msgId;
+    buff->append(msgHeaderBuff);
 
     //写入msg
-    outStream << msg;
+    buff->append(msg);
 }

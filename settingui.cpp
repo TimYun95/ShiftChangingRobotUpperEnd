@@ -20,7 +20,8 @@ SettingUI::SettingUI(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::SettingUI),
     ifhaveloggedin(false),
-    haveReadXML(false)
+    haveReadXML(false),
+    haveChangeUsage(false)
 {
     ui->setupUi(this);
 
@@ -129,6 +130,9 @@ void SettingUI::on_pushButton_saveSettings_clicked()
 
     if(Configuration::GetInstance()->SaveToFile()==0){
         QMessageBox::information(this,"提示",QObject::tr("设置保存成功"));
+        RemoveSettings();
+        ShowSettings();
+        haveChangeUsage = true;
     }else{
         QMessageBox::information(this,"提示",QObject::tr("!!!设置保存失败!!!"));
     }

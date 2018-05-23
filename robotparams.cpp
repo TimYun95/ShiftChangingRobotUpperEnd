@@ -60,3 +60,16 @@ double RobotParams::tempVars[10] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 
 bool RobotParams::ifConfirmSC = false; // 是否确认了挡位离合信息
 bool RobotParams::ifConfirmCS = false; // 是否确认了换挡时刻
+
+bool RobotParams::isExaming = false; // 正在测试挡位离合信息
+
+bool RobotParams::switchflag[5] = {false, false, false, false, false}; // 状态切换
+unsigned int RobotParams::NVHcurvestate = 9; //NVH状态下运行曲线标志位
+
+double RobotParams::nvh_P1t = 0; // 目标点1的时间
+double RobotParams::nvh_P1v = 0; // 目标点1的速度
+double RobotParams::nvh_P2t = 0; // 目标点2的时间
+double RobotParams::nvh_P2v = 0; // 目标点2的速度
+
+timeval RobotParams::testingtime[10]; // 测试用时刻计
+int RobotParams::testingtimenum[10] = {0,0,0,0,0,0,0,0,0,0}; // 测试用时刻计数

@@ -26,7 +26,7 @@ AutoDriveRobotApiClient::~AutoDriveRobotApiClient()
 
 void AutoDriveRobotApiClient::Process_PingMsg(URMSG::Rpc_PingMsg_C2S &pingMsg)
 {
-
+    Q_UNUSED(pingMsg);
 }
 
 void AutoDriveRobotApiClient::Process_GetGoHomeResultMsg(URMSG::Rpc_GetGoHomeResultMsg_C2S &gghrMsg)
@@ -52,11 +52,34 @@ void AutoDriveRobotApiClient::Process_GetRobotThetaMsg(URMSG::Rpc_GetRobotThetaM
     for(int i=0; i<grtMsg.robottheta_size(); ++i){
         RobotParams::angleRealTime[i] = grtMsg.robottheta(i);
     }
+
+    int usingnum = 0;
+    timeval time_last = RobotParams::testingtime[usingnum];
+    gettimeofday(&RobotParams::testingtime[usingnum], NULL);
+    double timeduring = (RobotParams::testingtime[usingnum].tv_sec-time_last.tv_sec)*1000.0 + (RobotParams::testingtime[usingnum].tv_usec-time_last.tv_usec)/1000.0;
+    if (timeduring > 60 || timeduring < 50)
+    {
+        double errt;
+        if (RobotParams::testingtimenum[usingnum] == 0)
+        {
+            errt = 0;
+        }
+        else
+        {
+            errt = 54 * RobotParams::testingtimenum[usingnum];
+        }
+        PRINTF(LOG_ERR, "%s: recieve ThetaMsg abnormal, using time %f ms, error time %f.\n", __func__, timeduring, errt);
+        RobotParams::testingtimenum[usingnum] = 0;
+    }
+    else
+    {
+        RobotParams::testingtimenum[usingnum]++;
+    }
 }
 
 void AutoDriveRobotApiClient::Process_GetRobotMatrixMsg(URMSG::Rpc_GetRobotMatrixMsg_C2S &grmMsg)
 {
-
+    Q_UNUSED(grmMsg);
 }
 
 void AutoDriveRobotApiClient::Process_GetStatusStringMsg(URMSG::Rpc_GetStatusStringMsg_C2S &gssMsg)
@@ -67,17 +90,40 @@ void AutoDriveRobotApiClient::Process_GetStatusStringMsg(URMSG::Rpc_GetStatusStr
 
 void AutoDriveRobotApiClient::Process_GetPedalRobotDeviceDataMsg(URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg)
 {
-//    RobotParams::brakeOpenValue = gprddMsg.candatavalues(0);
-//    RobotParams::accOpenValue = gprddMsg.candatavalues(1);
-//    RobotParams::canCarSpeed = gprddMsg.candatavalues(2);
-//    RobotParams::powerMode = gprddMsg.candatavalues(3);
-//    RobotParams::pulseCarSpeed = gprddMsg.pulsedatavalue();
+    RobotParams::brakeOpenValue = gprddMsg.candatavalues(0);
+    RobotParams::accOpenValue = gprddMsg.candatavalues(1);
+    RobotParams::canCarSpeed = gprddMsg.candatavalues(2);
+    RobotParams::powerMode = gprddMsg.candatavalues(3);
+    RobotParams::powerMode = 2;
+    RobotParams::pulseCarSpeed = gprddMsg.pulsedatavalue();
 
-    if ((RobotParams::accOpenValue = RobotParams::angleRealTime[1] - 1)<0) RobotParams::accOpenValue=0;
-    if ((RobotParams::brakeOpenValue = RobotParams::angleRealTime[0] - 1)<0) RobotParams::brakeOpenValue=0;
-    double pos, neg;
-    pos = RobotParams::accOpenValue*0.01;
-    neg = RobotParams::brakeOpenValue*0.01;
-    if ((RobotParams::canCarSpeed += (pos-neg)) < 0) RobotParams::canCarSpeed = 0;
+//    if ((RobotParams::accOpenValue = RobotParams::angleRealTime[1] - 1)<0) RobotParams::accOpenValue=0;
+//    if ((RobotParams::brakeOpenValue = RobotParams::angleRealTime[0] - 1)<0) RobotParams::brakeOpenValue=0;
+//    double pos, neg;
+//    pos = RobotParams::accOpenValue*0.01;
+//    neg = RobotParams::brakeOpenValue*0.01;
+//    if ((RobotParams::canCarSpeed += (pos-neg)) < 0) RobotParams::canCarSpeed = 0;
 
+    int usingnum = 1;
+    timeval time_last = RobotParams::testingtime[usingnum];
+    gettimeofday(&RobotParams::testingtime[usingnum], NULL);
+    double timeduring = (RobotParams::testingtime[usingnum].tv_sec-time_last.tv_sec)*1000.0 + (RobotParams::testingtime[usingnum].tv_usec-time_last.tv_usec)/1000.0;
+    if (timeduring > 60 || timeduring < 50)
+    {
+        double errt;
+        if (RobotParams::testingtimenum[usingnum] == 0)
+        {
+            errt = 0;
+        }
+        else
+        {
+            errt = 54 * RobotParams::testingtimenum[usingnum];
+        }
+        PRINTF(LOG_ERR, "%s: recieve CANMsg abnormal, using time %f ms, error time %f.\n", __func__, timeduring, errt);
+        RobotParams::testingtimenum[usingnum] = 0;
+    }
+    else
+    {
+        RobotParams::testingtimenum[usingnum]++;
+    }
 }

@@ -45,7 +45,7 @@ bool UnifiedRobotApiClientBase::Send_ProtobufMsg(const TcpTypes::TcpPacketMsgId_
     }
 
     if(m_sendQueue.size() > GetSendQueueMaxSize()){
-        qDebug()<< __func__ << "sendQueue is too long!\n";
+        qDebug()<< __func__ << "sendQueue is too long!";
         return false;
     }
 

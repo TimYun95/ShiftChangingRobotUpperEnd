@@ -8,6 +8,9 @@
 class RobotParams
 {
 public:
+    typedef std::vector< std::pair<double, int> > PairData; // pair=<time, aimshiftindex>
+
+public:
     static const unsigned int UIAxisNum; // UI界面支持的轴数
 
     static const unsigned int UITimerMs; // 基准定时器
@@ -47,11 +50,11 @@ public:
     static bool askGoHomeatstart; // 是否已经在程序开始时询问了回原信息
     static unsigned int askGoHomeatstartresult; // 在开始询问回原信息的结果 0--还没问 1--回原了 100--没回原
 
-    typedef std::vector<std::pair<double, int> > PairData; // pair=<time, aimshiftindex>
     static PairData changeshiftlist; // 换挡时刻表
     static int checkshiftlist; // 换挡时刻表的初始index
     static bool changeshiftstart; // 开始换挡标志位
     static bool changeshiftend; // 刚完成换挡
+
     static unsigned int round; // 换挡过程控制轮数1
     static unsigned int round2; // 换挡过程控制轮数2
     static unsigned int changeshiftprocess; // 换挡过程进度控制
@@ -67,6 +70,35 @@ public:
 
     static bool ifConfirmSC; // 是否确认了挡位离合信息
     static bool ifConfirmCS; // 是否确认了换挡时刻
+
+    static bool isExaming; // 正在测试挡位离合信息
+
+    /**
+     * @brief switchflag 切换标志位
+     * 0 ---> 切换到曲线运行前的准备状态
+     * 1 ---> 准备状态下区分等待和执行
+     * 2 ---> NVH状态
+     */
+    static bool switchflag[5];
+
+    /**
+     * @brief NVHcurvestate NVH状态下运行曲线标志位
+     * 0 ---> Moderate optional
+     * 1 ---> Moderate required
+     * 2 ---> Full Pedal
+     * 3 ---> High Gear
+     * 4 ---> Ready to Exit
+     * 9 ---> No State
+     */
+    static unsigned int NVHcurvestate;
+
+    static double nvh_P1t; // 目标点1的时间
+    static double nvh_P1v; // 目标点1的速度
+    static double nvh_P2t; // 目标点2的时间
+    static double nvh_P2v; // 目标点2的速度
+
+    static timeval testingtime[10]; // 测试用时刻计
+    static int testingtimenum[10]; // 测试用时刻计数
 };
 
 #endif // ROBOTPARAMS_H

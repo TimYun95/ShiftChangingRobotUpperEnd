@@ -33,6 +33,7 @@ void UnifiedRobotApiClient::InitClientMsgHandler()
     REGISTER_MSG_HANDLER(URMSG::Id_Rpc_GetRobotThetaMsg_C2S, UnifiedRobotApiClient::On_GetRobotThetaMsg);
     REGISTER_MSG_HANDLER(URMSG::Id_Rpc_GetRobotMatrixMsg_C2S, UnifiedRobotApiClient::On_GetRobotMatrixMsg);
     REGISTER_MSG_HANDLER(URMSG::Id_Rpc_GetStatusStringMsg_C2S, UnifiedRobotApiClient::On_GetStatusStringMsg);
+    REGISTER_MSG_HANDLER(URMSG::Id_Rpc_GetPositionLimitConfMsg_C2S, UnifiedRobotApiClient::On_GetPositionLimitConfMsg);
 
     REGISTER_MSG_HANDLER(URMSG::Id_Pptc_ReceiveEmergencyStopSignalMsg_S2C, UnifiedRobotApiClient::On_ReceiveEmergencyStopSignalMsg);
 }
@@ -205,6 +206,16 @@ void UnifiedRobotApiClient::Process_GetStatusStringMsg(URMSG::Rpc_GetStatusStrin
     }
 }
 
+void UnifiedRobotApiClient::Process_GetPositionLimitConfMsg(URMSG::Rpc_GetPositionLimitConfMsg_C2S &gplcMsg)
+{
+    for(int i=0; i<gplcMsg.positionlimitpositive_size(); ++i){
+        qDebug()<< __func__ << "positionLimitPositive=" << gplcMsg.positionlimitpositive(i);
+    }
+    for(int i=0; i<gplcMsg.positionlimitnegative_size(); ++i){
+        qDebug()<< __func__ << "positionLimitNegative" << gplcMsg.positionlimitnegative(i);
+    }
+}
+
 void UnifiedRobotApiClient::Process_ReceiveEmergencyStopSignalMsg(URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg)
 {
     if(ressMsg.has_isstopsuccess()){
@@ -252,6 +263,14 @@ void UnifiedRobotApiClient::On_GetStatusStringMsg(const std::__cxx11::string &re
     PARSE_PROTOBUF_MSG(requestMsg, gssMsg);
 
     Process_GetStatusStringMsg(gssMsg);
+}
+
+void UnifiedRobotApiClient::On_GetPositionLimitConfMsg(const std::__cxx11::string &requestMsg)
+{
+    URMSG::Rpc_GetPositionLimitConfMsg_C2S gplcMsg;
+    PARSE_PROTOBUF_MSG(requestMsg, gplcMsg);
+
+    Process_GetPositionLimitConfMsg(gplcMsg);
 }
 
 void UnifiedRobotApiClient::On_ReceiveEmergencyStopSignalMsg(const std::__cxx11::string &requestMsg)

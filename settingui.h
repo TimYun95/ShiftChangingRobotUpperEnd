@@ -39,6 +39,7 @@ private:
 
 public:
     bool haveReadXML; // 读取了车型配置文件
+    bool haveChangeUsage; // 更改了使用方式 NEDC/WLTC切换
 };
 
 #endif // SETTINGUI_H

@@ -41,6 +41,16 @@ private slots:
     void on_pushButton_startAction_clicked(); // “曲线运行”按下
     void on_pushButton_saveLoggerFile_clicked(); // “保存日志”按下
 
+    void on_pushButton_nvh_start_clicked(); // NVH开始
+    void on_pushButton_nvh_stop_clicked(); // NVH结束
+    void on_pushButton_nvh_log_clicked(); // NVH曲线日志保存
+    void on_comboBox_nvh_mode_currentIndexChanged(int index); // 切换NVH模式
+    void on_pushButton_confirmaim_clicked(); // 确认目标点
+
+    void on_pushButton_nvh_run_clicked(); // NVH曲线运行
+    void on_pushButton_nvh_softstop_clicked(); // NVH曲线停止
+    void on_pushButton_nvh_slowbrake_clicked(); // NVH曲线停止 缓踩刹车
+
 protected:
     void InitWidgets(); // 初始化界面
     void UpdateWidgets(); // 定时更新界面
