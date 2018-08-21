@@ -7,6 +7,7 @@
 #include <QWidget>
 #include <QKeyEvent>
 #include <QPushButton>
+#include <QThread>
 
 #include "shiftclutch/shiftclutchui.h"
 #include "pedalrobot.h"
@@ -28,8 +29,10 @@ public:
     void LockMutex(); // 加锁
     void UnlockMutex(); // 拆锁
 
-private slots:
+public slots:
     void PedalTimerDone(); // 定时器函数
+
+private slots:
     void SingleAxisPressed(); // 单轴按下
     void SingleAxisReleased(); // 单轴弹起
 
@@ -51,6 +54,21 @@ private slots:
     void on_pushButton_nvh_softstop_clicked(); // NVH曲线停止
     void on_pushButton_nvh_slowbrake_clicked(); // NVH曲线停止 缓踩刹车
 
+    /* <ACD> */
+
+    void on_pushButton_saveModelSelect_clicked();
+    void on_pushButton_refresh_clicked();
+    void on_pushButton_startACD_clicked();
+    void on_pushButton_stopAndLeft_clicked();
+    void on_pushButton_startACDonline_clicked();
+    void on_pushButton_refreshPredef_clicked();
+    void on_tabWidget_currentChanged(int index);
+    void on_pushButton_change_clicked();
+
+    /* </ACD> */
+
+
+
 protected:
     void InitWidgets(); // 初始化界面
     void UpdateWidgets(); // 定时更新界面
@@ -68,6 +86,9 @@ protected:
 
     void RefreshSoftStopFile(); // 更新softStop.txt
     void RefreshOriginFile(); // 更新origin.txt
+
+    bool RefreshNVHFile(const int index); // 更新NVH文件 包括NVHX和NVHX_ARM
+
 protected:
     Ui::PedalRobotUI *ui;
     QTimer *pdTimer; // 定时器 更新数据、状态、控制等
@@ -85,6 +106,8 @@ protected:
 
     bool ifSendGoHome; // 是否发送了回原指令
     unsigned int GoHomeRound; // 回原指令发送失效的界面周期轮数
+
+    QThread *timethread; // 定时器线程
 };
 
 #endif // PEDALROBOTUI_H

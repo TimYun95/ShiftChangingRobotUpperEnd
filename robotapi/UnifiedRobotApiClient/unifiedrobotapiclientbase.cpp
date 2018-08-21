@@ -13,7 +13,7 @@ UnifiedRobotApiClientBase::UnifiedRobotApiClientBase(QObject *parent)
 
 UnifiedRobotApiClientBase::~UnifiedRobotApiClientBase()
 {
-    StopSendTimer();
+
 }
 
 void UnifiedRobotApiClientBase::StartSendTimer(int sendTimerIntervalMs)

@@ -11,7 +11,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = AutoDrivingRobot
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
         mainwindow.cpp \
     pedal/pedalrobot.cpp \
@@ -71,6 +70,8 @@ include(robotapi/UnifiedRobotApiClient/UnifiedRobotApiClient.pri)
 #Specific Robot
 include(robotapi/RobotApiClientType/RobotApiClientTypeDefine.pri)
 include(robotapi/RobotApiClientType/RobotApiClientType.pri)
+include(robotapi/RobotApiClientSyncThreadWrapper/RobotApiClientSyncThreadWrapper.pri)
 
+INCLUDEPATH += $$PWD/robotapi/
 
-
+#DEFINES += ENABLE_TIME_CHECK

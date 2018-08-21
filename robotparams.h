@@ -1,6 +1,7 @@
 #ifndef ROBOTPARAMS_H
 #define ROBOTPARAMS_H
 
+#include <QTime>
 #include <string>
 #include <vector>
 #include <sys/time.h>
@@ -78,8 +79,11 @@ public:
      * 0 ---> 切换到曲线运行前的准备状态
      * 1 ---> 准备状态下区分等待和执行
      * 2 ---> NVH状态
+     * 3 ---> NVH状态 切换到曲线运行前的准备状态
+     * 4 ---> NVH状态 准备状态下区分等待和执行
+     * 5 ---> ACD状态
      */
-    static bool switchflag[5];
+    static bool switchflag[10];
 
     /**
      * @brief NVHcurvestate NVH状态下运行曲线标志位
@@ -92,13 +96,21 @@ public:
      */
     static unsigned int NVHcurvestate;
 
+    static unsigned int NVHcurvestate3state; //NVH状态3下运行状态标志位
+
     static double nvh_P1t; // 目标点1的时间
     static double nvh_P1v; // 目标点1的速度
     static double nvh_P2t; // 目标点2的时间
     static double nvh_P2v; // 目标点2的速度
 
-    static timeval testingtime[10]; // 测试用时刻计
+    static QTime testingTimes[10]; // 测试用时刻计
     static int testingtimenum[10]; // 测试用时刻计数
+
+    static bool readyToOrigin; // 准备执行回原文件
+
+    static bool ifCSACD; // 是否在ACD模式下换挡
+    static bool ifREBA; // 是否在ACD换挡模式下恢复踏板
+    static bool iffromNto1; // 是否从空挡换到1挡
 };
 
 #endif // ROBOTPARAMS_H

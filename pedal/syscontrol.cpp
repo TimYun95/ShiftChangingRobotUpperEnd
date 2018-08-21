@@ -75,231 +75,166 @@ SysControl::~SysControl()
 
 }
 
-void SysControl::train(const std::string& filename) {
-    PRINTF(LOG_DEBUG, "%s: receive file=%s\n",__func__, filename.c_str());
-    if(QMessageBox::question(NULL,"inform",QString("确定开始学习?"), QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel){
-        return;
+//修改5/////////////////////////////////////////////////////////////////////
+//控制速度[0]  ACD模式2 predefined模式 速度控制 更新vpdata数据
+void SysControl::vpdataCarSpeed2() {
+    double deltaSpeed=sysReadCarSpeed-sysSpeedStart;
+    double deltaTen=(deltaSpeed)/(fabs(deltaSpeed))*10.0;
+
+    double acc=1.5;//加速度的定义变量，即10千米用1.5秒到达，折算加速度是6.66>6(wltc最大加速度)
+    switch(sysCarSelect)
+    {
+    case 0:
+        acc=2;
+        break;
+    case 1:
+        acc=1.5;
+        break;
+    case 2:
+        acc=1;
+        break;
+    default:
+        acc=2;
     }
-    ifstream dataFile;
-    ofstream outFile;
-    dataFile.open(filename, std::fstream::binary);
-    if(dataFile.bad()){
-        QMessageBox::information(NULL,"inform",QString("无法打开学习样本文件\n")+filename.c_str());
-        return;
+    //std::cout<<" -system-acc-  "<<acc<<std::endl;
+
+    double timeStart=0;
+    if(fabs(deltaSpeed)<10)
+    {
+        vp_data.clear();
+        vp_data.push_back( std::make_pair(0,0) );
+        vp_data.push_back( std::make_pair(timeStart+1,sysSpeedStart) );
+        vp_data.push_back( std::make_pair(timeStart+1+acc,sysReadCarSpeed) );
+        vp_data.push_back( std::make_pair(99999,sysReadCarSpeed) );
     }
-    vector<double> in,out1,out2,aim;
-    double d[10];
-    while (!dataFile.eof()) {
-        dataFile >> d[0] >> d[1] >> d[2] >> d[3] >> d[4] >> d[5]>>d[6]>>d[7]>>d[8]>>d[9];
-        aim.push_back(d[9]);
-        in.push_back(d[9]-d[8]);
-        out1.push_back(d[7]);
-        out2.push_back(d[6]);
+
+    if(fabs(deltaSpeed)>=10)
+    {
+        double count=floor(fabs(deltaSpeed)/10.0)+1;
+        vp_data.clear();
+
+        vp_data.push_back( std::make_pair(0,0) );
+        vp_data.push_back( std::make_pair(timeStart+1,sysSpeedStart) );
+
+        for(int i=1;i<count;i++)
+        {
+            vp_data.push_back( std::make_pair(timeStart+1+acc*i,sysSpeedStart+deltaTen*i) );
+        }
+
+        vp_data.push_back( std::make_pair(timeStart+1+acc*count,sysReadCarSpeed) );
+        vp_data.push_back( std::make_pair(99999,sysReadCarSpeed) );
     }
-    dataFile.close();
-    double cos1, cos2, cos3, mtap, e, e1, e2, y, ym;
-    double nita = 1;
-    while (1) {
-        cos1 = 0;
-        cos2 = 0;
-        cos3 = 0;
-        mtap = 0;
-        for(size_t i = 2; i < in.size(); i++) {
-            if (aim[i] - aim[i - 1] >= 0) {
-                e = in[i];
-                e1 = in[i - 1];
-                e2 = in[i - 2];
-                y = out1[i]-out1[i-1];
-                ym = pid[0][0] * e + pid[0][1] * e1 + pid[0][2] * e2;
-                cos1 += (ym - y)*e;
-                cos2 += (ym - y)*e1;
-                cos3 += (ym - y)*e2;
-                mtap += 1;
+}
+
+//修改12/////////////////////////////////////////////////////////////////////
+//控制速度[0]  ACD模式1 online模式 速度控制 更新vpdata数据
+void SysControl::vpdataCarSpeed1() {
+    double deltaSpeed=sysReadCarSpeed-sysSpeedStart;
+    double deltaTen=(deltaSpeed)/(fabs(deltaSpeed))*10.0;
+
+    double acc=1.5;//加速度的定义变量，即10千米用1.5秒到达，折算加速度是6.66>6(wltc最大加速度)
+    switch(sysCarSelect)
+    {
+    case 0:
+        acc=2;
+        break;
+    case 1:
+        acc=1.5;
+        break;
+    case 2:
+        acc=1;
+        break;
+    default:
+        acc=2;
+    }
+    //std::cout<<" -system-acc-  "<<acc<<std::endl;
+
+    //修改13/////////////////////////////////////////////////////////////////////
+    double timeStart=0;
+    timeStart=sysTimeStart;
+
+    //因为本版本online对于elapsedSeconds强制做归零修改，所以下面这句 不用注释掉
+    timeStart=0;//因为每次刷新时elapsedSeconds都归0.且在pedalrobotui里，timeStart的赋值在elapsedSeconds归0之前
+
+    if(timeStart==0)
+    {
+        if(fabs(deltaSpeed)<10)
+        {
+            vp_data.clear();
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart+1,sysSpeedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1+acc,sysReadCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,sysReadCarSpeed) );
+        }
+
+        if(fabs(deltaSpeed)>=10)
+        {
+            double count=floor(fabs(deltaSpeed)/10.0)+1;
+            vp_data.clear();
+
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart+1,sysSpeedStart) );
+
+            for(int i=1;i<count;i++)
+            {
+                vp_data.push_back( std::make_pair(timeStart+1+acc*i,sysSpeedStart+deltaTen*i) );
             }
-        }
-        pid[0][0] -= nita*cos1 / mtap;
-        pid[0][1] -= nita*cos2 / mtap;
-        pid[0][2] -= nita*cos3 / mtap;
-        if(fabs(cos1) + fabs(cos2) + fabs(cos3) < 0.0001){
-            break;
+
+            vp_data.push_back( std::make_pair(timeStart+1+acc*count,sysReadCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,sysReadCarSpeed) );
         }
     }
-    while (1) {
-        cos1 = 0;
-        cos2 = 0;
-        cos3 = 0;
-        mtap = 0;
-        for(size_t i =2; i < in.size(); i++) {
-            if (aim[i] - aim[i - 1] < 0) {
-                e = in[i];
-                e1 = in[i - 1];
-                e2 = in[i - 2];
-                y = out2[i]-out2[i-1];
-                ym = pid[1][0] * e + pid[1][1] * e1 + pid[1][2] * e2;
-                cos1 += (ym - y)*e;
-                cos2 += (ym - y)*e1;
-                cos3 += (ym - y)*e2;
-                mtap += 1;
+
+    if(timeStart!=0)
+    {
+        if(fabs(deltaSpeed)<10)
+        {
+            vp_data.clear();
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart,sysSpeedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1,sysSpeedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1+acc,sysReadCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,sysReadCarSpeed) );
+        }
+
+        if(fabs(deltaSpeed)>=10)
+        {
+            double count=floor(fabs(deltaSpeed)/10.0)+1;
+            vp_data.clear();
+
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart,sysSpeedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1,sysSpeedStart) );
+
+            for(int i=1;i<count;i++)
+            {
+                vp_data.push_back( std::make_pair(timeStart+1+acc*i,sysSpeedStart+deltaTen*i) );
             }
-        }
-        pid[1][0] -= nita*cos1 / mtap;
-        pid[1][1] -= nita*cos2 / mtap;
-        pid[1][2] -= nita*cos3 / mtap;
-        if(fabs(cos1) + fabs(cos2) + fabs(cos3) < 0.0001){
-            break;
+
+            vp_data.push_back( std::make_pair(timeStart+1+acc*count,sysReadCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,sysReadCarSpeed) );
         }
     }
+    //修改13/////////////////////////////////////////////////////////////////////
 
-    outFile.open("parameters", std::fstream::binary);
-    for(int i=0; i<2; ++i){
-        for(int j=0; j<3; ++j){
-            outFile<<pid[i][j];
-        }
-        outFile<<"\n";
-    }
-    outFile.close();
-
-    isTrain = 1;
 }
 
-void SysControl::onlineTraining() {
-    double xitep = 1;
-    double xitei = 0.00000;
-    double xited = 0.1;
-    double K = 25;
-    double dw1=0;
-    double dw2=0;
-    double dw3=0;
-    double x1=error[2] - error[1];
-    double x2=error[2];
-    double x3=error[2] - 2*error[1]+error[0];
-	
-    /*
-    w1 = w1_1 + xitep*accOpen*(error[2] - error[1]);
-    w2 = w2_1 + xitei*accOpen*(error[2] );
-    w3 = w3_1 + xited*accOpen*(error[2] - 2*error[1]+error[0]);
-    */
-
-    dw1=xitep*sqrt(accOpen)*error[2]*x1;
-    dw2=xitei*sqrt(accOpen)*error[2]*x2;
-    dw3=xited*sqrt(accOpen)*error[2]*x3;
-    if(dw1>0.1) dw1=0.1;
-    else if(dw1<-0.1) dw1=-0.1;
-    if(dw3>0.01) dw3=0.01;
-    else if(dw3<-0.01) dw3=-0.01;
-    //dw1=std::max(dw1,-0.002);
-    //dw1=std::min(dw1,0.002);
-    //dw3= std::max(dw3, -0.001);
-    //dw3= std::min(dw3, 0.001);
-    w1 = w1_1 + dw1;
-    w2 = w2_1 + dw2;
-    w3 = w3_1 + dw3;
-    //K=(60-40)*(fabs(error[2])-0.0)*(fabs(error[2])-0.0)/((1.5-0.0)*(1.5-0.0))+40;
-	
-    /*
-    //调1
-    Tv_2=Tv_1;//初值为1
-    K_2=K_1;//初值为K
-    w1 = w1_1 + xitep*sqrt(accOpen)*error[2]*(2*error[2] - error[1]);
-    w2 = w2_1 + xitei*sqrt(accOpen)*error[2]*(2*error[2] - error[1]);
-    w3 = w3_1 + xited*sqrt(accOpen)*error[2]*(2*error[2] - error[1]);
-    if(error[2]*error[1]>0) K_1=K_2+0.02*K_2/Tv_2;
-    else K_1=0.75*K_2;
-    Tv_1=Tv_2+0.05*sgn(fabs(error[2] - error[1])-Tv_2*fabs(error[2] - 2*error[1]+error[0]));
-    //调2
-    dw1=xitep*sqrt(accOpen)*error[2]*x1;
-    dw2=xitei*sqrt(accOpen)*error[2]*x2;
-    dw3=xited*sqrt(accOpen)*error[2]*x3;
-    w1 = w1_1 + dw1;
-    w2 = w2_1 + dw2;
-    w3 = w3_1 + dw3;
-    if(fabs(error[2])>1.5) K=20;
-    else if(fabs(error[2])<0.5) K=5;
-    else K=(20-5)*(fabse(error[2])-0.5)*(fabse(error[2])-0.5)/((1.5-0.5)*(1.5-0.5))+5；
-    //二次型
-    double K1=10;
-    double K2=1;
-    double K3=0.1;
-    wtotal=w1*x1+w2*x2+w3*x3;
-    dw1=xitep*K1*(K2*error[2]*x1-K3*wtotal*x1);
-    dw2=xitei*K1*(K2*error[2]*x2-K3*wtotal*x2);
-    dw3=xited*K1*(K2*error[2]*x3-K3*wtotal*x3);
-    if(dw1>1) dw1=1;
-    else if(dw1<-1) dw1=-1;
-    if(dw3>0.01) dw3=0.01;
-    else if(dw3<-0.01) dw3=-0.01;
-    w1 = w1_1 + dw1;
-    w2 = w2_1 + dw2;
-    w3 = w3_1 + dw3;
-    */
-
-    w1 = std::max(w1, 0.0);
-    w2 = std::max(w2, 0.0);
-    w3 = std::max(w3, 0.0);
-    wtotal = fabs(w1) + fabs(w2) + fabs(w3);
-    wtotal=std::max(wtotal,1.00);
-    pid[0][0] =K* w1 / wtotal;
-    pid[0][1] =K* w2 / wtotal;
-    pid[0][2] =K* w3 / wtotal;
-    qDebug()<<wtotal;
-    w1_1 = w1;
-    w2_1 = w2;
-    w3_1 = w3;
-    isTrain=1;
-}
-
-void SysControl::onlineTraining2(){
-    double xitep = 5;
-    double xitei = 0.00000;
-    double xited = 0.01;
-    double xite=1;
-    double alfa=0.01;
-    Q_UNUSED(alfa);
-	double x1=error[2] - error[1];
-	double x2=error[2];
-    Q_UNUSED(x2);
-	double x3=error[2] - 2*error[1]+error[0];
-    Q_UNUSED(x3);
-	double rbfinput[3];
-    rbfinput[0]=conAcc[1];
-	rbfinput[1]=speed[3];
-	rbfinput[2]=speed[2];
-	double hsum[10];
-	double ym=0;
-	double yu=0;
-	for(int i=0;i<10;i++){
-		hsum[i]=0;
-		for(int j=0;j<3;j++){
-			hsum[i]+=(rbfinput[j]-cj[i][j])*(rbfinput[j]-cj[i][j]);
-		}
-		ym+=wj[i]*std::exp(-hsum[i]/(2*bj[i]*bj[i]));
-	}
-	for(int i=0;i<10;i++){
-		wj[i]+=xite*(speed[3]-ym)*std::exp(-hsum[i]/(2*bj[i]*bj[i]));//未加入动量因子alfa*（wj_1-wj_2);
-		bj[i]+=xite*(speed[3]-ym)*wj[i]*std::exp(-hsum[i]/(2*bj[i]*bj[i]))*hsum[i]/(bj[i]*bj[i]*bj[i]);
-		for(int j=0;j<3;j++){
-			cj[i][j]+=xite*(speed[3]-ym)*wj[i]*std::exp(-hsum[i]/(2*bj[i]*bj[i]))*(rbfinput[i]-cj[i][j])/(bj[i]*bj[i]);
-		}
-	}
-	for(int i=0;i<10;i++){
-		yu+=wj[i]*std::exp(-hsum[i]/(2*bj[i]*bj[i]))*(cj[i][0]-rbfinput[0])/(bj[i]*bj[i]);
-	}
-    if(yu>2) yu=2;
-    else if(yu<-2) yu=-2;
-    printf("yu=%f==%f\n",yu,x1);
-    w1+=xitep*error[2]*yu*x1;
-    w2+=xitei*error[2]*yu*x1;
-    w3+=xited*error[2]*yu*x1;
-    pid[0][0]=w1;
-    pid[0][1]=w2;
-    pid[0][2]=w3;
-	isTrain=1;
-}
-
-double SysControl::slidingAdjustion(){
-    double s=5*error[2]+dverror[2];
-    return 0.1*error[2]+2*sgn(s);
-}
+//修改12/////////////////////////////////////////////////////////////////////
+/*
+        std::cout<<vp_data.size()<<"   "<<elapsedSeconds<<std::endl;
+        std::cout<<vp_data[0].first<<"   "<<vp_data[0].second<<std::endl;
+        std::cout<<vp_data[1].first<<"   "<<vp_data[1].second<<std::endl;
+        std::cout<<vp_data[2].first<<"   "<<vp_data[2].second<<std::endl;
+        std::cout<<vp_data[3].first<<"   "<<vp_data[3].second<<std::endl;
+        std::cout<<vp_data[4].first<<"   "<<vp_data[4].second<<std::endl;
+        std::cout<<vp_data[5].first<<"   "<<vp_data[5].second<<std::endl;
+        std::cout<<vp_data[6].first<<"   "<<vp_data[6].second<<std::endl;
+        std::cout<<vp_data[7].first<<"   "<<vp_data[7].second<<std::endl;
+        std::cout<<vp_data[8].first<<"   "<<vp_data[8].second<<std::endl;
+        std::cout<<vp_data[9].first<<"   "<<vp_data[9].second<<std::endl;
+        std::cout<<vp_data[10].first<<"   "<<vp_data[10].second<<std::endl;
+*/
+//修改5/////////////////////////////////////////////////////////////////////
 
 void SysControl::Init(const PairData& data, const Configuration* conf) {
     maxAccRefresh = 0;
@@ -309,6 +244,49 @@ void SysControl::Init(const PairData& data, const Configuration* conf) {
     isTrain = 0;
     border = 1.2;
 	
+    //修改5/////////////////////////////////////////////////////////////////////
+
+    //修改21////////////////////////////////////////////////////////////////////
+    if(systemModelSelect==2 || systemModelSelect==1){//ACD的predef模式和online模式
+        //修改21////////////////////////////////////////////////////////////////////
+
+        vp_data.clear();
+        //double vpSize=vp_data.size();//这样显示不对，始终0
+        //std::cout<<vpSize<<std::endl;
+
+        //vpdataSize=vp_data.size();//这样显示不对，始终0
+        std::cout<<vp_data.size()<<std::endl;
+
+        vp_data.push_back( std::make_pair(0,0) );
+        vp_data.push_back( std::make_pair(1,0) );
+        vp_data.push_back( std::make_pair(99990,0) );
+        vp_data.push_back( std::make_pair(99999,0) );
+        std::cout<<vp_data.size()<<" -system-   "<<vpdataSize<<"   "<<"   "<<vp_data[1].first<<"   "<<vp_data[1].second<<"   "<<vp_data[vpdataSize-1].second<<std::endl;
+
+        /*
+            vp_data.push_back( std::make_pair(1,2) );
+            vp_data.push_back( std::make_pair(999999,9) );
+
+
+            vpdataSize=vp_data.size();
+            std::cout<<vpdataSize<<std::endl;
+            std::cout<<"vp_data.size: "<<vp_data.size()<<"   "<<"   "<<vp_data[0].first<<"   "<<vp_data[vpdataSize-1].second<<std::endl;
+
+            vector<pair<int,int> > ::iterator iter;
+            //iter=vp_data.begin();
+            vp_data.erase(vp_data.end());
+            //double a=(*iter).first;
+
+            vpdataSize=vp_data.size();
+            std::cout<<vpdataSize<<std::endl;
+
+
+            std::cout<<"vp_data.size: "<<vp_data.size()<<"   "<<"   "<<vp_data[0].first<<"   "<<vp_data[vpdataSize-1].second<<std::endl;
+            //std::cout<<vp_data[5].second<<"   "<<vpSize-1<<std::endl;
+            */
+    }
+    //修改5/////////////////////////////////////////////////////////////////////
+
     speedmethod = conf->getSpeedMethod;
 
     if(speedmethod==2){ // CAN
@@ -342,20 +320,6 @@ void SysControl::Init(const PairData& data, const Configuration* conf) {
     pid[0][0]= 0.8;
     pid[0][1]= 0.1;
     pid[0][2]= 0.1;
-    w1 = 10*pid[0][0];
-    w2 = 10*pid[0][1]/1000;
-    w3 = 10*pid[0][2];
-	w1_1 = w1;
-	w2_1 = w2;
-	w3_1 = w3;
-	
-	for(int i=0;i<10;i++){
-        bj[i]=10;
-        wj[i]=0.1;
-		for(int j=0;j<3;j++){
-			cj[i][j]=0;
-		}
-	}
 }
 
 void SysControl::getError() {
@@ -380,15 +344,6 @@ size_t SysControl::getIndex(double t) {
     return i;//当前在i-1到i段
 }
 
-double SysControl::getNextLineDuration()
-{
-    size_t i = indexNow;//当前时间在i-1到i段
-    if(i >= vp_data.size()-1){//最后一段
-        return 0.0;
-    }
-    return vp_data[i+1].first-vp_data[i].first;//i到i+1段的时间
-}
-
 void SysControl::getSpeedDv(double t,double speedNow) {
     size_t i = getIndex(t);
     indexNow = i;
@@ -405,6 +360,7 @@ void SysControl::getSpeedDv(double t,double speedNow) {
     dv[2] = (speed[3] - speed[2]) / timeGap;
 
     i = getIndex(t + 0.0*speed[3]/60);
+    if (i==0) i=1;
     lineDv[0] = lineDv[1];
     lineDv[1] = lineDv[2];
     lineDv[2] = (vp_data[i].second - vp_data[i - 1].second) / (vp_data[i].first - vp_data[i - 1].first);
@@ -414,6 +370,7 @@ void SysControl::getSpeedDv(double t,double speedNow) {
     lineSpeed[3] = (t - vp_data[i - 1].first)*lineDv[2] + vp_data[i - 1].second;
 
     i = getIndex(t+1);
+    if (i==0) i=1;
     if(i<vp_data.size()){
         linefuDv = (vp_data[i].second - vp_data[i - 1].second) / (vp_data[i].first - vp_data[i - 1].first);
         linefuSpeed=vp_data[i].second;
@@ -422,6 +379,7 @@ void SysControl::getSpeedDv(double t,double speedNow) {
         linefuSpeed=0;
     }
     i = getIndex(t+startupTime);
+    if (i==0) i=1;
     if(i<vp_data.size()){
         linefuDv2 = (vp_data[i].second - vp_data[i - 1].second) / (vp_data[i].first - vp_data[i - 1].first);
         linefuSpeed2=vp_data[i].second;
@@ -430,6 +388,7 @@ void SysControl::getSpeedDv(double t,double speedNow) {
         linefuSpeed2=0;
     }
 	i = getIndex(t+startupTimeW);
+    if (i==0) i=1;
     if(i<vp_data.size()){
         linefuDv3 = (vp_data[i].second - vp_data[i - 1].second) / (vp_data[i].first - vp_data[i - 1].first);
         linefuSpeed3=vp_data[i].second;
@@ -438,6 +397,7 @@ void SysControl::getSpeedDv(double t,double speedNow) {
         linefuSpeed3=0;
     }
     i = getIndex(t+3);
+    if (i==0) i=1;
     if(i<vp_data.size()){
         linefuDvLong = (vp_data[i].second - vp_data[i - 1].second) / (vp_data[i].first - vp_data[i - 1].first);
         linefuSpeedLong=vp_data[i].second;
@@ -445,10 +405,21 @@ void SysControl::getSpeedDv(double t,double speedNow) {
         linefuDvLong=0;
         linefuSpeedLong=0;
     }
+    i = getIndex(t+2);
+    if (i==0) i=1;
+    if(i<vp_data.size()){
+        linefuDvSubLong = (vp_data[i].second - vp_data[i - 1].second) / (vp_data[i].first - vp_data[i - 1].first);
+        linefuSpeedSubLong=vp_data[i].second;
+    }else{
+        linefuDvSubLong=0;
+        linefuSpeedSubLong=0;
+    }
     i=getIndex(t-1);
+    if (i==0) i=1;
     linelastSpeed=vp_data[i].second;   //无插值
     linelastDv = (vp_data[i].second - vp_data[i - 1].second) / (vp_data[i].first - vp_data[i - 1].first);
     i=getIndex(t-3);
+    if (i==0) i=1;
     linelastSpeed3=vp_data[i].second;
 }
 
@@ -575,6 +546,128 @@ void SysControl::calCon(double time, double speedNow, double brakeOpen0, double 
 
     isTrain=0;
     //PRINTF(LOG_DEBUG, "%f+%f\n",maxAccRecorder,accOpen);
+}
+
+void SysControl::calConN(double time, double speedNow, double brakeOpen0, double accOpen0)
+{
+    //std::cout<<"time="<<time<<std::endl;
+
+    //UNUSED(accOpen);
+    timeGap = time - lastControlTime;   //求两次控制间的时间间隔
+    //timeGap *= 1000.0;//ms
+    //PRINTF(LOG_DEBUG, "timegap=%f\n",timeGap);   //应当是14ms
+    lastControlTime = time;
+    brakeOpen=brakeOpen0;
+    accOpen=accOpen0;
+    getSpeedDv(time,speedNow);
+//    printf("%f  %f  %f %f  %f  %f %f  %f\n",error[2],accOpen,speed[3],conAcc[1],conBrake[1],timeGap,maxAccRecorder,time);
+
+    getError();
+    if (lineSpeed[3] == 0) {
+        conAcc[0] = accOpen;
+        conBrake[0] = brakeOpen;
+    }
+    //double nextTime = getNextLineDuration();
+    //PRINTF(LOG_DEBUG, "%s: duration=%f\n", __func__, nextTime);
+    //---------------------------------------------------------------------//
+    if(lineSpeed[3]==-5||lineDv[2]>=100){   //free测试用
+        conAcc[1]=-100;
+    }
+
+    //---------------------------------------------------------------------//
+    else {
+        if(speed[3]>=30&&error[2]<-2.2){  //1 检测上界误差，过大则切换刹车控制.2.3 2.5
+            conAcc[1]=-100;
+        }
+        //else if(speed[3]<30&&error[2]<-2){
+        //    conAcc[1]=-100;
+        //    conBrake[1]=changeBrakeW();
+        //}
+        else if(lineDv[2]>0&&(linefuDv<0)&&lineSpeed[3]<50){
+            if(error[2]<0){
+                conAcc[1]=-100;
+            }
+            else {//此处存疑
+                conAcc[1]=-wltc_degree_toLow_fix*4;
+            }
+        }
+        else if ((linefuDv<0.6*lineDv[2])&&lineDv[2]>0){  //3 检测斜率骤降，记录maxAcc并减油门
+            if (maxAccRefresh == 0||(time>maxAcctimer+2.0)) {   //Refresh标注是否需要更新maxAcc
+                maxAccRefresh = 1;
+                maxAcctimer=time;
+                maxAccRecorder = accOpen*(0.18+0.3+speed[3]/300.0);	//拐点参数1：accRecorder的比例系数
+            }
+            if((error[2]<0)||((error[2]<1||(error[2]>2&&error[2]<2.5))&&lineSpeed[3]<40)&&linefuDv>0&&accOpen>maxAccRecorder) conAcc[1]=-wltc_degree_toLow_fix*4;
+            else if((error[2]<0||error[2]>2)&&linefuDv<0&&accOpen>0.5*maxAccRecorder) conAcc[1]=-wltc_degree_toLow_fix*6;  //std::max(changeAcc(),0.0);
+            else conAcc[1]=changeAccN();
+            sysControlMethod=-1;
+        }
+        else if (lineDv[2]<=0){ //4 检测减速到加速拐点，附加特定加油量
+            if(error[2]>-1.2){//1.5 1.2     高速段 0.4 0.2
+                conAcc[1]=changeAccN() + startupTimeW*(linefuSpeedSubLong-lineDv[2])*sqrt(speed[3]);
+                sysControlMethod=-90;
+            }
+            else
+            {
+                conAcc[1]=changeAccN();
+                sysControlMethod=-95;
+            }
+        }
+        else {
+            conAcc[1] = changeAccN();
+            sysControlMethod=-80;
+        }
+        return;
+    }
+    conAcc[0] = conAcc[0] + conAcc[1];
+    if (conAcc[0] < 0)conAcc[0] = 0;
+    conBrake[0] = conBrake[0] + conBrake[1];//
+
+    isTrain=0;
+    //PRINTF(LOG_DEBUG, "%f+%f\n",maxAccRecorder,accOpen);
+}
+
+double SysControl::changeAccN() {
+    pidA[0][0]=accpidfixW*2;
+    pidA[0][1]=accpidfixW*2;
+    pidA[0][2]=accpidfixW*0.1;
+    isTrain=1;
+    if (isTrain == 1) {
+        //测试用con1，屏蔽来自设置信号
+        //double con1=1*5 * (error[2] - error[1]) + 4*0.2 * error[2] + 0.1 * (error[2] - 2 * error[1] + error[0]);
+
+        //正常运行con1
+        double con1=borderfixW*5 * (error[2] - error[1]) + borderfixW*0.2 * error[2] + 0.1 * (error[2] - 2 * error[1] + error[0]);
+        double con2=0.5*con1;
+        Q_UNUSED(con2);
+        //con1=slidingAdjustion();
+
+        if(lineDv[2]==0){
+            if(error[2]<-1.0||error[2]>1.0){//改动2：原1.0
+                return con1;
+            }
+            else{
+                sysControlMethod=3;
+                return  pidA[0][0] * (dverror[2] - dverror[1]) + pidA[0][1] * dverror[2] + pidA[0][2] * (dverror[2] - 2 * dverror[1] + dverror[0]);
+            }
+        }
+        else{
+            double lim = 1.5;
+            if(error[2]<-lim||error[2]>lim){//改动3：原0.5 到 1.0 到 1.5(wltc)
+                sysControlMethod=1;
+                if(error[2]<0) return con1;
+                else if(error[2]>0) return con1;
+            }
+            else{
+                sysControlMethod=2;
+                return  pidA[0][0] * (dverror[2] - dverror[1]) + pidA[0][1] * dverror[2] + pidA[0][2] * (dverror[2] - 2 * dverror[1] + dverror[0]);
+
+                //return pid[0][0] * (error[2] - error[1]) + pid[0][1] * error[2] + pid[0][2] * (error[2] - 2 * error[1] + error[0]);
+            }
+        }
+    }
+    PRINTF(LOG_DEBUG, "%s: this should never be reached!\n",__func__);
+    return 0.0;
 }
 
 void SysControl::calConW(double time, double speedNow, double brakeOpen0, double accOpen0)
@@ -733,7 +826,6 @@ void SysControl::calConW(double time, double speedNow, double brakeOpen0, double
     //PRINTF(LOG_DEBUG, "%f+%f\n",maxAccRecorder,accOpen);
 }
 
-
 double SysControl::changeAcc() {
     pidA[0][0]= accpidfix*2;
     pidA[0][1]= accpidfix*2;
@@ -765,7 +857,6 @@ double SysControl::changeAcc() {
             }
             else{
                 sysControlMethod=2;
-                onlineTraining();
                 return  pidA[0][0] * (dverror[2] - dverror[1]) + pidA[0][1] * dverror[2] + pidA[0][2] * (dverror[2] - 2 * dverror[1] + dverror[0]);
 
                 //return pid[0][0] * (error[2] - error[1]) + pid[0][1] * error[2] + pid[0][2] * (error[2] - 2 * error[1] + error[0]);
@@ -851,7 +942,6 @@ double SysControl::changeAccW() {
             }
             else{
                 sysControlMethod=2;
-                onlineTraining();
                 return  pidA[0][0] * (dverror[2] - dverror[1]) + pidA[0][1] * dverror[2] + pidA[0][2] * (dverror[2] - 2 * dverror[1] + dverror[0]);
 
                 //return pid[0][0] * (error[2] - error[1]) + pid[0][1] * error[2] + pid[0][2] * (error[2] - 2 * error[1] + error[0]);
@@ -860,16 +950,6 @@ double SysControl::changeAccW() {
     }
     PRINTF(LOG_DEBUG, "%s: this should never be reached!\n",__func__);
     return 0.0;
-}
-
-double SysControl::changeHoldon(){
-	if(error[2]<-1.5||error[2]>1.5||(error[2]<-0.5&&dverror[2]<=0)||(error[2]>0.5&&dverror[2]>=0)){
-            sysControlMethod=1;
-            return 25 * (error[2] - error[1]) + 0.4 * error[2] + 0.1 * (error[2] - 2 * error[1] + error[0]);
-    }
-    else {
-		return  pidA[0][0] * (dverror[2] - dverror[1]) + pidA[0][1] * dverror[2] + pidA[0][2] * (dverror[2] - 2 * dverror[1] + dverror[0]);
-	}
 }
 
 double SysControl::changeBrake() {

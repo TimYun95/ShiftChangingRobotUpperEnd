@@ -17,7 +17,7 @@ BaseTcpClient::BaseTcpClient(QObject *parent)
 
 BaseTcpClient::~BaseTcpClient()
 {
-    DisconnectFromServer();
+
 }
 
 QAbstractSocket::SocketState BaseTcpClient::GetSocketState()

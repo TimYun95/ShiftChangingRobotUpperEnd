@@ -3,7 +3,7 @@
 PatacPedalRobotApiClient::PatacPedalRobotApiClient(QObject *parent)
     : UnifiedRobotApiClient(parent)
 {
-
+    qRegisterMetaType<URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S>( "URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S" );
 }
 
 PatacPedalRobotApiClient::~PatacPedalRobotApiClient()
@@ -53,8 +53,12 @@ bool PatacPedalRobotApiClient::Send_GetPedalRobotDeviceDataMsg()
     return Send_ProtobufMsg(URMSG::Id_Rpc_GetPedalRobotDeviceDataMsg_C2S, gprddMsg);
 }
 
-void PatacPedalRobotApiClient::Process_GetPedalRobotDeviceDataMsg(URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg)
+void PatacPedalRobotApiClient::Process_GetPedalRobotDeviceDataMsg(const URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg)
 {
+    if(!GetEnableRpcMsgDebugFlag()){
+        return;
+    }
+
     for(int i=0; i<gprddMsg.candatavalues_size(); ++i){
         qDebug()<< __func__ << "value=" << gprddMsg.candatavalues(i);
     }
@@ -69,4 +73,6 @@ void PatacPedalRobotApiClient::On_GetPedalRobotDeviceDataMsg(const std::__cxx11:
     PARSE_PROTOBUF_MSG(requestMsg, gprddmsg);
 
     Process_GetPedalRobotDeviceDataMsg(gprddmsg);
+    emit SignalProcess_GetPedalRobotDeviceDataMsg(gprddmsg);
+    ReleaseThreadSyncSemaphore();
 }

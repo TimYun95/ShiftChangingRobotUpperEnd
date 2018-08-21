@@ -64,6 +64,11 @@ void PedalRobot::SoftStop()
     RobotParams::switchflag[2] = false;
     RobotParams::switchflag[3] = false;
     RobotParams::switchflag[4] = false;
+    RobotParams::switchflag[5] = false;
+    RobotParams::switchflag[6] = false;
+    RobotParams::switchflag[7] = false;
+    RobotParams::switchflag[8] = false;
+    RobotParams::switchflag[9] = false;
     RobotParams::isExaming = false;
     PRINTF(LOG_DEBUG, "%s: ...\n",__func__);
 
@@ -161,6 +166,64 @@ bool PedalRobot::SelectSpeedCurve(const bool selectFile)
     }
 }
 
+bool PedalRobot::SelectSpeedCurveACD(const bool selectFile)
+{
+    int ret = 0;
+
+    ret = QMessageBox::information(
+                NULL,"提示", QString(curveFilePath.c_str()) + QObject::tr("请先发动车辆!\n点击确认车辆已发动!"),
+                QObject::tr("确认"),QObject::tr("取消"));
+
+    if(ret == 1){
+        PRINTF(LOG_DEBUG, "%s...cancel\n", __func__);
+        return false;
+    }
+    else if (ret == 0)
+    {
+        if (RobotParams::powerMode != PedalRobot::Run)
+        {
+            QMessageBox::information(NULL,"警告", QString("检测到车辆并没有发动，请重试！"));
+            PRINTF(LOG_WARNING, "%s: car is checked not lauched.\n", __func__);
+            return false;
+        }
+        else
+        {
+            // 选择曲线文件
+            if(selectFile){
+                QString str = QFileDialog::getOpenFileName(NULL, QString("请选择实验曲线文件"), (Configuration::mainFolder+"/stdand_files/").c_str());
+                if(str==""){
+                    return false;
+                }else if( !QFile::exists(str) ) {
+                    QMessageBox::information(NULL, "Warning", QObject::tr("所选定的文件不存在，请重新选择！")) ;
+                    return false;
+                }
+                curveFilePath = str.toStdString();
+                conf->defaultFile = curveFilePath+"_ARM";
+            }else{//使用上一次的文件
+                size_t index = conf->defaultFile.find("_ARM");
+                std::string str = conf->defaultFile;
+                str.resize(index);//去除_ARM的尾部
+                curveFilePath = str;
+            }
+            if( !QFile::exists(conf->defaultFile.c_str()) ){
+                QMessageBox::information(NULL, "Warning", QObject::tr("用于机器人控制的文件不存在:\n") + conf->defaultFile.c_str());
+                return false;
+            }
+
+            RobotParams::round = 1;
+            RobotParams::round2 = 1;
+
+            conf->SaveToFile();
+            return true;
+        }
+    }
+    else
+    {
+        PRINTF(LOG_DEBUG, "%sunknown choice...cancel\n", __func__);
+        return false;
+    }
+}
+
 void PedalRobot::StartQCustomPlot(const std::__cxx11::string &fileNameARM)
 {
     std::string fileName = fileNameARM.substr(0, fileNameARM.length()-4); // 去除"_ARM"=4 为供UI使用的示教文件
@@ -181,7 +244,7 @@ void PedalRobot::StartQCustomPlot(const std::__cxx11::string &fileNameARM)
     pQCustomPlot->graph(lowerCurve)->setData(lowerTime,lowerSpeed);
     pQCustomPlot->replot();
 
-    if (conf->ifManualShift)
+    if (conf->ifManualShift && !RobotParams::switchflag[5])
     {
         // 确定初始换挡查询点
         size_t listlen = RobotParams::changeshiftlist.size();
@@ -234,7 +297,7 @@ void PedalRobot::StartQCustomPlot(const std::__cxx11::string &fileNameARM)
         }
     }
     myLogger->Customize("\n");
-    myLogger->Customize("TimeStamp\tBrakeOpenValue\tAccOpenValue\tCANSpeed\t\tPULSESpeed\t\tTargetSpeed\t\tControlMethod\tConBrake\t\tConAcc\t\t\tShift\t\t\tClutch\t\t\tBrakeAxis\t\tAccAxis\t\t\tClutchAxis\t\tShiftAxis1\t\tShiftAxis2\t\tSteeringAxis\tCurrentTime\n");
+    myLogger->Customize("TimeStamp BrakeOpenValue AccOpenValue CANSpeed PULSESpeed TargetSpeed ControlMethod ConBrake ConAcc BrakeAxis AccAxis CurrentTime Shift Clutch ClutchAxis ShiftAxis1 ShiftAxis2 SteeringAxis\n");
     autoSaveLogger = true;
     PRINTF(LOG_DEBUG, "%s: logger is cleared and ready!\n", __func__);
 
@@ -293,34 +356,42 @@ void PedalRobot::UpdatePart1()
                 }
                 else
                 {
-                    if (mySysControl->ifreachedshift(false, 2) && fabs(RobotParams::angleRealTime[0] - conf->brakeThetaAfterGoHome) < 1.0)
+                    if (fabs(RobotParams::angleRealTime[0] - conf->brakeThetaAfterGoHome) < 1.0)
                     {
-                        RobotParams::currentshiftindex = 2;
-                        RobotParams::currentshiftvalue = "D";
+                        if (mySysControl->ifreachedshift(false, 2))
+                        {
+                            RobotParams::currentshiftindex = 2;
+                            RobotParams::currentshiftvalue = "D";
 
-                        RobotParams::round = 1;
-                        RobotParams::round2 = 1;
-                        RobotParams::switchflag[1] = false;
-                        RobotParams::switchflag[0] = false;
+                            RobotParams::round = 1;
+                            RobotParams::round2 = 1;
+                            RobotParams::switchflag[1] = false;
+                            RobotParams::switchflag[0] = false;
 
-                        AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
+                            AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
+                        }
+                        else
+                        {
+                            double *shiftaims = new double[2];
+                            mySysControl->getconSft(shiftaims, RobotParams::round);
+
+                            values[3] = *shiftaims;
+                            values[4] = *(shiftaims + 1);
+                            ifABS[3] = 1;
+                            ifABS[4] = 1;
+
+                            SendMoveCommandAll(values, ifABS);
+                            delete shiftaims;
+
+                            RobotParams::round++;
+                        }
                     }
                     else
                     {
-                        double *shiftaims = new double[2];
-                        mySysControl->getconSft(shiftaims, RobotParams::round);
-
                         values[0] = conf->brakeThetaAfterGoHome;
-                        values[3] = *shiftaims;
-                        values[4] = *(shiftaims + 1);
-                        ifABS[0] = 1;/*
-                        ifABS[3] = 1;*/
-                        ifABS[4] = 1;
+                        ifABS[0] = 1;
 
                         SendMoveCommandAll(values, ifABS);
-                        delete shiftaims;
-
-                        RobotParams::round++;
                     }
                 }
             }
@@ -329,6 +400,7 @@ void PedalRobot::UpdatePart1()
                 RobotParams::round2++;
                 SendMoveCommandAll(values, ifABS);
             }
+            return;
         }
         else
         {
@@ -364,36 +436,105 @@ void PedalRobot::UpdatePart1()
             }
             else
             {
-                if (mySysControl->ifreachedshift(false, 2) && fabs(RobotParams::angleRealTime[0] - conf->brakeThetaAfterGoHome) < 1.0)
+                if (fabs(RobotParams::angleRealTime[0] - conf->brakeThetaAfterGoHome) < 1.0)
+                {
+                    if (mySysControl->ifreachedshift(false, 2))
+                    {
+                        RobotParams::currentshiftindex = 2;
+                        RobotParams::currentshiftvalue = "D";
+
+                        RobotParams::round = 1;
+                        RobotParams::round2 = 1;
+                        RobotParams::switchflag[1] = false;
+                        RobotParams::switchflag[0] = false;
+
+                        AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
+                    }
+                    else
+                    {
+                        double *shiftaims = new double[2];
+                        mySysControl->getconSft(shiftaims, RobotParams::round);
+
+                        values[3] = *shiftaims;
+                        values[4] = *(shiftaims + 1);
+                        ifABS[3] = 1;
+                        ifABS[4] = 1;
+
+                        SendMoveCommandAll(values, ifABS);
+                        delete shiftaims;
+
+                        RobotParams::round++;
+                    }
+                }
+                else
+                {
+                    values[0] = conf->brakeThetaAfterGoHome;
+                    ifABS[0] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+                }
+            }
+            return;
+        }
+    }
+
+    if (RobotParams::switchflag[3])
+    {
+        if (!RobotParams::switchflag[4])
+        {
+            if (RobotParams::round2 > 5)
+            {
+                RobotParams::switchflag[4] = true;
+
+                if (fabs(RobotParams::angleRealTime[0] - conf->deathPos[0]) < 1.0)
                 {
                     RobotParams::currentshiftindex = 2;
                     RobotParams::currentshiftvalue = "D";
 
                     RobotParams::round = 1;
                     RobotParams::round2 = 1;
-                    RobotParams::switchflag[1] = false;
-                    RobotParams::switchflag[0] = false;
+                    RobotParams::switchflag[4] = false;
+                    RobotParams::switchflag[3] = false;
 
                     AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
                 }
                 else
                 {
-                    double *shiftaims = new double[2];
-                    mySysControl->getconSft(shiftaims, RobotParams::round);
-
-                    values[0] = conf->brakeThetaAfterGoHome;
-                    values[3] = *shiftaims;
-                    values[4] = *(shiftaims + 1);
+                    values[0] = conf->deathPos[0];
                     ifABS[0] = 1;
-                    ifABS[3] = 1;
-                    ifABS[4] = 1;
 
                     SendMoveCommandAll(values, ifABS);
-                    delete shiftaims;
-
-                    RobotParams::round++;
                 }
             }
+            else
+            {
+                RobotParams::round2++;
+                SendMoveCommandAll(values, ifABS);
+            }
+            return;
+        }
+        else
+        {
+            if (fabs(RobotParams::angleRealTime[0] - conf->deathPos[0]) < 1.0)
+            {
+                RobotParams::currentshiftindex = 2;
+                RobotParams::currentshiftvalue = "D";
+
+                RobotParams::round = 1;
+                RobotParams::round2 = 1;
+                RobotParams::switchflag[4] = false;
+                RobotParams::switchflag[3] = false;
+
+                AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
+            }
+            else
+            {
+                values[0] = conf->deathPos[0];
+                ifABS[0] = 1;
+
+                SendMoveCommandAll(values, ifABS);
+            }
+            return;
         }
     }
 
@@ -402,7 +543,7 @@ void PedalRobot::UpdatePart1()
 
 void PedalRobot::UpdatePart2()
 {
-    if (!isControlling || RobotParams::switchflag[0] || RobotParams::switchflag[1] || RobotParams::switchflag[2] || RobotParams::switchflag[3] || RobotParams::switchflag[4] || RobotParams::isExaming)
+    if (!isControlling || RobotParams::switchflag[0] || RobotParams::switchflag[1] || RobotParams::switchflag[2] || RobotParams::switchflag[3] || RobotParams::switchflag[4] || RobotParams::switchflag[6] || RobotParams::switchflag[7] || RobotParams::switchflag[8] || RobotParams::switchflag[9] || RobotParams::isExaming)
     {
         return;
     }
@@ -410,96 +551,43 @@ void PedalRobot::UpdatePart2()
     // 绘图
     UpdateQCustomPlot();
 
-    double values[RobotParams::axisNum];
-    int ifABS[RobotParams::axisNum];
-    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
-    {
-        values[i] = 0; ifABS[i] = 0;
-    }
+    //第一次修改
 
-    // 换挡
-    if (conf->ifManualShift)
+    //第2次修改
+    if (modelSelect==0 || controlSelect==0)
     {
-        int end_index = RobotParams::changeshiftlist.size()-1;
-        if (elapsedSeconds >= RobotParams::changeshiftlist[RobotParams::checkshiftlist].first && RobotParams::checkshiftlist <= end_index)
+
+        //修改sy//////////////////////////////////////////////////////////////
+        double values[RobotParams::axisNum];
+        int ifABS[RobotParams::axisNum];
+        for (unsigned int i=0; i<RobotParams::axisNum; ++i)
         {
-            // 换挡点到了
-            RobotParams::checkshiftlist++;
-            RobotParams::changeshiftstart = true;
-            RobotParams::changeshiftend = false;
-            RobotParams::round = 1;
-            RobotParams::round2 = 1;
-            RobotParams::changeshiftprocess = 0;
-            RobotParams::startchangeshifttimeflag = false;
-
-            if (!RobotParams::startchangeshifttimeflag)
-            {
-                RobotParams::startchangeshifttimeflag = true;
-                gettimeofday(&RobotParams::starttime, NULL);
-            }
-
-            values[0] = Configuration::GetInstance()->deathPos[0];
-            values[1] = Configuration::GetInstance()->deathPos[1];
-
-            RobotParams::aimclutchindex = 0;
-            double *clutchaim = new double();
-            mySysControl->getconClh(clutchaim, RobotParams::round);
-            values[2] = *clutchaim;
-            delete clutchaim;
-            RobotParams::round++;
-
-            ifABS[0] = 1; ifABS[1] = 1; ifABS[2] = 1;
-
-            PRINTF(LOG_INFO, "%s: ready to change shift.\n", __func__);
-            SendMoveCommandAll(values, ifABS);
-
-            LoggerStudySamples();
-            timeStamp++;
-            return;
+            values[i] = 0; ifABS[i] = 0;
         }
 
-        if (RobotParams::changeshiftstart)
+        if (modelSelect == 0)
         {
-            if (RobotParams::changeshiftprocess == 0)
+            // 换挡
+            if (conf->ifManualShift)
             {
-                if (mySysControl->ifreachedclutch(false, 0) && fabs(RobotParams::angleRealTime[0]-Configuration::GetInstance()->deathPos[0]) < 1.0 && fabs(RobotParams::angleRealTime[1]-Configuration::GetInstance()->deathPos[1]) < 1.0)
+                int end_index = RobotParams::changeshiftlist.size()-1;
+                if (elapsedSeconds >= RobotParams::changeshiftlist[RobotParams::checkshiftlist].first && RobotParams::checkshiftlist <= end_index)
                 {
-                    gettimeofday(&RobotParams::stoptime, NULL);
-                    double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
-                    PRINTF(LOG_INFO, "%s: clutch has been trodden, using time %f ms.\n", __func__, timeduring);
-
-                    RobotParams::currentclutchindex = 0;
-                    RobotParams::currentclutchvalue = "踩下";
-
+                    // 换挡点到了
+                    RobotParams::checkshiftlist++;
+                    RobotParams::changeshiftstart = true;
+                    RobotParams::changeshiftend = false;
                     RobotParams::round = 1;
-                    RobotParams::changeshiftprocess = 1;
+                    RobotParams::round2 = 1;
+                    RobotParams::changeshiftprocess = 0;
+                    RobotParams::startchangeshifttimeflag = false;
 
-                    // 规划路径
-                    RobotParams::aimshiftindex = RobotParams::changeshiftlist[RobotParams::checkshiftlist - 1].second;
-                    mySysControl->plantrace();
-                    std::string indexaim = RobotParams::manulShiftValues[RobotParams::aimshiftindex];
-                    PRINTF(LOG_INFO, "%s: to shift %s.\n", __func__, indexaim.c_str());
+                    if (!RobotParams::startchangeshifttimeflag)
+                    {
+                        RobotParams::startchangeshifttimeflag = true;
+                        gettimeofday(&RobotParams::starttime, NULL);
+                    }
 
-                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-                    RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
-                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
-
-                    double *shiftaims = new double[2];
-                    mySysControl->getconSft(shiftaims, RobotParams::round);
-                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
-                    delete shiftaims;
-                    RobotParams::round++;
-
-                    ifABS[3] = 1; ifABS[4] = 1;
-
-                    SendMoveCommandAll(values, ifABS);
-
-                    LoggerStudySamples();
-                    timeStamp++;
-                    return;
-                }
-                else
-                {
                     values[0] = Configuration::GetInstance()->deathPos[0];
                     values[1] = Configuration::GetInstance()->deathPos[1];
 
@@ -512,238 +600,349 @@ void PedalRobot::UpdatePart2()
 
                     ifABS[0] = 1; ifABS[1] = 1; ifABS[2] = 1;
 
+                    PRINTF(LOG_INFO, "%s: ready to change shift.\n", __func__);
                     SendMoveCommandAll(values, ifABS);
 
                     LoggerStudySamples();
                     timeStamp++;
                     return;
                 }
-            }
-            else if (RobotParams::changeshiftprocess == 1)
-            {
-                if (RobotParams::shiftrunpointer + 1 == RobotParams::shiftrunlength - 1)
+
+                if (RobotParams::changeshiftstart)
                 {
-                    if (mySysControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+                    if (RobotParams::changeshiftprocess == 0)
                     {
-                        RobotParams::shiftrunpointer++;
+                        if (mySysControl->ifreachedclutch(false, 0) && fabs(RobotParams::angleRealTime[0]-Configuration::GetInstance()->deathPos[0]) < 1.0 && fabs(RobotParams::angleRealTime[1]-Configuration::GetInstance()->deathPos[1]) < 1.0)
+                        {
+                            gettimeofday(&RobotParams::stoptime, NULL);
+                            double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                            PRINTF(LOG_INFO, "%s: clutch has been trodden, using time %f ms.\n", __func__, timeduring);
 
-                        RobotParams::round = 1;
+                            RobotParams::currentclutchindex = 0;
+                            RobotParams::currentclutchvalue = "踩下";
 
-                        gettimeofday(&RobotParams::stoptime, NULL);
-                        double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
-                        PRINTF(LOG_INFO, "%s: shift changing is finished, using time %f ms.\n", __func__, timeduring);
+                            RobotParams::round = 1;
+                            RobotParams::changeshiftprocess = 1;
 
-                        RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-                        RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
-                        RobotParams::lastshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer - 1];
-                        RobotParams::shiftrunpointer = 0;
+                            // 规划路径
+                            RobotParams::aimshiftindex = RobotParams::changeshiftlist[RobotParams::checkshiftlist - 1].second;
+                            mySysControl->plantrace();
+                            std::string indexaim = RobotParams::manulShiftValues[RobotParams::aimshiftindex];
+                            PRINTF(LOG_INFO, "%s: to shift %s.\n", __func__, indexaim.c_str());
 
-                        RobotParams::changeshiftprocess = 0;
-                        RobotParams::changeshiftstart = false;
-                        RobotParams::changeshiftend = true;
+                            RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                            RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                            RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
 
-                        SendMoveCommandAll(values, ifABS);
+                            double *shiftaims = new double[2];
+                            mySysControl->getconSft(shiftaims, RobotParams::round);
+                            values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                            delete shiftaims;
+                            RobotParams::round++;
 
-                        LoggerStudySamples();
-                        timeStamp++;
-                        return;
+                            ifABS[3] = 1; ifABS[4] = 1;
+
+                            SendMoveCommandAll(values, ifABS);
+
+                            LoggerStudySamples();
+                            timeStamp++;
+                            return;
+                        }
+                        else
+                        {
+                            values[0] = Configuration::GetInstance()->deathPos[0];
+                            values[1] = Configuration::GetInstance()->deathPos[1];
+
+                            RobotParams::aimclutchindex = 0;
+                            double *clutchaim = new double();
+                            mySysControl->getconClh(clutchaim, RobotParams::round);
+                            values[2] = *clutchaim;
+                            delete clutchaim;
+                            RobotParams::round++;
+
+                            ifABS[0] = 1; ifABS[1] = 1; ifABS[2] = 1;
+
+                            SendMoveCommandAll(values, ifABS);
+
+                            LoggerStudySamples();
+                            timeStamp++;
+                            return;
+                        }
                     }
-                    else
+                    else if (RobotParams::changeshiftprocess == 1)
                     {
-                        RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-                        RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
-                        RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+                        if (RobotParams::shiftrunpointer + 1 == RobotParams::shiftrunlength - 1)
+                        {
+                            if (mySysControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+                            {
+                                RobotParams::shiftrunpointer++;
 
-                        double *shiftaims = new double[2];
-                        mySysControl->getconSft(shiftaims, RobotParams::round);
-                        values[3] = *shiftaims; values[4] = *(shiftaims + 1);
-                        delete shiftaims;
-                        RobotParams::round++;
+                                RobotParams::round = 1;
 
-                        ifABS[3] = 1; ifABS[4] = 1;
+                                gettimeofday(&RobotParams::stoptime, NULL);
+                                double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                                PRINTF(LOG_INFO, "%s: shift changing is finished, using time %f ms.\n", __func__, timeduring);
 
-                        SendMoveCommandAll(values, ifABS);
+                                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                                RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                                RobotParams::lastshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer - 1];
+                                RobotParams::shiftrunpointer = 0;
 
-                        LoggerStudySamples();
-                        timeStamp++;
-                        return;
-                    }
-                }
-                else
-                {
-                    if (mySysControl->ifreachedshiftprocess(RobotParams::shiftrunpath[RobotParams::shiftrunpointer], RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
-                    {
-                        RobotParams::shiftrunpointer++;
+                                RobotParams::changeshiftprocess = 0;
+                                RobotParams::changeshiftstart = false;
+                                RobotParams::changeshiftend = true;
 
-                        RobotParams::round = 1;
+                                SendMoveCommandAll(values, ifABS);
 
-                        gettimeofday(&RobotParams::stoptime, NULL);
-                        double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
-                        PRINTF(LOG_INFO, "%s: shift is changing, using time %f ms.\n", __func__, timeduring);
+                                LoggerStudySamples();
+                                timeStamp++;
+                                return;
+                            }
+                            else
+                            {
+                                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                                RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
 
-                        RobotParams::lastshiftindex = RobotParams::currentshiftindex;
-                        RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-                        RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
-                        RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+                                double *shiftaims = new double[2];
+                                mySysControl->getconSft(shiftaims, RobotParams::round);
+                                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                                delete shiftaims;
+                                RobotParams::round++;
 
-                        double *shiftaims = new double[2];
-                        mySysControl->getconSft(shiftaims, RobotParams::round);
-                        values[3] = *shiftaims; values[4] = *(shiftaims + 1);
-                        delete shiftaims;
-                        RobotParams::round++;
+                                ifABS[3] = 1; ifABS[4] = 1;
 
-                        ifABS[3] = 1; ifABS[4] = 1;
+                                SendMoveCommandAll(values, ifABS);
 
-                        SendMoveCommandAll(values, ifABS);
+                                LoggerStudySamples();
+                                timeStamp++;
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            if (mySysControl->ifreachedshiftprocess(RobotParams::shiftrunpath[RobotParams::shiftrunpointer], RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+                            {
+                                RobotParams::shiftrunpointer++;
 
-                        LoggerStudySamples();
-                        timeStamp++;
-                        return;
-                    }
-                    else
-                    {
-                        RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
-                        RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
-                        RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+                                RobotParams::round = 1;
 
-                        double *shiftaims = new double[2];
-                        mySysControl->getconSft(shiftaims, RobotParams::round);
-                        values[3] = *shiftaims; values[4] = *(shiftaims + 1);
-                        delete shiftaims;
-                        RobotParams::round++;
+                                gettimeofday(&RobotParams::stoptime, NULL);
+                                double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                                PRINTF(LOG_INFO, "%s: shift is changing, using time %f ms.\n", __func__, timeduring);
 
-                        ifABS[3] = 1; ifABS[4] = 1;
+                                RobotParams::lastshiftindex = RobotParams::currentshiftindex;
+                                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                                RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
 
-                        SendMoveCommandAll(values, ifABS);
+                                double *shiftaims = new double[2];
+                                mySysControl->getconSft(shiftaims, RobotParams::round);
+                                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                                delete shiftaims;
+                                RobotParams::round++;
 
-                        LoggerStudySamples();
-                        timeStamp++;
-                        return;
+                                ifABS[3] = 1; ifABS[4] = 1;
+
+                                SendMoveCommandAll(values, ifABS);
+
+                                LoggerStudySamples();
+                                timeStamp++;
+                                return;
+                            }
+                            else
+                            {
+                                RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                                RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                                RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                                double *shiftaims = new double[2];
+                                mySysControl->getconSft(shiftaims, RobotParams::round);
+                                values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                                delete shiftaims;
+                                RobotParams::round++;
+
+                                ifABS[3] = 1; ifABS[4] = 1;
+
+                                SendMoveCommandAll(values, ifABS);
+
+                                LoggerStudySamples();
+                                timeStamp++;
+                                return;
+                            }
+                        }
                     }
                 }
             }
         }
-    }
 
-    // 非换挡情况下 执行油门刹车踏板计算
-    double deltaBrake, deltaAcc;
+        // 非换挡情况下 执行油门刹车踏板计算
+        double deltaBrake, deltaAcc;
 
-    if(conf->pedalRobotUsage == SettingWidgetPedalRobotGetSpeed::NedcControl){//NEDC曲线
-        mySysControl->calCon(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
-    }else if(conf->pedalRobotUsage == SettingWidgetPedalRobotGetSpeed::WltcControl){//WLTC曲线
-        mySysControl->calConW(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
-    }
+        if(conf->pedalRobotUsage == SettingWidgetPedalRobotGetSpeed::NedcControl){//NEDC曲线
+            mySysControl->calCon(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
+        }else if(conf->pedalRobotUsage == SettingWidgetPedalRobotGetSpeed::WltcControl){//WLTC曲线
+            mySysControl->calConW(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
+        }
 
-    //获得增量控制(开度)
-    deltaBrake = mySysControl->getconBrake();
-    deltaAcc   = mySysControl->getconAcc();
+        //获得增量控制(开度)
+        deltaBrake = mySysControl->getconBrake();
+        deltaAcc   = mySysControl->getconAcc();
 
-    // 软件限位
-    bool overmax[2] = {false, false};
-    bool overmin[2] = {false, false};
-    if ((RobotParams::angleRealTime[0] + deltaBrake) > conf->limPos[0])
-    {
-        overmax[0] = true;
-    }
-    else if ((RobotParams::angleRealTime[0] + deltaBrake) < conf->deathPos[0])
-    {
-        overmin[0] = true;
-    }
-    else { }
-
-    if ((RobotParams::angleRealTime[1] + deltaAcc) > conf->limPos[1])
-    {
-        overmax[1] = true;
-    }
-    else if ((RobotParams::angleRealTime[1] + deltaAcc) < conf->deathPos[1])
-    {
-        overmin[1] = true;
-    }
-    else { }
-
-    // 换挡结束时 刹车油门和离合的配合
-    if (conf->ifManualShift)
-    {
-        if (RobotParams::changeshiftend)
+        // 软件限位
+        bool overmax[2] = {false, false};
+        bool overmin[2] = {false, false};
+        if ((RobotParams::angleRealTime[0] + deltaBrake) > conf->limPos[0])
         {
-            if (RobotParams::currentshiftindex != 3)
+            overmax[0] = true;
+        }
+        else if ((RobotParams::angleRealTime[0] + deltaBrake) < conf->deathPos[0])
+        {
+            overmin[0] = true;
+        }
+        else { }
+
+        if ((RobotParams::angleRealTime[1] + deltaAcc) > conf->limPos[1])
+        {
+            overmax[1] = true;
+        }
+        else if ((RobotParams::angleRealTime[1] + deltaAcc) < conf->deathPos[1])
+        {
+            overmin[1] = true;
+        }
+        else { }
+
+        if (modelSelect == 0)
+        {
+            // 换挡结束时 刹车油门和离合的配合
+            if (conf->ifManualShift)
             {
-                if (mySysControl->ifreachedclutch(false, 1))
+                if (RobotParams::changeshiftend)
                 {
-                    gettimeofday(&RobotParams::stoptime, NULL);
-                    double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
-                    PRINTF(LOG_INFO, "%s: changing shift is finished, totally using time %f ms.\n", __func__, timeduring);
+                    if (RobotParams::currentshiftindex != 3)
+                    {
+                        if (mySysControl->ifreachedclutch(false, 1))
+                        {
+                            gettimeofday(&RobotParams::stoptime, NULL);
+                            double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                            PRINTF(LOG_INFO, "%s: changing shift is finished, totally using time %f ms.\n", __func__, timeduring);
 
-                    RobotParams::currentclutchindex = 1;
-                    RobotParams::currentclutchvalue = "松开";
+                            RobotParams::currentclutchindex = 1;
+                            RobotParams::currentclutchvalue = "松开";
 
-                    RobotParams::startchangeshifttimeflag = false;
-                    RobotParams::changeshiftend = false;
+                            RobotParams::startchangeshifttimeflag = false;
+                            RobotParams::changeshiftend = false;
 
-                    RobotParams::round = 1;
+                            RobotParams::round = 1;
 
-                    SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
+                            SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
+                        }
+                        else
+                        {
+                            RobotParams::currentclutchindex = 2;
+                            RobotParams::currentclutchvalue = "抬升";
+
+                            double clutchaim = 0;
+                            if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - RobotParams::round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                            {
+                                clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                            }
+
+                            values[2] = clutchaim;
+                            RobotParams::round++;
+
+                            ifABS[2] = 1;
+
+                            SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, true, values[2]);
+                        }
+                    }
+                    else
+                    {
+                        if (mySysControl->ifreachedclutch(false, 1) && fabs(RobotParams::angleRealTime[1] - Configuration::GetInstance()->startAccAngleValue) < 1.0)
+                        {
+                            gettimeofday(&RobotParams::stoptime, NULL);
+                            double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                            PRINTF(LOG_INFO, "%s: changing shift is finished, totally using time %f ms.\n", __func__, timeduring);
+
+                            RobotParams::currentclutchindex = 1;
+                            RobotParams::currentclutchvalue = "松开";
+
+                            RobotParams::startchangeshifttimeflag = false;
+                            RobotParams::changeshiftend = false;
+
+                            RobotParams::round = 1;
+
+                            SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
+                        }
+                        else
+                        {
+                            RobotParams::currentclutchindex = 2;
+                            RobotParams::currentclutchvalue = "抬升";
+
+                            double clutchaim = 0, accaim = 0;
+                            if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - RobotParams::round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                            {
+                                clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                            }
+                            values[2] = clutchaim;
+
+                            if ( ( accaim = Configuration::GetInstance()->deathPos[1] + RobotParams::round * (Configuration::GetInstance()->clutchUpSpeed / (Configuration::GetInstance()->clutchAngles[0] - Configuration::GetInstance()->clutchAngles[1]) * (Configuration::GetInstance()->startAccAngleValue - Configuration::GetInstance()->deathPos[1]) ) ) > Configuration::GetInstance()->startAccAngleValue)
+                            {
+                                accaim = Configuration::GetInstance()->startAccAngleValue;
+                            }
+                            values[1] = accaim;
+                            ifABS[1] = 1;
+                            ifABS[2] = 1;
+
+                            RobotParams::round++;
+
+                            SendMoveCommandAll(values, ifABS);
+                        }
+                    }
                 }
                 else
                 {
-                    RobotParams::currentclutchindex = 2;
-                    RobotParams::currentclutchvalue = "抬升";
-
-                    double clutchaim = 0;
-                    if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - RobotParams::round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
-                    {
-                        clutchaim = Configuration::GetInstance()->clutchAngles[1];
-                    }
-
-                    values[2] = clutchaim;
-                    RobotParams::round++;
-
-                    ifABS[2] = 1;
-
-                    SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, true, values[2]);
+                    SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
                 }
             }
             else
             {
-                if (mySysControl->ifreachedclutch(false, 1) && fabs(RobotParams::angleRealTime[1] - Configuration::GetInstance()->startAccAngleValue) < 1.0)
+                // 自动挡结束前回空挡
+                if ((elapsedSeconds > actionDurationSecond - 2) && (GetCarSpeed() < 10))
                 {
-                    gettimeofday(&RobotParams::stoptime, NULL);
-                    double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
-                    PRINTF(LOG_INFO, "%s: changing shift is finished, totally using time %f ms.\n", __func__, timeduring);
+                    if (mySysControl->ifreachedshift(false, 1))
+                    {
+                        RobotParams::round = 1;
 
-                    RobotParams::currentclutchindex = 1;
-                    RobotParams::currentclutchvalue = "松开";
+                        RobotParams::currentshiftindex = 1;
+                        RobotParams::currentshiftvalue = "N";
+                        RobotParams::currentclutchindex = 1;
+                        RobotParams::currentclutchvalue = "自动";
 
-                    RobotParams::startchangeshifttimeflag = false;
-                    RobotParams::changeshiftend = false;
+                        SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
+                    }
+                    else
+                    {
+                        RobotParams::aimshiftindex = 1;
 
-                    RobotParams::round = 1;
+                        double *shiftaims = new double[2];
+                        mySysControl->getconSft(shiftaims, RobotParams::round);
 
-                    SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
+                        values[3] = *shiftaims;
+                        values[4] = *(shiftaims + 1);
+                        ifABS[3] = 1;
+                        ifABS[4] = 1;
+
+                        SendMoveCommandAll(values, ifABS);
+
+                        delete shiftaims;
+
+                        RobotParams::round++;
+                    }
                 }
                 else
                 {
-                    RobotParams::currentclutchindex = 2;
-                    RobotParams::currentclutchvalue = "抬升";
-
-                    double clutchaim = 0, accaim = 0;
-                    if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - RobotParams::round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
-                    {
-                        clutchaim = Configuration::GetInstance()->clutchAngles[1];
-                    }
-                    values[2] = clutchaim;
-
-                    if ( ( accaim = Configuration::GetInstance()->deathPos[1] + RobotParams::round * (Configuration::GetInstance()->clutchUpSpeed / (Configuration::GetInstance()->clutchAngles[0] - Configuration::GetInstance()->clutchAngles[1]) * (Configuration::GetInstance()->startAccAngleValue - Configuration::GetInstance()->deathPos[1]) ) ) > Configuration::GetInstance()->startAccAngleValue)
-                    {
-                        accaim = Configuration::GetInstance()->startAccAngleValue;
-                    }
-                    values[1] = accaim;
-                    ifABS[1] = 1;
-                    ifABS[2] = 1;
-
-                    RobotParams::round++;
-
-                    SendMoveCommandAll(values, ifABS);
+                    SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
                 }
             }
         }
@@ -751,47 +950,12 @@ void PedalRobot::UpdatePart2()
         {
             SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
         }
+        //修改sy//////////////////////////////////////////////////////////////
+
     }
-    else
-    {
-        // 自动挡结束前回空挡
-        if ((elapsedSeconds > actionDurationSecond - 2) && (GetCarSpeed() < 10))
-        {
-            if (mySysControl->ifreachedshift(false, 1))
-            {
-                RobotParams::round = 1;
+    //第2次修改
 
-                RobotParams::currentshiftindex = 1;
-                RobotParams::currentshiftvalue = "N";
-                RobotParams::currentclutchindex = 1;
-                RobotParams::currentclutchvalue = "自动";
-
-                SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
-            }
-            else
-            {
-                RobotParams::aimshiftindex = 1;
-
-                double *shiftaims = new double[2];
-                mySysControl->getconSft(shiftaims, RobotParams::round);
-
-                values[3] = *shiftaims;
-                values[4] = *(shiftaims + 1);
-                ifABS[3] = 1;
-                ifABS[4] = 1;
-
-                SendMoveCommandAll(values, ifABS);
-
-                delete shiftaims;
-
-                RobotParams::round++;
-            }
-        }
-        else
-        {
-            SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
-        }
-    }
+    //修改1//////////////////////////////////////////////////////////////
 
     LoggerStudySamples();
     timeStamp++;
@@ -801,7 +965,7 @@ void PedalRobot::UpdatePart2()
 
 void PedalRobot::UpdatePart3()
 {
-    if (isControlling || RobotParams::switchflag[0] || RobotParams::switchflag[1] || RobotParams::switchflag[3] || RobotParams::switchflag[4] || RobotParams::isExaming)
+    if (isControlling || RobotParams::switchflag[0] || RobotParams::switchflag[1] || RobotParams::switchflag[3] || RobotParams::switchflag[4] || RobotParams::switchflag[5] || RobotParams::switchflag[6] || RobotParams::switchflag[7] || RobotParams::switchflag[8] || RobotParams::switchflag[9] || RobotParams::isExaming)
     {
         return;
     }
@@ -809,6 +973,8 @@ void PedalRobot::UpdatePart3()
     // 是否在NVH曲线运行下
     if (RobotParams::switchflag[2])
     {
+        UpdateQCustomPlotSpeed();
+
         if (RobotParams::NVHcurvestate == 9)
         {
             return;
@@ -828,10 +994,10 @@ void PedalRobot::UpdatePart3()
             // 非换挡情况下 执行油门刹车踏板计算
             double deltaBrake, deltaAcc;
 
-            mySysControl->calConW(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
+            mySysControl->calConN(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
 
             //获得增量控制(开度)
-            deltaBrake = mySysControl->getconBrake();
+            deltaBrake = -10;
             deltaAcc   = mySysControl->getconAcc();
 
             // 软件限位
@@ -897,10 +1063,10 @@ void PedalRobot::UpdatePart3()
             // 非换挡情况下 执行油门刹车踏板计算
             double deltaBrake, deltaAcc;
 
-            mySysControl->calConW(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
+            mySysControl->calConN(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
 
             //获得增量控制(开度)
-            deltaBrake = mySysControl->getconBrake();
+            deltaBrake = -10;
             deltaAcc   = mySysControl->getconAcc();
 
             // 软件限位
@@ -1001,9 +1167,6 @@ void PedalRobot::UpdatePart3()
         }
         else if (RobotParams::NVHcurvestate == 3)
         {
-            // 绘图
-            UpdateQCustomPlotNVH();
-
             double values[RobotParams::axisNum];
             int ifABS[RobotParams::axisNum];
             for (unsigned int i=0; i<RobotParams::axisNum; ++i)
@@ -1011,62 +1174,136 @@ void PedalRobot::UpdatePart3()
                 values[i] = 0; ifABS[i] = 0;
             }
 
-            // 非换挡情况下 执行油门刹车踏板计算
-            double deltaBrake, deltaAcc;
-
-            mySysControl->calConW(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
-
-            //获得增量控制(开度)
-            deltaBrake = mySysControl->getconBrake();
-            deltaAcc   = mySysControl->getconAcc();
-
-            // 软件限位
-            bool overmax[2] = {false, false};
-            bool overmin[2] = {false, false};
-            if ((RobotParams::angleRealTime[0] + deltaBrake) > conf->limPos[0])
+            if (RobotParams::NVHcurvestate3state == 0)
             {
-                overmax[0] = true;
-            }
-            else if ((RobotParams::angleRealTime[0] + deltaBrake) < conf->deathPos[0])
-            {
-                overmin[0] = true;
-            }
-            else { }
-
-            if ((RobotParams::angleRealTime[1] + deltaAcc) > conf->limPos[1])
-            {
-                overmax[1] = true;
-            }
-            else if ((RobotParams::angleRealTime[1] + deltaAcc) < conf->deathPos[1])
-            {
-                overmin[1] = true;
-            }
-            else { }
-
-            // 换挡结束时 刹车油门和离合的配合
-            // 自动挡结束前送油门
-            if ( (elapsedSeconds > actionDurationSecond - 2) )
-            {
-                if ( fabs(RobotParams::angleRealTime[1] - conf->deathPos[1]) < 1.0 )
+                // 到速度前踩一半油门
+                if ( GetCarSpeed() >= RobotParams::nvh_P1v + 0.5 )
                 {
-                    bool temp[2] = {false, false};
-                    SendMoveCommand(0.0, 0.0, temp, temp, false);
+                    if ( fabs(RobotParams::angleRealTime[1] - conf->deathPos[1]) < 1.0 )
+                    {
+                        SendMoveCommandAll(values, ifABS);
+                        RobotParams::NVHcurvestate3state = 1;
+                    }
+                    else
+                    {
+                        values[1] = conf->deathPos[1];
+                        ifABS[1] = 1;
+
+                        SendMoveCommandAll(values, ifABS);
+                    }
                 }
                 else
                 {
-                    values[1] = conf->deathPos[1];
-                    ifABS[1] = 1;
+                    double aim = (conf->limPos[1] + conf->deathPos[1]) / 2;
+                    if (fabs(RobotParams::angleRealTime[1] - aim) < 1.0)
+                    {
+                        SendMoveCommandAll(values, ifABS);
+                    }
+                    else
+                    {
+                        values[1] = aim;
+                        ifABS[1] = 1;
 
-                    SendMoveCommandAll(values, ifABS);
+                        SendMoveCommandAll(values, ifABS);
+                    }
+                }
+
+            }
+            else if (RobotParams::NVHcurvestate3state == 1)
+            {
+                if ( GetCarSpeed() <= RobotParams::nvh_P1v + 0.5 )
+                {
+                    size_t sz = vp_data.size();
+
+                    // 运动时间的记录
+                    gettimeofday(&actionStartTime, NULL);
+                    PRINTF(LOG_DEBUG, "%s: actionStartTime=%ld:%ld\n", __func__, actionStartTime.tv_sec, actionStartTime.tv_usec);
+                    actionDurationSecond = vp_data[sz-1].first - vp_data[0].first;
+                    PRINTF(LOG_DEBUG, "%s: actionDurationSecond=%f\n",__func__,actionDurationSecond);
+
+                    InitControlMethod();
+
+                    // 准备日志数据
+                    myLogger->clear();
+                    myLogger->Customize("ControlParams:\n");
+
+                    myLogger->Customize("Run as WLTC(NVH): ");
+                    for(size_t i=0; i<sizeof(conf->sysControlParamsWltc)/sizeof(conf->sysControlParamsWltc[0]); ++i){
+                        myLogger->Customize(conf->sysControlParamsWltc[i]).Customize("\t");
+                    }
+
+                    myLogger->Customize("\n");
+                    myLogger->Customize("TimeStamp\tBrakeOpenValue\tAccOpenValue\tCANSpeed\t\tPULSESpeed\t\tTargetSpeed\t\tControlMethod\tConBrake\t\tConAcc\t\t\tShift\t\t\tClutch\t\t\tBrakeAxis\t\tAccAxis\t\t\tClutchAxis\t\tShiftAxis1\t\tShiftAxis2\t\tSteeringAxis\tCurrentTime\n");
+                    autoSaveLogger = true;
+                    PRINTF(LOG_DEBUG, "%s: logger is cleared and ready!\n", __func__);
+
+                    timeStamp=0;
+
+                    RobotParams::NVHcurvestate3state = 2;
                 }
             }
-            else
+            else if (RobotParams::NVHcurvestate3state == 2)
             {
-                SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
-            }
+                // 绘图
+                UpdateQCustomPlotNVH();
 
-            LoggerStudySamples();
-            timeStamp++;
+                // 非换挡情况下 执行油门刹车踏板计算
+                double deltaBrake, deltaAcc;
+
+                mySysControl->calConN(elapsedSeconds, GetCarSpeed(), RobotParams::brakeOpenValue, RobotParams::accOpenValue);
+
+                //获得增量控制(开度)
+                deltaBrake = -10;
+                deltaAcc   = mySysControl->getconAcc();
+
+                // 软件限位
+                bool overmax[2] = {false, false};
+                bool overmin[2] = {false, false};
+                if ((RobotParams::angleRealTime[0] + deltaBrake) > conf->limPos[0])
+                {
+                    overmax[0] = true;
+                }
+                else if ((RobotParams::angleRealTime[0] + deltaBrake) < conf->deathPos[0])
+                {
+                    overmin[0] = true;
+                }
+                else { }
+
+                if ((RobotParams::angleRealTime[1] + deltaAcc) > conf->limPos[1])
+                {
+                    overmax[1] = true;
+                }
+                else if ((RobotParams::angleRealTime[1] + deltaAcc) < conf->deathPos[1])
+                {
+                    overmin[1] = true;
+                }
+                else { }
+
+                // 换挡结束时 刹车油门和离合的配合
+                // 自动挡结束前送油门
+                if ( (elapsedSeconds > actionDurationSecond - 2) )
+                {
+                    if ( fabs(RobotParams::angleRealTime[1] - conf->deathPos[1]) < 1.0 )
+                    {
+                        bool temp[2] = {false, false};
+                        SendMoveCommand(0.0, 0.0, temp, temp, false);
+                    }
+                    else
+                    {
+                        values[1] = conf->deathPos[1];
+                        ifABS[1] = 1;
+
+                        SendMoveCommandAll(values, ifABS);
+                    }
+                }
+                else
+                {
+                    SendMoveCommand(deltaBrake, deltaAcc, overmax, overmin, false);
+                }
+
+                LoggerStudySamples();
+                timeStamp++;
+            }
         }
         else if (RobotParams::NVHcurvestate == 4)
         {
@@ -1102,7 +1339,7 @@ void PedalRobot::UpdatePart3()
                 values[i] = 0; ifABS[i] = 0;
             }
 
-            if (mySysControl->ifreachedshift(false, 1) && fabs(RobotParams::angleRealTime[0] - conf->brakeThetaAfterGoHome) < 1.0)
+            if (mySysControl->ifreachedshift(false, 1) && fabs(RobotParams::angleRealTime[0] - conf->brakeThetaAfterGoHome) && fabs(RobotParams::angleRealTime[1] - conf->deathPos[1]) < 1.0)
             {
                 RobotParams::currentshiftindex = 1;
                 RobotParams::currentshiftvalue = "N";
@@ -1111,6 +1348,7 @@ void PedalRobot::UpdatePart3()
                 RobotParams::round2 = 1;
                 RobotParams::switchflag[2] = false;
 
+                FinishQCustomPlotSpeed(false);
                 AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
             }
             else
@@ -1119,9 +1357,11 @@ void PedalRobot::UpdatePart3()
                 mySysControl->getconSft(shiftaims, RobotParams::round);
 
                 values[0] = conf->brakeThetaAfterGoHome;
+                values[1] = conf->deathPos[1];
                 values[3] = *shiftaims;
                 values[4] = *(shiftaims + 1);
                 ifABS[0] = 1;
+                ifABS[1] = 1;
                 ifABS[3] = 1;
                 ifABS[4] = 1;
 
@@ -1138,6 +1378,356 @@ void PedalRobot::UpdatePart3()
     }
 
     return;
+}
+
+void PedalRobot::UpdatePart4()
+{
+    double values[RobotParams::axisNum];
+    int ifABS[RobotParams::axisNum];
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        values[i] = 0; ifABS[i] = 0;
+    }
+
+    if (!RobotParams::startchangeshifttimeflag)
+    {
+        RobotParams::startchangeshifttimeflag = true;
+        gettimeofday(&RobotParams::starttime, NULL);
+    }
+
+    // 换挡
+    if (conf->ifManualShift)
+    {
+        if (RobotParams::changeshiftstart)
+        {
+            if (RobotParams::changeshiftprocess == 0)
+            {
+                if (mySysControl->ifreachedclutch(false, 0) && fabs(RobotParams::angleRealTime[0]-Configuration::GetInstance()->deathPos[0]) < 1.0 && fabs(RobotParams::angleRealTime[1]-Configuration::GetInstance()->deathPos[1]) < 1.0)
+                {
+                    gettimeofday(&RobotParams::stoptime, NULL);
+                    double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                    PRINTF(LOG_INFO, "%s: clutch has been trodden, using time %f ms.\n", __func__, timeduring);
+
+                    RobotParams::currentclutchindex = 0;
+                    RobotParams::currentclutchvalue = "踩下";
+
+                    RobotParams::round = 1;
+                    RobotParams::changeshiftprocess = 1;
+
+                    // 规划路径
+                    mySysControl->plantrace();
+                    std::string indexaim = RobotParams::manulShiftValues[RobotParams::aimshiftindex];
+                    PRINTF(LOG_INFO, "%s: to shift %s.\n", __func__, indexaim.c_str());
+
+                    RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                    RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                    RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                    double *shiftaims = new double[2];
+                    mySysControl->getconSft(shiftaims, RobotParams::round);
+                    values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                    delete shiftaims;
+                    RobotParams::round++;
+
+                    ifABS[3] = 1; ifABS[4] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+
+                    LoggerStudySamples();
+                    timeStamp++;
+                    return;
+                }
+                else
+                {
+                    values[0] = Configuration::GetInstance()->deathPos[0];
+                    values[1] = Configuration::GetInstance()->deathPos[1];
+
+                    RobotParams::aimclutchindex = 0;
+                    double *clutchaim = new double();
+                    mySysControl->getconClh(clutchaim, RobotParams::round);
+                    values[2] = *clutchaim;
+                    delete clutchaim;
+                    RobotParams::round++;
+
+                    ifABS[0] = 1; ifABS[1] = 1; ifABS[2] = 1;
+
+                    SendMoveCommandAll(values, ifABS);
+
+                    LoggerStudySamples();
+                    timeStamp++;
+                    return;
+                }
+            }
+            else if (RobotParams::changeshiftprocess == 1)
+            {
+                if (RobotParams::shiftrunpointer + 1 == RobotParams::shiftrunlength - 1)
+                {
+                    if (mySysControl->ifreachedshift(false,RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+                    {
+                        RobotParams::shiftrunpointer++;
+
+                        RobotParams::round = 1;
+
+                        gettimeofday(&RobotParams::stoptime, NULL);
+                        double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                        PRINTF(LOG_INFO, "%s: shift changing is finished, using time %f ms.\n", __func__, timeduring);
+
+                        RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                        RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                        RobotParams::lastshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer - 1];
+                        RobotParams::shiftrunpointer = 0;
+
+                        RobotParams::changeshiftprocess = 0;
+                        RobotParams::changeshiftstart = false;
+                        RobotParams::changeshiftend = true;
+                    }
+                    else
+                    {
+                        RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                        RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                        RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                        double *shiftaims = new double[2];
+                        mySysControl->getconSft(shiftaims, RobotParams::round);
+                        values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                        delete shiftaims;
+                        RobotParams::round++;
+
+                        ifABS[3] = 1; ifABS[4] = 1;
+
+                        SendMoveCommandAll(values, ifABS);
+
+                        LoggerStudySamples();
+                        timeStamp++;
+                        return;
+                    }
+                }
+                else
+                {
+                    if (mySysControl->ifreachedshiftprocess(RobotParams::shiftrunpath[RobotParams::shiftrunpointer], RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1]))
+                    {
+                        RobotParams::shiftrunpointer++;
+
+                        RobotParams::round = 1;
+
+                        gettimeofday(&RobotParams::stoptime, NULL);
+                        double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                        PRINTF(LOG_INFO, "%s: shift is changing, using time %f ms.\n", __func__, timeduring);
+
+                        RobotParams::lastshiftindex = RobotParams::currentshiftindex;
+                        RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                        RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                        RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                        double *shiftaims = new double[2];
+                        mySysControl->getconSft(shiftaims, RobotParams::round);
+                        values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                        delete shiftaims;
+                        RobotParams::round++;
+
+                        ifABS[3] = 1; ifABS[4] = 1;
+
+                        SendMoveCommandAll(values, ifABS);
+
+                        LoggerStudySamples();
+                        timeStamp++;
+                        return;
+                    }
+                    else
+                    {
+                        RobotParams::currentshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer];
+                        RobotParams::currentshiftvalue = RobotParams::manulShiftValues[RobotParams::currentshiftindex];
+                        RobotParams::aimshiftindex = RobotParams::shiftrunpath[RobotParams::shiftrunpointer + 1];
+
+                        double *shiftaims = new double[2];
+                        mySysControl->getconSft(shiftaims, RobotParams::round);
+                        values[3] = *shiftaims; values[4] = *(shiftaims + 1);
+                        delete shiftaims;
+                        RobotParams::round++;
+
+                        ifABS[3] = 1; ifABS[4] = 1;
+
+                        SendMoveCommandAll(values, ifABS);
+
+                        LoggerStudySamples();
+                        timeStamp++;
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (RobotParams::changeshiftend)
+        {
+            if (!RobotParams::iffromNto1)
+            {
+                if (RobotParams::ifREBA)
+                {
+                    if (mySysControl->ifreachedclutch(false, 1) && fabs(RobotParams::angleRealTime[0] - RobotParams::tempVars[8]) < 1.0 && fabs(RobotParams::angleRealTime[1] - RobotParams::tempVars[9]) < 1.0)
+                    {
+                        gettimeofday(&RobotParams::stoptime, NULL);
+                        double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                        PRINTF(LOG_INFO, "%s: changing shift is finished, totally using time %f ms.\n", __func__, timeduring);
+
+                        RobotParams::currentclutchindex = 1;
+                        RobotParams::currentclutchvalue = "松开";
+
+                        RobotParams::startchangeshifttimeflag = false;
+                        RobotParams::changeshiftend = false;
+
+                        RobotParams::round = 1;
+
+                        RobotParams::iffromNto1 = false;
+                        RobotParams::ifCSACD = false;
+
+                        SendMoveCommandAll(values, ifABS);
+
+                        LoggerStudySamples();
+                        timeStamp++;
+                        return;
+                    }
+                    else
+                    {
+                        RobotParams::currentclutchindex = 2;
+                        RobotParams::currentclutchvalue = "抬升";
+
+                        double clutchaim = 0, brkaim = 0, accaim = 0;
+                        if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - RobotParams::round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                        {
+                            clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                        }
+                        values[2] = clutchaim;
+
+                        if ( ( brkaim = Configuration::GetInstance()->deathPos[0] + RobotParams::round * (Configuration::GetInstance()->clutchUpSpeed / (Configuration::GetInstance()->clutchAngles[0] - Configuration::GetInstance()->clutchAngles[1]) * (RobotParams::tempVars[8] - Configuration::GetInstance()->deathPos[0]) ) ) > RobotParams::tempVars[8])
+                        {
+                            brkaim = RobotParams::tempVars[8];
+                        }
+                        values[0] = brkaim;
+
+                        if ( ( accaim = Configuration::GetInstance()->deathPos[1] + RobotParams::round * (Configuration::GetInstance()->clutchUpSpeed / (Configuration::GetInstance()->clutchAngles[0] - Configuration::GetInstance()->clutchAngles[1]) * (RobotParams::tempVars[9] - Configuration::GetInstance()->deathPos[1]) ) ) > RobotParams::tempVars[9])
+                        {
+                            accaim = RobotParams::tempVars[9];
+                        }
+                        values[1] = accaim;
+
+                        ifABS[0] = 1;
+                        ifABS[1] = 1;
+                        ifABS[2] = 1;
+
+                        RobotParams::round++;
+
+                        SendMoveCommandAll(values, ifABS);
+
+                        LoggerStudySamples();
+                        timeStamp++;
+                        return;
+                    }
+                }
+                else
+                {
+                    if (mySysControl->ifreachedclutch(false, 1))
+                    {
+                        gettimeofday(&RobotParams::stoptime, NULL);
+                        double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                        PRINTF(LOG_INFO, "%s: changing shift is finished, totally using time %f ms.\n", __func__, timeduring);
+
+                        RobotParams::currentclutchindex = 1;
+                        RobotParams::currentclutchvalue = "松开";
+
+                        RobotParams::startchangeshifttimeflag = false;
+                        RobotParams::changeshiftend = false;
+
+                        RobotParams::round = 1;
+
+                        RobotParams::iffromNto1 = false;
+                        RobotParams::ifCSACD = false;
+
+                        SendMoveCommandAll(values, ifABS);
+
+                        LoggerStudySamples();
+                        timeStamp++;
+                        return;
+                    }
+                    else
+                    {
+                        RobotParams::currentclutchindex = 2;
+                        RobotParams::currentclutchvalue = "抬升";
+
+                        double clutchaim = 0;
+                        if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - RobotParams::round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                        {
+                            clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                        }
+
+                        values[2] = clutchaim;
+                        RobotParams::round++;
+
+                        ifABS[2] = 1;
+
+                        SendMoveCommandAll(values, ifABS);
+
+                        LoggerStudySamples();
+                        timeStamp++;
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                if (mySysControl->ifreachedclutch(false, 1) && fabs(RobotParams::angleRealTime[1] - Configuration::GetInstance()->startAccAngleValue) < 1.0)
+                {
+                    gettimeofday(&RobotParams::stoptime, NULL);
+                    double timeduring = (RobotParams::stoptime.tv_sec-RobotParams::starttime.tv_sec)*1000.0 + (RobotParams::stoptime.tv_usec-RobotParams::starttime.tv_usec)/1000.0;
+                    PRINTF(LOG_INFO, "%s: changing shift is finished, totally using time %f ms.\n", __func__, timeduring);
+
+                    RobotParams::currentclutchindex = 1;
+                    RobotParams::currentclutchvalue = "松开";
+
+                    RobotParams::startchangeshifttimeflag = false;
+                    RobotParams::changeshiftend = false;
+
+                    RobotParams::round = 1;
+
+                    RobotParams::iffromNto1 = false;
+                    RobotParams::ifCSACD = false;
+
+                    SendMoveCommandAll(values, ifABS);
+
+                    LoggerStudySamples();
+                    timeStamp++;
+                    return;
+                }
+                else
+                {
+                    RobotParams::currentclutchindex = 2;
+                    RobotParams::currentclutchvalue = "抬升";
+
+                    double clutchaim = 0, accaim = 0;
+                    if ((clutchaim = Configuration::GetInstance()->clutchAngles[0] - RobotParams::round * Configuration::GetInstance()->clutchUpSpeed) < Configuration::GetInstance()->clutchAngles[1])
+                    {
+                        clutchaim = Configuration::GetInstance()->clutchAngles[1];
+                    }
+                    values[2] = clutchaim;
+
+                    if ( ( accaim = Configuration::GetInstance()->deathPos[1] + RobotParams::round * (Configuration::GetInstance()->clutchUpSpeed / (Configuration::GetInstance()->clutchAngles[0] - Configuration::GetInstance()->clutchAngles[1]) * (Configuration::GetInstance()->startAccAngleValue - Configuration::GetInstance()->deathPos[1]) ) ) > Configuration::GetInstance()->startAccAngleValue)
+                    {
+                        accaim = Configuration::GetInstance()->startAccAngleValue;
+                    }
+                    values[1] = accaim;
+                    ifABS[1] = 1;
+                    ifABS[2] = 1;
+
+                    RobotParams::round++;
+
+                    SendMoveCommandAll(values, ifABS);
+
+                    LoggerStudySamples();
+                    timeStamp++;
+                    return;
+                }
+            }
+        }
+    }
 }
 
 bool PedalRobot::ReadyToNVH()
@@ -1167,10 +1757,8 @@ bool PedalRobot::ReadyToNVH()
   RobotParams::switchflag[0] = true;
 
   ret = QMessageBox::information(
-              NULL,"提示", QString(curveFilePath.c_str()) + QObject::tr("请再次确认挡位离合信息后发动车辆!\n点击确认后开始运行!"),
+              NULL,"提示", QObject::tr("请再次确认挡位离合信息后发动车辆!\n点击确认后开始运行!"),
               QObject::tr("确认"),QObject::tr("取消"));
-
-  while (RobotParams::switchflag[0]) {;}
 
   if(ret == 1){
       PRINTF(LOG_DEBUG, "%s...cancel\n", __func__);
@@ -1186,6 +1774,29 @@ bool PedalRobot::ReadyToNVH()
       }
       else
       {
+          if (RobotParams::switchflag[0])
+          {
+              QMessageBox::information(NULL,"警告", QString("按键指令与机械运动冲突，请重试！"));
+              PRINTF(LOG_WARNING, "%s: too fast push button.\n", __func__);
+              return false;
+          }
+
+          // 停止
+          AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
+
+          // 开始监听模式
+          std::string fileContent = FileAssistantFunc::ReadFileContent(Configuration::examFilePath + "SC_ARM");
+          if(fileContent.empty()){
+              PRINTF(LOG_WARNING, "%s: read file error.\n", __func__);
+              return false;
+          }
+          AutoDriveRobotApiClient::GetInstance()->Send_SwitchToActionMsg(fileContent);
+
+          RobotParams::round = 1;
+          RobotParams::round2 = 1;
+          RobotParams::switchflag[4] = false;
+          RobotParams::switchflag[3] = true;
+
           conf->SaveToFile();
           return true;
       }
@@ -1229,92 +1840,29 @@ void PedalRobot::StartQCustomPlotNVH(const std::__cxx11::string &fileNameARM, co
     size_t sz = vp_data.size();
     PairData tempvp_data;
 
+    RobotParams::canCarSpeed = 6; // should be solved
+
     switch (index)
     {
     case 0:
-        tempvp_data.clear(); tempvp_data.reserve(sz + 3);
-
-        tempvp_data.push_back( std::make_pair(0.0, 8.0) );
-        tempvp_data.push_back( std::make_pair(5.0, 8.0) );
-        for(size_t i=0; i<sz; ++i){
-            tempvp_data.push_back( std::make_pair(vp_data[i].first + 6.0, vp_data[i].second) );
-        }
-        if ( (tempvp_data[sz + 1].first - tempvp_data[sz].first) == 0 )
-        {
-            tempvp_data.push_back( std::make_pair(tempvp_data[sz + 1].first + 3.0, tempvp_data[sz + 1].second) );
-        }
-        else
-        {
-            tempvp_data.push_back( std::make_pair(tempvp_data[sz + 1].first + 3.0, tempvp_data[sz + 1].second + (tempvp_data[sz + 1].second - tempvp_data[sz].second) / (tempvp_data[sz + 1].first - tempvp_data[sz].first) * 3.0) );
-        }
-
-        vp_data.clear(); vp_data.reserve(tempvp_data.size());
-
-        for(size_t i=0; i<tempvp_data.size(); ++i){
-            vp_data.push_back( std::make_pair(tempvp_data[i].first, tempvp_data[i].second) );
-        }
-        break;
     case 1:
-        tempvp_data.clear(); tempvp_data.reserve(sz + 3);
-
-        tempvp_data.push_back( std::make_pair(0.0, 0.0) );
-        tempvp_data.push_back( std::make_pair(5.0, 0.0) );
-        for(size_t i=0; i<sz; ++i){
-            tempvp_data.push_back( std::make_pair(vp_data[i].first + 6.0, vp_data[i].second) );
-        }
-        if ( (tempvp_data[sz + 1].first - tempvp_data[sz].first) == 0 )
-        {
-            tempvp_data.push_back( std::make_pair(tempvp_data[sz + 1].first + 3.0, tempvp_data[sz + 1].second) );
-        }
-        else
-        {
-            tempvp_data.push_back( std::make_pair(tempvp_data[sz + 1].first + 3.0, tempvp_data[sz + 1].second + (tempvp_data[sz + 1].second - tempvp_data[sz].second) / (tempvp_data[sz + 1].first - tempvp_data[sz].first) * 3.0) );
-        }
-
-        vp_data.clear(); vp_data.reserve(tempvp_data.size());
-
-        for(size_t i=0; i<tempvp_data.size(); ++i){
-            vp_data.push_back( std::make_pair(tempvp_data[i].first, tempvp_data[i].second) );
-        }
-        break;
-    case 2:
-        break;
     case 3:
-        tempvp_data.clear(); tempvp_data.reserve(sz + 24);
+    {
+        tempvp_data.clear(); tempvp_data.reserve(sz + 2);
+        int lengthsz = sz + 2;
 
-        tempvp_data.push_back( std::make_pair(0.0, 0.0) );
-        tempvp_data.push_back( std::make_pair(1.0, 2.2) );
-        tempvp_data.push_back( std::make_pair(2.0, 4.6) );
-        tempvp_data.push_back( std::make_pair(3.0, 7.2) );
-        tempvp_data.push_back( std::make_pair(4.0, 10.0) );
-        tempvp_data.push_back( std::make_pair(5.0, 13.0) );
-        tempvp_data.push_back( std::make_pair(6.0, 16.2) );
-        tempvp_data.push_back( std::make_pair(7.0, 19.6) );
-        tempvp_data.push_back( std::make_pair(8.0, 23.2) );
-        tempvp_data.push_back( std::make_pair(17.0, 56.8) );
-        tempvp_data.push_back( std::make_pair(18.0, 60.4) );
-        tempvp_data.push_back( std::make_pair(19.0, 63.8) );
-        tempvp_data.push_back( std::make_pair(20.0, 67.0) );
-        tempvp_data.push_back( std::make_pair(21.0, 70.0) );
-        tempvp_data.push_back( std::make_pair(22.0, 72.8) );
-        tempvp_data.push_back( std::make_pair(23.0, 75.4) );
-        tempvp_data.push_back( std::make_pair(24.0, 77.8) );
-        tempvp_data.push_back( std::make_pair(25.0, 80.0) );
-        tempvp_data.push_back( std::make_pair(26.0, 80.0) );
-        tempvp_data.push_back( std::make_pair(27.0, 77.8) );
-        tempvp_data.push_back( std::make_pair(28.0, 75.4) );
-        tempvp_data.push_back( std::make_pair(29.0, 72.8) );
-        tempvp_data.push_back( std::make_pair(30.0, 70.2) );
+        tempvp_data.push_back( std::make_pair(0.0, vp_data[0].second) );
         for(size_t i=0; i<sz; ++i){
-            tempvp_data.push_back( std::make_pair(vp_data[i].first + 31.0, vp_data[i].second) );
+            tempvp_data.push_back( std::make_pair(vp_data[i].first + 2.0, vp_data[i].second) );
         }
-        if ( (tempvp_data[sz + 1].first - tempvp_data[sz].first) == 0 )
+
+        if ( (tempvp_data[lengthsz - 2].first - tempvp_data[lengthsz - 3].first) == 0 )
         {
-            tempvp_data.push_back( std::make_pair(tempvp_data[sz + 22].first + 3.0, tempvp_data[sz + 22].second) );
+            tempvp_data.push_back( std::make_pair(tempvp_data[lengthsz - 2].first + 3.0, tempvp_data[lengthsz - 2].second) );
         }
         else
         {
-            tempvp_data.push_back( std::make_pair(tempvp_data[sz + 22].first + 3.0, tempvp_data[sz + 22].second + (tempvp_data[sz + 22].second - tempvp_data[sz + 21].second) / (tempvp_data[sz + 22].first - tempvp_data[sz + 21].first) * 3.0) );
+            tempvp_data.push_back( std::make_pair(tempvp_data[lengthsz - 2].first + 3.0, tempvp_data[lengthsz - 2].second + (tempvp_data[lengthsz - 2].second - tempvp_data[lengthsz - 3].second) / (tempvp_data[lengthsz - 2].first - tempvp_data[lengthsz - 3].first) * 3.0) );
         }
 
         vp_data.clear(); vp_data.reserve(tempvp_data.size());
@@ -1322,6 +1870,9 @@ void PedalRobot::StartQCustomPlotNVH(const std::__cxx11::string &fileNameARM, co
         for(size_t i=0; i<tempvp_data.size(); ++i){
             vp_data.push_back( std::make_pair(tempvp_data[i].first, tempvp_data[i].second) );
         }
+        break;
+    }
+    case 2:
         break;
     default:
         break;
@@ -1333,7 +1884,6 @@ void PedalRobot::StartQCustomPlotNVH(const std::__cxx11::string &fileNameARM, co
     QVector<double> lowerTime(sz), lowerSpeed(sz);
     const double maxY = CalculateUpperLowerBound(time, speed, upperTime, upperSpeed, lowerTime, lowerSpeed);
 
-    InitQCustomPlotNVH1(maxY);
     InitQCustomPlotNVH2(maxY);
     plotNVH2->graph(fileCurve)->setData(time,speed);
     plotNVH2->graph(upperCurve)->setData(upperTime,upperSpeed);
@@ -1348,36 +1898,78 @@ void PedalRobot::StartQCustomPlotNVH(const std::__cxx11::string &fileNameARM, co
     RobotParams::changeshiftstart = false;
     RobotParams::changeshiftend = false;
 
-    // 运动时间的记录
-    gettimeofday(&actionStartTime, NULL);
-    PRINTF(LOG_DEBUG, "%s: actionStartTime=%ld:%ld\n", __func__, actionStartTime.tv_sec, actionStartTime.tv_usec);
-    actionDurationSecond = time[sz-1] - time[0];
-    PRINTF(LOG_DEBUG, "%s: actionDurationSecond=%f\n",__func__,actionDurationSecond);
+    if (RobotParams::NVHcurvestate != 3)
+    {
+        // 运动时间的记录
+        gettimeofday(&actionStartTime, NULL);
+        PRINTF(LOG_DEBUG, "%s: actionStartTime=%ld:%ld\n", __func__, actionStartTime.tv_sec, actionStartTime.tv_usec);
+        actionDurationSecond = time[sz-1] - time[0];
+        PRINTF(LOG_DEBUG, "%s: actionDurationSecond=%f\n",__func__,actionDurationSecond);
 
-    InitControlMethod();
+        InitControlMethod();
 
-    // 准备日志数据
-    myLogger->clear();
-    myLogger->Customize("ControlParams:\n");
+        // 准备日志数据
+        myLogger->clear();
+        myLogger->Customize("ControlParams:\n");
 
-    myLogger->Customize("Run as WLTC(NVH): ");
-    for(size_t i=0; i<sizeof(conf->sysControlParamsWltc)/sizeof(conf->sysControlParamsWltc[0]); ++i){
-        myLogger->Customize(conf->sysControlParamsWltc[i]).Customize("\t");
+        myLogger->Customize("Run as WLTC(NVH): ");
+        for(size_t i=0; i<sizeof(conf->sysControlParamsWltc)/sizeof(conf->sysControlParamsWltc[0]); ++i){
+            myLogger->Customize(conf->sysControlParamsWltc[i]).Customize("\t");
+        }
+
+        myLogger->Customize("\n");
+        myLogger->Customize("TimeStamp\tBrakeOpenValue\tAccOpenValue\tCANSpeed\t\tPULSESpeed\t\tTargetSpeed\t\tControlMethod\tConBrake\t\tConAcc\t\t\tShift\t\t\tClutch\t\t\tBrakeAxis\t\tAccAxis\t\t\tClutchAxis\t\tShiftAxis1\t\tShiftAxis2\t\tSteeringAxis\tCurrentTime\n");
+        autoSaveLogger = true;
+        PRINTF(LOG_DEBUG, "%s: logger is cleared and ready!\n", __func__);
+
+        timeStamp=0;
     }
-
-    myLogger->Customize("\n");
-    myLogger->Customize("TimeStamp\tBrakeOpenValue\tAccOpenValue\tCANSpeed\t\tPULSESpeed\t\tTargetSpeed\t\tControlMethod\tConBrake\t\tConAcc\t\t\tShift\t\t\tClutch\t\t\tBrakeAxis\t\tAccAxis\t\t\tClutchAxis\t\tShiftAxis1\t\tShiftAxis2\t\tSteeringAxis\tCurrentTime\n");
-    autoSaveLogger = true;
-    PRINTF(LOG_DEBUG, "%s: logger is cleared and ready!\n", __func__);
-
-    timeStamp=0;
+    else
+    {
+        RobotParams::NVHcurvestate3state = 0;
+    }
 
     RobotParams::NVHcurvestate = index;
 }
 
-void PedalRobot::InitQCustomPlotNVH1(double maxY)
+void PedalRobot::StartQCustomPlotSpeed()
 {
-    Q_UNUSED(maxY);
+    InitQCustomPlotNVH1();
+    plotNVH1->replot();
+
+    // 运动时间的记录
+    gettimeofday(&actionStartTimeSpeed, NULL);
+    PRINTF(LOG_DEBUG, "%s: actionStartTimeSpeed=%ld:%ld\n", __func__, actionStartTimeSpeed.tv_sec, actionStartTimeSpeed.tv_usec);
+}
+
+void PedalRobot::InitQCustomPlotNVH1()
+{
+    plotNVH1->clearGraphs();
+    plotNVH1->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes | QCP::iSelectLegend | QCP::iSelectPlottables);
+    plotNVH1->xAxis->setLabel(QObject::tr("时间(s)"));
+    plotNVH1->yAxis->setLabel(QObject::tr("速度(km/h)"));
+
+    QPen myPen;
+    myPen.setWidth(5);
+
+    //1)实际曲线
+    plotNVH1->addGraph();
+    myPen.setColor(Qt::green);
+    plotNVH1->graph(0)->setPen(myPen);
+    plotNVH1->yAxis->setRange(GetCarSpeed()-30.0, GetCarSpeed()+30.0);
+}
+
+void PedalRobot::UpdateQCustomPlotSpeed()
+{
+    struct timeval tv;
+    gettimeofday(&tv,NULL);
+    elapsedSecondsSpeed = GetElapsedMillisecond(actionStartTimeSpeed, tv)/1000.0;
+
+    plotNVH1->graph(0)->addData(elapsedSecondsSpeed, GetCarSpeed());//(s, km/h)
+    double lowerX = GetDisplayLowerBoundSpeed(elapsedSecondsSpeed);
+    plotNVH1->xAxis->setRange(lowerX, lowerX+60.0);
+    plotNVH1->yAxis->setRange(0.0, GetCarSpeed()+5.0);
+    plotNVH1->replot();
 }
 
 void PedalRobot::InitQCustomPlotNVH2(double maxY)
@@ -1433,6 +2025,7 @@ void PedalRobot::UpdateQCustomPlotNVH()
 void PedalRobot::FinishQCustomPlotNVH(bool showMessageBox)
 {
     RobotParams::NVHcurvestate = 9;
+    RobotParams::NVHcurvestate3state = 0;
     AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
     CheckIfSaveLogger();
 
@@ -1441,10 +2034,12 @@ void PedalRobot::FinishQCustomPlotNVH(bool showMessageBox)
     }
 }
 
-
-
-
-
+void PedalRobot::FinishQCustomPlotSpeed(bool showMessageBox)
+{
+    if(showMessageBox){
+        QMessageBox::information(NULL,"提示","NVH测试已完成!");
+    }
+}
 
 double PedalRobot::GetBrakePosition()
 {
@@ -1513,6 +2108,28 @@ void PedalRobot::CheckIfSaveLogger()
 
 void PedalRobot::InitParameters()
 {
+    /* <ACD> */
+
+    //修改6/////////////////////////////////////////////////////////////////
+    lastCmndMd=1;
+    lastGetAcclStPos=1.0;//做延时用
+    lastGetAcclDlyTmr=1.0;//做延时用
+    lastGetBrkPdlStPos=1.0;//做延时用
+    lastGetBrkPdlDlyTmr=1.0;//做延时用
+    lastGetVehStSpd=1.0;//做online控制 速度初始用
+
+    myGetMTApp=0; //是否手动挡
+    myGetTransReqGr=0; //手动档位
+    myGetCmndMd=3; //控制模式
+    myGetVehStSpd=1.0; //目标速度
+    myGetAcclStPos=1.0; //目标油门开度
+    myGetAcclDlyTmr=1.0; //油门延迟时间
+    myGetBrkPdlStPos=1.0; //目标刹车开度
+    myGetBrkPdlDlyTmr=1.0; //刹车延迟时间
+    //修改6/////////////////////////////////////////////////////////////////
+
+    /* </ACD> */
+
     vp_data.clear();
     vp_data.reserve(64);
     isControlling=false;
@@ -1559,6 +2176,33 @@ int PedalRobot::ReadListeningTeachFile(const std::__cxx11::string &fileName)
                     fs>>time>>speed;
                     vp_data.push_back( std::make_pair(time,speed) );
                 }
+
+                /* <ACD> */
+
+                //修改5/////////////////////////////////////////////////////////////////////
+
+                //修改21/////////////////////////////////////////////////////////////////////
+                if(modelSelect==1 || modelSelect==2){//ACD的predef模式和online模式
+                    //修改21/////////////////////////////////////////////////////////////////////
+
+                    vp_data.clear();
+                    //double vpSize=vp_data.size();//这样显示不对，始终0
+                    //std::cout<<vpSize<<std::endl;
+
+
+                    std::cout<<vp_data.size()<<std::endl;
+
+                    vp_data.push_back( std::make_pair(0,0) );
+                    vp_data.push_back( std::make_pair(1,0) );
+                    vp_data.push_back( std::make_pair(99990,0) );
+                    vp_data.push_back( std::make_pair(99999,0) );
+                    std::cout<<vp_data.size()<<"   "<<elapsedSeconds<<"   "<<"   "<<vp_data[1].first<<"   "<<vp_data[1].second<<"   "<<std::endl;
+
+                }
+                //修改5/////////////////////////////////////////////////////////////////////
+
+                /* </ACD> */
+
                 break;
             default:
                 PRINTF(LOG_ERR, "%s: (%s) switch default return -1\n",__func__,buf);
@@ -1844,6 +2488,11 @@ double PedalRobot::GetDisplayLowerBound(double value)
     return value<15.0? 0.0: value-15.0;
 }
 
+double PedalRobot::GetDisplayLowerBoundSpeed(double value)
+{
+    return value<30.0? 0.0: value-30.0;
+}
+
 double PedalRobot::GetDisplayUpperBound(double value)
 {
     return value>actionDurationSecond-30.0? actionDurationSecond: value+30.0;
@@ -1969,32 +2618,668 @@ void PedalRobot::SendMoveCommand(double deltaBrake, double deltaAcc, bool *overm
     AutoDriveRobotApiClient::GetInstance()->Send_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta);
 }
 
+/* <ACD> */
+
+//第一次修改
+void PedalRobot::RunMyPID() {
+
+    //if(modelSelect!=1){//修改
+    //  return;
+    //}
+
+    //if(startMyPID2==false){//修改
+    //   return;
+    //}
+    const static QTime t1 = QTime::currentTime();//修改
+    QTime t2 = QTime::currentTime();
+    int timeElapsed =1000*60*(t2.minute()-t1.minute())+1000*(t2.second()-t1.second())+t2.msec()-t1.msec();
+
+    double values1[RobotParams::axisNum];//栈不能这样赋初值，要像下面一样
+    int ifABS1[RobotParams::axisNum];
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        values1[i] = 0; ifABS1[i] = 0;
+    }
+    double values2[RobotParams::axisNum];//栈不能这样赋初值，要像下面一样
+    int ifABS2[RobotParams::axisNum];
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        values2[i] = 0; ifABS2[i] = 0;
+    }
+    for(int i=0; i<2; ++i){//绝对位置，所以会在0-30间来回运动
+        values1[i] = 0.0; ifABS1[i] = 1;
+        values2[i] = 80.0; ifABS2[i] = 1;
+    }
+    //theta2[0] = 0.0;//刹车踏板不动
+
+    timeElapsed %= 6000;
+    if(timeElapsed<3000){
+        SendMoveCommandAll(values1, ifABS1);
+        //std::cout<<"positive"<<timeElapsed<<std::endl;
+        //std::cout<<scara_theta[1]<<" InitialMyACD "<<scara_theta[0]<<std::endl;
+    }else{
+        SendMoveCommandAll(values2, ifABS2);
+        //std::cout<<"negative"<<timeElapsed<<std::endl;
+        //std::cout<<scara_theta[1]<<" InitialMyACD "<<scara_theta[0]<<std::endl;
+    }
+
+}
+//第一次修改
+
+//第一次修改
+//控制油门开度[1]  ACD模式2 predefined模式 油门延时控制
+void PedalRobot::RunAccOpenValue2() {
+    if(startAccOpenValue==false){
+        return;
+    }
+
+
+    //if(scara_theta[1]>=1)//54ms一个周期足以将就刹车从1退到0
+    double values[RobotParams::axisNum];//栈不能这样赋初值，要像下面一样
+    int ifABS[RobotParams::axisNum];
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        values[i] = 0; ifABS[i] = 0;
+    }
+    values[0] = 0.0; ifABS[0] = 1;//刹车踏板不动
+    //readAcceleratorOpenValue目标油门开度 ； acceleratorOpenValue当前油门开度
+    //theta3[1]设置目标油门踏板位置         ；scara_theta[1] //当前油门踏板位置
+    standardAccACD2=1;//设为1，要改改为比1大
+
+    //下面这句是测试用，删除////////////////////////////////////////////////////////
+    //acceleratorOpenValue=(scara_theta[1])*0.9;//测试用，删除/////////////////////////////////
+
+    //const static QTime t1 = QTime::currentTime();//修改 pdRobot->initConTime
+
+    QTime t2 = QTime::currentTime();
+    int microTimeElapsed =1000*60*(t2.minute()-initConTime.minute())+1000*(t2.second()-initConTime.second())+t2.msec()-initConTime.msec();
+    double TimeElapsed=microTimeElapsed/1000.0;
+    if(TimeElapsed>=readAccDelayTime)
+    {
+        TimeElapsed=readAccDelayTime;
+    }
+    //std::cout<<TimeElapsed<<" time-theta "<<scara_theta[1]<<std::endl;
+
+    //下面这段是加了延时控制  之后那句是没有延时
+    if(readAccDelayTime==0)
+    {
+        values[1]=RobotParams::angleRealTime[1]+(readAccOpenValue-RobotParams::accOpenValue)*standardAccACD2;
+    }
+    else
+    {
+        //theta3[1]=scara_theta[1]+(TimeElapsed/readAccDelayTime)*(readAccOpenValue-acceleratorOpenValue)*standardAccACD2;
+
+        //修改11////////////////////////////////////////////////////////////////////
+        //theta3[1]=(TimeElapsed/readAccDelayTime)*(scara_theta[1]+(readAccOpenValue-acceleratorOpenValue)*standardAccACD2);
+        //theta3[1]=scara_theta[1]+(TimeElapsed/readAccDelayTime)*(TimeElapsed/readAccDelayTime)*(readAccOpenValue-acceleratorOpenValue)*standardAccACD2;
+        //theta3[1]=scara1AccStart+(TimeElapsed/readAccDelayTime)*(readAccOpenValue-acceleratorOpenValue)*standardAccACD2;
+        values[1]=(1-TimeElapsed/readAccDelayTime)*scara1AccStart+(TimeElapsed/readAccDelayTime)*(RobotParams::angleRealTime[1]+(readAccOpenValue-RobotParams::accOpenValue)*standardAccACD2);
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+    ifABS[1] = 1;
+
+    //std::cout<<TimeElapsed<<" TimeElapsed "<<(TimeElapsed/readAccDelayTime)<<" timeRate-theta3[1] "<<theta3[1]<<" scara "<<scara_theta[1]<<std::endl;
+    //theta3[1]=scara_theta[1]+(readAccOpenValue-acceleratorOpenValue)*standardAccACD2;
+
+    SendMoveCommandAll(values, ifABS);
+}
+//第一次修改
+
+//第一次修改
+//控制刹车开度[2]  ACD模式2 predefined模式 刹车延时控制
+void PedalRobot::RunBrakeOpenValue2() {
+    if(startBrakeOpenValue==false){
+        return;
+    }
+
+    //if(scara_theta[1]>=1)//54ms一个周期足以将就刹车从1退到0
+    double values[RobotParams::axisNum];//栈不能这样赋初值，要像下面一样
+    int ifABS[RobotParams::axisNum];
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        values[i] = 0; ifABS[i] = 0;
+    }
+    values[1] = 0.0; ifABS[1] = 1;//油门踏板不动
+    //readAcceleratorOpenValue目标油门开度 ； acceleratorOpenValue当前油门开度
+    //theta3[1]设置目标油门踏板位置         ；scara_theta[1] //当前油门踏板位置
+    standardAccACD2=1;//设为1，要改改为比1大
+
+    //下面这句是测试用，删除////////////////////////////////////////////////////////
+    //brakeOpenValue=(scara_theta[0])*0.9;//测试用，删除/////////////////////////////////
+
+    //const static QTime t1 = QTime::currentTime();//修改 pdRobot->initConTime
+
+    QTime t2 = QTime::currentTime();
+    int microTimeElapsed =1000*60*(t2.minute()-initConTime.minute())+1000*(t2.second()-initConTime.second())+t2.msec()-initConTime.msec();
+    double TimeElapsed=microTimeElapsed/1000.0;
+    if(TimeElapsed>=readBrakeDelayTime)
+    {
+        TimeElapsed=readBrakeDelayTime;
+    }
+    //std::cout<<TimeElapsed<<" time-theta "<<scara_theta[0]<<std::endl;
+
+    //下面这段是加了延时控制  之后那句是没有延时
+    if(readBrakeDelayTime==0)
+    {
+        values[0]=RobotParams::angleRealTime[0]+(readBrakeOpenValue-RobotParams::brakeOpenValue)*standardAccACD2;
+    }
+    else
+    {
+
+        //修改11////////////////////////////////////////////////////////////////////
+        //theta3[0]=(TimeElapsed/readBrakeDelayTime)*(scara_theta[0]+(readBrakeOpenValue-brakeOpenValue)*standardAccACD2);
+        //theta3[0]=scara0BrakeStart+(TimeElapsed/readBrakeDelayTime)*(readBrakeOpenValue-brakeOpenValue)*standardAccACD2;
+        values[0]=(1-TimeElapsed/readBrakeDelayTime)*scara0BrakeStart+(TimeElapsed/readBrakeDelayTime)*(RobotParams::angleRealTime[0]+(readBrakeOpenValue-RobotParams::brakeOpenValue)*standardAccACD2);
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+    ifABS[0] = 1;
+
+    //theta3[1]=scara_theta[1]+(readAccOpenValue-acceleratorOpenValue)*standardAccACD2;
+
+    SendMoveCommandAll(values, ifABS);
+}
+//第一次修改
+
+//第3次修改
+void PedalRobot::intialMySysControl(){
+    mySysControl->systemModelSelect=modelSelect;
+}
+//第3次修改
+
+//修改5/////////////////////////////////////////////////////////////////////
+void PedalRobot::intialMySysSpeed(){
+    mySysControl->sysSpeedStart=speedStart;
+    mySysControl->sysReadCarSpeed=readCarSpeed;
+    mySysControl->sysCarSelect=carSelect;
+
+    //修改12////////////////////////////////////////////////////////////////////
+
+    //修改21////////////////////////////////////////////////////////////////////
+    mySysControl->sysTimeStart=timeStart;
+    //修改21////////////////////////////////////////////////////////////////////
+
+    //修改12////////////////////////////////////////////////////////////////////
+
+}
+
+double PedalRobot::GetElapsedSeconds()
+{
+    return elapsedSeconds;
+}
+
+double PedalRobot::GetMyCarSpeed()
+{
+    return GetCarSpeed();
+}
+
+//控制速度[0]  ACD模式2 predefined模式 速度控制
+void PedalRobot::RunCarSpeed2(){
+    if(startCarSpeed==false){
+        return;
+    }
+
+    mySysControl->vpdataCarSpeed2();
+
+    //mySysControl->vp_data.clear();
+    //std::cout<<elapsedSeconds<<"  "<<vp_data.size()<<"   "<<vp_data[1].first<<"   "<<vp_data[1].second<<std::endl;
+    double deltaSpeed=readCarSpeed-speedStart;
+    double deltaTen=(deltaSpeed)/(fabs(deltaSpeed))*10.0;
+
+    double acc=1.5;//加速度的定义变量，即10千米用1.5秒到达，折算加速度是6.66>6(wltc最大加速度)
+    switch(carSelect)
+    {
+    case 0:
+        acc=2;
+        break;
+    case 1:
+        acc=1.5;
+        break;
+    case 2:
+        acc=1;
+        break;
+    default:
+        acc=2;
+    }
+    //std::cout<<"-acc-  "<<acc<<std::endl;
+
+    timeStart=0;//因为每次刷新时elapsedSeconds都归0.且在pedalrobotui里，timeStart的赋值在elapsedSeconds归0之前
+    if(timeStart==0)
+    {
+        if(fabs(deltaSpeed)<10)
+        {
+            vp_data.clear();
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart+1,speedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1+acc,readCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,readCarSpeed) );
+        }
+
+        if(fabs(deltaSpeed)>=10)
+        {
+            double count=floor(fabs(deltaSpeed)/10.0)+1;
+            vp_data.clear();
+
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart+1,speedStart) );
+
+            for(int i=1;i<count;i++)
+            {
+                vp_data.push_back( std::make_pair(timeStart+1+acc*i,speedStart+deltaTen*i) );
+            }
+
+            vp_data.push_back( std::make_pair(timeStart+1+acc*count,readCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,readCarSpeed) );
+        }
+    }
+
+    if(timeStart!=0)
+    {
+        if(fabs(deltaSpeed)<10)
+        {
+            vp_data.clear();
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart,speedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1,speedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1+acc,readCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,readCarSpeed) );
+        }
+
+        if(fabs(deltaSpeed)>=10)
+        {
+            double count=floor(fabs(deltaSpeed)/10.0)+1;
+            vp_data.clear();
+
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart,speedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1,speedStart) );
+
+            for(int i=1;i<count;i++)
+            {
+                vp_data.push_back( std::make_pair(timeStart+1+acc*i,speedStart+deltaTen*i) );
+            }
+
+            vp_data.push_back( std::make_pair(timeStart+1+acc*count,readCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,readCarSpeed) );
+        }
+    }
+
+}
+
+//修改5/////////////////////////////////////////////////////////////////////
+/*
+        std::cout<<vp_data.size()<<"   "<<elapsedSeconds<<std::endl;
+        std::cout<<vp_data[0].first<<"   "<<vp_data[0].second<<std::endl;
+        std::cout<<vp_data[1].first<<"   "<<vp_data[1].second<<std::endl;
+        std::cout<<vp_data[2].first<<"   "<<vp_data[2].second<<std::endl;
+        std::cout<<vp_data[3].first<<"   "<<vp_data[3].second<<std::endl;
+        std::cout<<vp_data[4].first<<"   "<<vp_data[4].second<<std::endl;
+        std::cout<<vp_data[5].first<<"   "<<vp_data[5].second<<std::endl;
+        std::cout<<vp_data[6].first<<"   "<<vp_data[6].second<<std::endl;
+        std::cout<<vp_data[7].first<<"   "<<vp_data[7].second<<std::endl;
+        std::cout<<vp_data[8].first<<"   "<<vp_data[8].second<<std::endl;
+        std::cout<<vp_data[9].first<<"   "<<vp_data[9].second<<std::endl;
+        std::cout<<vp_data[10].first<<"   "<<vp_data[10].second<<std::endl;
+*/
+
+//第一次修改
+//修改6/////////////////////////////////////////////////////////////////////
+
+//ACD模式1 online模式
+void PedalRobot::onlineAccOpenValue1(){
+    double values[RobotParams::axisNum];//栈不能这样赋初值，要像下面一样
+    int ifABS[RobotParams::axisNum];
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        values[i] = 0; ifABS[i] = 0;
+    }
+    values[0] = 0.0; ifABS[0] = 1;//刹车踏板不动
+    //readAcceleratorOpenValue目标油门开度 ； acceleratorOpenValue当前油门开度
+    //theta3[1]设置目标油门踏板位置         ；scara_theta[1] //当前油门踏板位置
+    standardAccACD2=1;//设为1，要改改为比1大
+
+    //下面这句是测试用，删除////////////////////////////////////////////////////////
+    //acceleratorOpenValue=(scara_theta[1])*0.9;//测试用，删除/////////////////////////////////
+
+    //const static QTime t1 = QTime::currentTime();//修改 pdRobot->initConTime
+
+    QTime t2 = QTime::currentTime();
+    int microTimeElapsed =1000*60*(t2.minute()-initConTime1.minute())+1000*(t2.second()-initConTime1.second())+t2.msec()-initConTime1.msec();
+    double TimeElapsed=microTimeElapsed/1000.0;
+    if(TimeElapsed>=myGetAcclDlyTmr)
+    {
+        TimeElapsed=myGetAcclDlyTmr;
+    }
+    //std::cout<<TimeElapsed<<" time-theta "<<scara_theta[1]<<std::endl;
+
+    //下面这段是加了延时控制  之后那句是没有延时
+    if(myGetAcclDlyTmr==0)
+    {
+        values[1]=RobotParams::angleRealTime[1]+(myGetAcclStPos-RobotParams::accOpenValue)*standardAccACD2;
+    }
+    else
+    {
+        //theta3[1]=scara_theta[1]+(TimeElapsed/readAccDelayTime)*(readAccOpenValue-acceleratorOpenValue)*standardAccACD2;
+
+        //修改11////////////////////////////////////////////////////////////////////
+        //theta3[1]=(TimeElapsed/myGetAcclDlyTmr)*(scara_theta[1]+(myGetAcclStPos-acceleratorOpenValue)*standardAccACD2);
+        //theta3[1]=scara1AccStart+(TimeElapsed/myGetAcclDlyTmr)*(myGetAcclStPos-acceleratorOpenValue)*standardAccACD2;
+        values[1]=(1-TimeElapsed/myGetAcclDlyTmr)*scara1AccStart+(TimeElapsed/myGetAcclDlyTmr)*(RobotParams::angleRealTime[1]+(myGetAcclStPos-RobotParams::accOpenValue)*standardAccACD2);
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+    ifABS[1] = 1;
+    //std::cout<<TimeElapsed<<" TimeElapsed "<<(TimeElapsed/readAccDelayTime)<<" timeRate-theta3[1] "<<theta3[1]<<" scara "<<scara_theta[1]<<std::endl;
+    //theta3[1]=scara_theta[1]+(readAccOpenValue-acceleratorOpenValue)*standardAccACD2;
+
+    SendMoveCommandAll(values, ifABS);
+}
+
+void PedalRobot::onlineBrakeOpenValue1(){
+    double values[RobotParams::axisNum];//栈不能这样赋初值，要像下面一样
+    int ifABS[RobotParams::axisNum];
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        values[i] = 0; ifABS[i] = 0;
+    }
+    values[1] = 0.0; ifABS[1] = 1;//油门踏板不动
+    //readAcceleratorOpenValue目标油门开度 ； acceleratorOpenValue当前油门开度
+    //theta3[1]设置目标油门踏板位置         ；scara_theta[1] //当前油门踏板位置
+    standardAccACD2=1;//设为1，要改改为比1大
+
+    //下面这句是测试用，删除////////////////////////////////////////////////////////
+    //brakeOpenValue=(scara_theta[0])*0.9;//测试用，删除/////////////////////////////////
+
+    //const static QTime t1 = QTime::currentTime();//修改 pdRobot->initConTime
+
+    QTime t2 = QTime::currentTime();
+    int microTimeElapsed =1000*60*(t2.minute()-initConTime1.minute())+1000*(t2.second()-initConTime1.second())+t2.msec()-initConTime1.msec();
+    double TimeElapsed=microTimeElapsed/1000.0;
+    if(TimeElapsed>=myGetBrkPdlDlyTmr)
+    {
+        TimeElapsed=myGetBrkPdlDlyTmr;
+    }
+    //std::cout<<TimeElapsed<<" time-theta "<<scara_theta[0]<<std::endl;
+
+    //下面这段是加了延时控制  之后那句是没有延时
+    if(myGetBrkPdlDlyTmr==0)
+    {
+        values[0]=RobotParams::angleRealTime[0]+(myGetBrkPdlStPos-RobotParams::brakeOpenValue)*standardAccACD2;
+    }
+    else
+    {
+
+        //修改11////////////////////////////////////////////////////////////////////
+        //theta3[0]=(TimeElapsed/myGetBrkPdlDlyTmr)*(scara_theta[0]+(myGetBrkPdlStPos-brakeOpenValue)*standardAccACD2);
+        //theta3[0]=scara0BrakeStart+(TimeElapsed/myGetBrkPdlDlyTmr)*(myGetBrkPdlStPos-brakeOpenValue)*standardAccACD2;
+        values[0]=(1-TimeElapsed/myGetBrkPdlDlyTmr)*scara0BrakeStart+(TimeElapsed/myGetBrkPdlDlyTmr)*(RobotParams::angleRealTime[0]+(myGetBrkPdlStPos-RobotParams::brakeOpenValue)*standardAccACD2);
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+    ifABS[0] = 1;
+
+    //theta3[1]=scara_theta[1]+(readAccOpenValue-acceleratorOpenValue)*standardAccACD2;
+
+    SendMoveCommandAll(values, ifABS);
+}
+
+void PedalRobot::onlineCarSpeed1(){
+
+    //修改12////////////////////////////////////////////////////////////////////
+    mySysControl->vpdataCarSpeed1();
+
+    //mySysControl->vp_data.clear();
+    //std::cout<<elapsedSeconds<<"  "<<vp_data.size()<<"   "<<vp_data[1].first<<"   "<<vp_data[1].second<<std::endl;
+    double deltaSpeed=readCarSpeed-speedStart;
+    double deltaTen=(deltaSpeed)/(fabs(deltaSpeed))*10.0;
+
+    double acc=1.5;//加速度的定义变量，即10千米用1.5秒到达，折算加速度是6.66>6(wltc最大加速度)
+    switch(carSelect)
+    {
+    case 0:
+        acc=2;
+        break;
+    case 1:
+        acc=1.5;
+        break;
+    case 2:
+        acc=1;
+        break;
+    default:
+        acc=2;
+    }
+    //std::cout<<"-acc-  "<<acc<<std::endl;
+
+    //因为本版本online对于elapsedSeconds强制做归零修改，所以下面这句 不用注释掉
+    timeStart=0;//因为每次刷新时elapsedSeconds都归0.且在pedalrobotui里，timeStart的赋值在elapsedSeconds归0之前
+    if(timeStart==0)
+    {
+        if(fabs(deltaSpeed)<10)
+        {
+            vp_data.clear();
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart+1,speedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1+acc,readCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,readCarSpeed) );
+        }
+
+        if(fabs(deltaSpeed)>=10)
+        {
+            double count=floor(fabs(deltaSpeed)/10.0)+1;
+            vp_data.clear();
+
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart+1,speedStart) );
+
+            for(int i=1;i<count;i++)
+            {
+                vp_data.push_back( std::make_pair(timeStart+1+acc*i,speedStart+deltaTen*i) );
+            }
+
+            vp_data.push_back( std::make_pair(timeStart+1+acc*count,readCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,readCarSpeed) );
+        }
+    }
+
+    if(timeStart!=0)
+    {
+        if(fabs(deltaSpeed)<10)
+        {
+            vp_data.clear();
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart,speedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1,speedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1+acc,readCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,readCarSpeed) );
+        }
+
+        if(fabs(deltaSpeed)>=10)
+        {
+            double count=floor(fabs(deltaSpeed)/10.0)+1;
+            vp_data.clear();
+
+            vp_data.push_back( std::make_pair(0,0) );
+            vp_data.push_back( std::make_pair(timeStart,speedStart) );
+            vp_data.push_back( std::make_pair(timeStart+1,speedStart) );
+
+            for(int i=1;i<count;i++)
+            {
+                vp_data.push_back( std::make_pair(timeStart+1+acc*i,speedStart+deltaTen*i) );
+            }
+
+            vp_data.push_back( std::make_pair(timeStart+1+acc*count,readCarSpeed) );
+            vp_data.push_back( std::make_pair(99999,readCarSpeed) );
+        }
+    }
+
+    //修改12////////////////////////////////////////////////////////////////////
+
+}
+
+void PedalRobot::RunOnline1(){
+    if(myGetMTApp==0 && myGetCmndMd!=lastCmndMd && myGetCmndMd==1)//油门延时控制用，给初始时间
+    {
+        initConTime1=QTime::currentTime();
+
+        //修改11////////////////////////////////////////////////////////////////////
+        scara1AccStart=RobotParams::angleRealTime[1];
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+    if(myGetMTApp==0 && myGetCmndMd!=lastCmndMd && myGetCmndMd==2)//刹车延时控制用，给初始时间
+    {
+        initConTime1=QTime::currentTime();
+
+        //修改11////////////////////////////////////////////////////////////////////
+        scara0BrakeStart=RobotParams::angleRealTime[0];
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+
+    if(myGetMTApp==0 && myGetCmndMd==lastCmndMd && myGetCmndMd==1 && lastGetAcclStPos!=myGetAcclStPos)//油门延时控制用，给初始时间
+    {
+        initConTime1=QTime::currentTime();
+
+        //修改11////////////////////////////////////////////////////////////////////
+        scara1AccStart=RobotParams::angleRealTime[1];
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+    if(myGetMTApp==0 && myGetCmndMd==lastCmndMd && myGetCmndMd==1 && lastGetAcclDlyTmr!=myGetAcclDlyTmr)//油门延时控制用，给初始时间
+    {
+        initConTime1=QTime::currentTime();
+
+        //修改11////////////////////////////////////////////////////////////////////
+        scara1AccStart=RobotParams::angleRealTime[1];
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+
+    if(myGetMTApp==0 && myGetCmndMd==lastCmndMd && myGetCmndMd==2 && lastGetBrkPdlStPos!=myGetBrkPdlStPos)//刹车延时控制用，给初始时间
+    {
+        initConTime1=QTime::currentTime();
+
+        //修改11////////////////////////////////////////////////////////////////////
+        scara0BrakeStart=RobotParams::angleRealTime[0];
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+    if(myGetMTApp==0 && myGetCmndMd==lastCmndMd && myGetCmndMd==2 && lastGetBrkPdlDlyTmr!=myGetBrkPdlDlyTmr)//刹车延时控制用，给初始时间
+    {
+        initConTime1=QTime::currentTime();
+
+        //修改11////////////////////////////////////////////////////////////////////
+        scara0BrakeStart=RobotParams::angleRealTime[0];
+        //修改11////////////////////////////////////////////////////////////////////
+
+    }
+
+    //修改12////////////////////////////////////////////////////////////////////
+    if(myGetMTApp==0 && myGetCmndMd!=lastCmndMd && myGetCmndMd==0)//速度控制用，用于初始设置
+    {
+        readCarSpeed=myGetVehStSpd;
+        timeStart=floor(GetElapsedSeconds());
+        speedStart=GetMyCarSpeed();
+        intialMySysSpeed();
+        elapsedSeconds=0;
+    }
+
+    if(myGetMTApp==0 && myGetCmndMd==lastCmndMd && myGetCmndMd==0 && lastGetVehStSpd!=myGetVehStSpd)//速度控制用，用于初始设置
+    {
+        readCarSpeed=myGetVehStSpd;
+        timeStart=floor(GetElapsedSeconds());
+        speedStart=GetMyCarSpeed();
+        intialMySysSpeed();
+        elapsedSeconds=0;
+    }
+    //修改12////////////////////////////////////////////////////////////////////
+
+    lastCmndMd=myGetCmndMd;//做延时用
+    lastGetAcclStPos=myGetAcclStPos;//做延时用
+    lastGetAcclDlyTmr=myGetAcclDlyTmr;//做延时用
+    lastGetBrkPdlStPos=myGetBrkPdlStPos;//做延时用
+    lastGetBrkPdlDlyTmr=myGetBrkPdlDlyTmr;//做延时用
+    lastGetVehStSpd=myGetVehStSpd;//做online控制 速度初始用
+
+    if(myGetMTApp==0 && myGetCmndMd==0)
+    {
+        onlineCarSpeed1();
+    }
+
+    if(myGetMTApp==0 && myGetCmndMd==1)
+    {
+
+        //修改11////////////////////////////////////////////////////////////////////
+        //scara1AccStart=scara_theta[1];//这么写不对，这样相当于不是给一个初始固定值了，而是实时在给
+        //修改11////////////////////////////////////////////////////////////////////
+
+        onlineAccOpenValue1();
+    }
+
+    if(myGetMTApp==0 && myGetCmndMd==2)
+    {
+
+        //修改11////////////////////////////////////////////////////////////////////
+        //scara0BrakeStart=scara_theta[0];//这么写不对，这样相当于不是给一个初始固定值了，而是实时在给
+        //修改11////////////////////////////////////////////////////////////////////
+
+        onlineBrakeOpenValue1();
+    }
+}
+
+//int myGetMTApp; //是否手动挡
+//int myGetTransReqGr; //手动档位
+//int myGetCmndMd; //控制模式
+//double myGetVehStSpd; //目标速度
+//double myGetAcclStPos; //目标油门开度
+//double myGetAcclDlyTmr; //油门延迟时间
+//double myGetBrkPdlStPos; //目标刹车开度
+//double myGetBrkPdlDlyTmr; //刹车延迟时间
+//修改6/////////////////////////////////////////////////////////////////////
+
+/* </ACD> */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void PedalRobot::LoggerStudySamples()
 {
-    myLogger->Customize(timeStamp).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::brakeOpenValue).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::accOpenValue).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::canCarSpeed).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::pulseCarSpeed).Customize("\t\t\t");
-    myLogger->Customize(GetCurrentTargetSpeed()).Customize("\t\t\t");
-    myLogger->Customize(mySysControl->GetSysControlMethod()).Customize("\t\t\t\t");
-    myLogger->Customize(mySysControl->getconBrake()).Customize("\t\t\t");
-    myLogger->Customize(mySysControl->getconAcc()).Customize("\t\t\t");
-
+    myLogger->Customize(timeStamp).Customize(" ");
+    myLogger->Customize(RobotParams::brakeOpenValue).Customize(" ");
+    myLogger->Customize(RobotParams::accOpenValue).Customize(" ");
+    myLogger->Customize(RobotParams::canCarSpeed).Customize(" ");
+    myLogger->Customize(RobotParams::pulseCarSpeed).Customize(" ");
+    myLogger->Customize(GetCurrentTargetSpeed()).Customize(" ");
+    myLogger->Customize(mySysControl->GetSysControlMethod()).Customize(" ");
+    myLogger->Customize(mySysControl->getconBrake()).Customize(" ");
+    myLogger->Customize(mySysControl->getconAcc()).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[0]).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[1]).Customize(" ");
+    myLogger->Customize(QTime::currentTime().toString("hhmmsszzz").toStdString().c_str()).Customize(" ");
     QString shiftnow = QString::fromStdString(RobotParams::currentshiftvalue);
     if (shiftnow == QString("N_1&2") || shiftnow == QString("N_3&4") || shiftnow == QString("N_5&6"))
     {
         shiftnow = QString("N");
     }
-    myLogger->Customize(shiftnow.toStdString().c_str()).Customize("\t\t\t\t");
-    myLogger->Customize(RobotParams::currentclutchvalue.c_str()).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::angleRealTime[0]).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::angleRealTime[1]).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::angleRealTime[2]).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::angleRealTime[3]).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::angleRealTime[4]).Customize("\t\t\t");
-    myLogger->Customize(RobotParams::angleRealTime[5]).Customize("\t\t\t");
-    myLogger->Customize(QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str()).Customize("\n");
+    myLogger->Customize(shiftnow.toStdString().c_str()).Customize(" ");
+    myLogger->Customize(RobotParams::currentclutchvalue.c_str()).Customize(" ");
+
+    myLogger->Customize(RobotParams::angleRealTime[2]).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[3]).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[4]).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[5]).Customize("\n");
 }
 
 double PedalRobot::GetCurrentTargetSpeed()
@@ -2119,7 +3404,7 @@ bool PedalRobot::GetIsControlling()
 
 bool PedalRobot::isStateIdle()
 {
-    if ( RobotParams::switchflag[0] || RobotParams::switchflag[1] || RobotParams::switchflag[2] || RobotParams::switchflag[3] || RobotParams::switchflag[4] || RobotParams::isExaming || isControlling)
+    if ( RobotParams::switchflag[0] || RobotParams::switchflag[1] || RobotParams::switchflag[2] || RobotParams::switchflag[3] || RobotParams::switchflag[4] || RobotParams::switchflag[5] || RobotParams::switchflag[6] || RobotParams::switchflag[7] || RobotParams::switchflag[8] || RobotParams::switchflag[9] || RobotParams::isExaming || isControlling)
     {
         return false;
     }

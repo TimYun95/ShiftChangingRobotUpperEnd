@@ -126,6 +126,12 @@ private:
 
 public:
     bool haveReadXML;
+
+    unsigned int timestamp_test = 0;
+
+//    std::vector<int> actionMethod;
+//    std::vector<int> actionAxes;
+//    std::vector<double> actionTheta;
 };
 
 #endif // SHIFTCLUTCHUI_H

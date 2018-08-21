@@ -4,7 +4,7 @@ const unsigned int RobotParams::UIAxisNum = 6; // UI界面支持的轴数
 
 const unsigned int RobotParams::UITimerMs = 18; // 基准定时器 18ms
 const unsigned int RobotParams::UITimerMultiplier = 3; // 控制指令发送周期 18*3=54m
-const unsigned int RobotParams::updateUIFrequency = 3; // 界面更新周期 18*3*3=112ms
+const unsigned int RobotParams::updateUIFrequency = 6; // 界面更新周期 18*3*6=324ms
 const unsigned int RobotParams::waitForGoHomeRound = 30; // 发送了回原指令后30个界面更新周期后失效
 
 const std::string RobotParams::robotType = "dof_6_autodrive"; // 机器人类型
@@ -15,7 +15,6 @@ const double RobotParams::singleAxisBtnRatioC = 2.0; // 单轴运动速度比例
 
 std::string RobotParams::currentshiftvalue = "/"; // 初始化挡位值
 std::string RobotParams::currentclutchvalue = "/"; // 初始化离合值
-
 
 double RobotParams::angleRealTime[axisNum]; // 实时各轴角度
 bool RobotParams::ifGoHome; // 是否已经回原
@@ -63,13 +62,20 @@ bool RobotParams::ifConfirmCS = false; // 是否确认了换挡时刻
 
 bool RobotParams::isExaming = false; // 正在测试挡位离合信息
 
-bool RobotParams::switchflag[5] = {false, false, false, false, false}; // 状态切换
+bool RobotParams::switchflag[10] = {false, false, false, false, false, false, false, false, false, false}; // 状态切换
 unsigned int RobotParams::NVHcurvestate = 9; //NVH状态下运行曲线标志位
+unsigned int RobotParams::NVHcurvestate3state = 0; //NVH状态3下运行状态标志位
 
 double RobotParams::nvh_P1t = 0; // 目标点1的时间
 double RobotParams::nvh_P1v = 0; // 目标点1的速度
 double RobotParams::nvh_P2t = 0; // 目标点2的时间
 double RobotParams::nvh_P2v = 0; // 目标点2的速度
 
-timeval RobotParams::testingtime[10]; // 测试用时刻计
+QTime RobotParams::testingTimes[10]; // 测试用时刻计
 int RobotParams::testingtimenum[10] = {0,0,0,0,0,0,0,0,0,0}; // 测试用时刻计数
+
+bool RobotParams::readyToOrigin = false; // 准备执行回原文件
+
+bool RobotParams::ifCSACD = false;  // 是否在ACD模式下换挡
+bool RobotParams::ifREBA = false; // 是否在ACD换挡模式下恢复踏板
+bool RobotParams::iffromNto1 = false; // 是否从空挡换到1挡

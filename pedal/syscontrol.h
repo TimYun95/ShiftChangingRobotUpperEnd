@@ -15,8 +15,6 @@ public:
 	SysControl();
     ~SysControl();
 
-	void train(const std::string& filename);
-
     typedef std::vector< std::pair<double, double> > PairData; // pair=<time,speed>
     void Init(const PairData& vp_data, const Configuration* conf);
 
@@ -25,6 +23,8 @@ public:
     //输入 控制模型
     void calCon(double time, double speedNow, double brakeOpen0, double accOpen0);
     void calConW(double time, double speedNow, double brakeOpen0, double accOpen0);
+    void calConN(double time, double speedNow, double brakeOpen0, double accOpen0);
+
     //返回 控制的目标开度
     double getconAcc();
     double getconBrake();
@@ -42,25 +42,42 @@ public:
     bool ifreachedatinitial(const double angle_err = 0.2); // 开始运行挡位时的调校 误差相对较小
 
 
-
-
-
-
     /** ----------- **/
 
+public:
+
+    /* <ACD> */
+
+    //修改2/////////////////////////////////////////////////////////////////////
+    double systemModelSelect=0;
+    double vpdataSize;
+    //修改2/////////////////////////////////////////////////////////////////////
+
+    //修改5/////////////////////////////////////////////////////////////////////
+    //PairData vp_data;这样好像不对。因为pedalrobot里也有一个vp_data
+    void vpdataCarSpeed2();//predef模式用
+
+    //修改12/////////////////////////////////////////////////////////////////////
+    void vpdataCarSpeed1();//online模式用
+    double sysTimeStart;
+    //修改12/////////////////////////////////////////////////////////////////////
+
+    double sysSpeedStart;
+    double sysReadCarSpeed;
+    int sysCarSelect=0;
+    //修改5/////////////////////////////////////////////////////////////////////
+
+    /* </ACD> */
 
 private:
     size_t getIndex(double time);
-    double getNextLineDuration();
     void getError();
     void getSpeedDv(double time,double speedNow);
     double changeAcc();
     double changeAccW();
+    double changeAccN();
     double changeBrake();
     double changeBrakeW();
-	double changeHoldon();
-    void onlineTraining(),onlineTraining2();
-    double slidingAdjustion();
 
     /** 挡位和离合控制 **/
     //      1       3       5 ----------------
@@ -70,18 +87,12 @@ private:
     //      2       4       6 ----------------
     int getnodeformanual(const int s); // 获得给定挡位的节点挡位
 
-
-
-
-
-
     /** ----------- **/
 
 private:
 	double pid[2][3];
 	double pidA[2][3];
-	double w1,w2,w3,w1_1,w2_1,w3_1,wtotal;//单神经元全局参数
-	double bj[10],cj[10][3],wj[10];//三输入十节点rbf全局参数
+
 	double border;
 	double conAcc[2],conBrake[2];
     double brakeOpen,accOpen;
@@ -94,17 +105,12 @@ private:
     double error[3], dverror[3];
     double linefuDv,linefuDv2,linefuDv3,linelastDv,linefuSpeed,linefuSpeed2,linefuSpeed3,linelastSpeed,linelastSpeed3;
     double linefuSpeedLong,linefuDvLong;
+    double linefuSpeedSubLong, linefuDvSubLong;
     double timeGap,lastControlTime;
     int isTrain;//0未训练 1训练完后
     size_t indexNow;
 
     int sysControlMethod;
-
-
-
-
-
-
 
 
 };

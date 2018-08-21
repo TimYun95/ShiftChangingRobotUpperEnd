@@ -109,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     robotclient = AutoDriveRobotApiClient::GetInstance(); // 首次实例化客户端
-    robotclient->StartUnifiedRobotApiClient("127.0.0.1", 9);
+    robotclient->StartClient("127.0.0.1", 2);
 
     QFont ft;
     ft.setPointSize(20);
@@ -133,7 +133,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    robotclient->StopUnifiedRobotApiClient();
+    robotclient->StopClient();
 
 #ifdef DEBUG_OUTPUT_2_LOCAL_FILE // 输出日志到本地文件
     Log4QTWrapper::Stop();
@@ -374,7 +374,7 @@ bool MainWindow::createNEDC()
     nedc << std::right << std::setw(15) << 1142 << std::right << std::setw(15) << 80 << "\n";
     nedc << std::right << std::setw(15) << 1150 << std::right << std::setw(15) << 50 << "\n";
     nedc << std::right << std::setw(15) << 1160 << std::right << std::setw(15) << 0 << "\n";
-    nedc << std::right << std::setw(15) << 1180 << std::right << std::setw(15) << 0 << "\n";
+    nedc << std::right << std::setw(15) << 1180 << std::right << std::setw(15) << 0;
 
     nedc.close();
     return true;
@@ -399,7 +399,7 @@ bool MainWindow::createNEDC_ARM()
     nedc_arm << std::right << std::setw(15) << 1180 << std::right << std::setw(15) << 1200 << "\n";
     nedc_arm << std::right << std::setw(15) << 1 << std::right << std::setw(15) << 1000000 << std::right << std::setw(15) << 1 << "\n";
     nedc_arm << std::right << std::setw(15) << 10 << std::right << std::setw(15) << 10 << "\n";
-    nedc_arm << std::right << std::setw(15) << 0 << std::right << std::setw(15) << 0 << "\n";
+    nedc_arm << std::right << std::setw(15) << 0 << std::right << std::setw(15) << 0;
 
     nedc_arm.close();
     return true;
@@ -2004,7 +2004,7 @@ bool MainWindow::createWLTC()
     wltc << std::right << std::setw(15) << 1793 << std::right << std::setw(15) << 8.7 << "\n";
     wltc << std::right << std::setw(15) << 1794 << std::right << std::setw(15) << 5.2 << "\n";
     wltc << std::right << std::setw(15) << 1795 << std::right << std::setw(15) << 0 << "\n";
-    wltc << std::right << std::setw(15) << 1800 << std::right << std::setw(15) << 0 << "\n";
+    wltc << std::right << std::setw(15) << 1800 << std::right << std::setw(15) << 0;
 
     wltc.close();
     return true;
@@ -2029,7 +2029,7 @@ bool MainWindow::createWLTC_ARM()
     wltc_arm << std::right << std::setw(15) << 1800 << std::right << std::setw(15) << 1200 << "\n";
     wltc_arm << std::right << std::setw(15) << 1 << std::right << std::setw(15) << 1000000 << std::right << std::setw(15) << 1 << "\n";
     wltc_arm << std::right << std::setw(15) << 10 << std::right << std::setw(15) << 10 << "\n";
-    wltc_arm << std::right << std::setw(15) << 0 << std::right << std::setw(15) << 0 << "\n";
+    wltc_arm << std::right << std::setw(15) << 0 << std::right << std::setw(15) << 0;
 
     wltc_arm.close();
     return true;
@@ -2054,7 +2054,7 @@ bool MainWindow::createSC_ARM()
     sc_arm << std::right << std::setw(15) << 3600 << std::right << std::setw(15) << 1200 << "\n";
     sc_arm << std::right << std::setw(15) << 1 << std::right << std::setw(15) << 1000000 << std::right << std::setw(15) << 1 << "\n";
     sc_arm << std::right << std::setw(15) << 10 << std::right << std::setw(15) << 10 << "\n";
-    sc_arm << std::right << std::setw(15) << 0 << std::right << std::setw(15) << 0 << "\n";
+    sc_arm << std::right << std::setw(15) << 0 << std::right << std::setw(15) << 0;
 
     sc_arm.close();
     return true;

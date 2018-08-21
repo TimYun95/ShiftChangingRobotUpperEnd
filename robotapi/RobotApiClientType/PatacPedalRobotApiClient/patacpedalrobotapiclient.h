@@ -1,7 +1,7 @@
 #ifndef PATACPEDALROBOTAPICLIENT_H
 #define PATACPEDALROBOTAPICLIENT_H
 
-#include "robotapi/UnifiedRobotApiClient/unifiedrobotapiclient.h"
+#include "UnifiedRobotApiClient/unifiedrobotapiclient.h"
 
 class PatacPedalRobotApiClient : public UnifiedRobotApiClient
 {
@@ -34,7 +34,7 @@ protected:
     void InitClientMsgHandler() Q_DECL_OVERRIDE;
 
     //Send
-public:
+public slots:
     //Specific Ptc msg
     bool Send_SetPedalRobotDeviceDataMsg(const std::vector<double> &canDataValues);
     bool Send_SetPedalRobotEmergencyStopThetaMsg(int emergencyStopType, const std::vector<double> &emergencyStopTheta);
@@ -44,7 +44,10 @@ public:
 
     //Receive
 protected:
-    virtual void Process_GetPedalRobotDeviceDataMsg(URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg);
+    virtual void Process_GetPedalRobotDeviceDataMsg(const URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg);
+
+signals:
+    void SignalProcess_GetPedalRobotDeviceDataMsg(const URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg);
 
 protected:
     void On_GetPedalRobotDeviceDataMsg(const std::string &requestMsg);

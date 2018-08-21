@@ -72,8 +72,10 @@ public:
     static const std::string carTypeFilePath;
     static const std::string softStopFilePath;
     static const std::string examsoftStopFilePath;
+    static const std::string nvhsoftStopFilePath;
     static const std::string slowlyBrakeFilePath;
     static const std::string examslowlyBrakeFilePath;
+    static const std::string nvhslowlyBrakeFilePath;
     static const std::string originFilePath;
     static const std::string logFilePath;
     static const std::string logCurvePath;

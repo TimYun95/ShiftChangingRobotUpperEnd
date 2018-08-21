@@ -1,14 +1,37 @@
 #include "unifiedrobotapiclient.h"
 
 UnifiedRobotApiClient::UnifiedRobotApiClient(QObject *parent)
-    : UnifiedRobotApiClientBase(parent)
+    : UnifiedRobotApiClientBase(parent),
+      m_enableRpcMsgDebugFlag(false),
+      m_threadSyncSemaphore(Q_NULLPTR)
 {
-
+    qRegisterMetaType<URMSG::Rpc_PingMsg_C2S>("URMSG::Rpc_PingMsg_C2S");
+    qRegisterMetaType<URMSG::Rpc_GetGoHomeResultMsg_C2S>("URMSG::Rpc_GetGoHomeResultMsg_C2S");
+    qRegisterMetaType<URMSG::Rpc_GetRobotThetaMsg_C2S>("URMSG::Rpc_GetRobotThetaMsg_C2S");
+    qRegisterMetaType<URMSG::Rpc_GetRobotMatrixMsg_C2S>("URMSG::Rpc_GetRobotMatrixMsg_C2S");
+    qRegisterMetaType<URMSG::Rpc_GetStatusStringMsg_C2S>("URMSG::Rpc_GetStatusStringMsg_C2S");
+    qRegisterMetaType<URMSG::Rpc_GetPositionLimitConfMsg_C2S>("URMSG::Rpc_GetPositionLimitConfMsg_C2S");
+    qRegisterMetaType<URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C>("URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C");
 }
 
 UnifiedRobotApiClient::~UnifiedRobotApiClient()
 {
 
+}
+
+void UnifiedRobotApiClient::SetThreadSyncSemaphore(QSemaphore *threadSyncSemaphore)
+{
+    m_threadSyncSemaphore = threadSyncSemaphore;
+}
+
+void UnifiedRobotApiClient::SetEnableRpcMsgDebugFlag(bool enableFlag)
+{
+    m_enableRpcMsgDebugFlag = enableFlag;
+}
+
+bool UnifiedRobotApiClient::GetEnableRpcMsgDebugFlag()
+{
+    return m_enableRpcMsgDebugFlag;
 }
 
 bool UnifiedRobotApiClient::StartUnifiedRobotApiClient(const QString &serverUrl, int sendTimerIntervalMs)
@@ -23,6 +46,7 @@ bool UnifiedRobotApiClient::StartUnifiedRobotApiClient(const QString &serverUrl,
 
 void UnifiedRobotApiClient::StopUnifiedRobotApiClient()
 {
+    StopSendTimer();
     DisconnectFromServer();
 }
 
@@ -168,8 +192,12 @@ bool UnifiedRobotApiClient::Send_GetPositionLimitConfMsg()
     return Send_ProtobufMsg(URMSG::Id_Rpc_GetPositionLimitConfMsg_C2S, gplcMsg);
 }
 
-void UnifiedRobotApiClient::Process_PingMsg(URMSG::Rpc_PingMsg_C2S &pingMsg)
+void UnifiedRobotApiClient::Process_PingMsg(const URMSG::Rpc_PingMsg_C2S &pingMsg)
 {
+    if(!GetEnableRpcMsgDebugFlag()){
+        return;
+    }
+
     qDebug()<< __func__ << " timestamp=" << pingMsg.timestamp();
     qDebug()<< __func__ << " content=" << pingMsg.content().c_str();
     for(int i=0; i<pingMsg.array_size(); ++i){
@@ -177,27 +205,43 @@ void UnifiedRobotApiClient::Process_PingMsg(URMSG::Rpc_PingMsg_C2S &pingMsg)
     }
 }
 
-void UnifiedRobotApiClient::Process_GetGoHomeResultMsg(URMSG::Rpc_GetGoHomeResultMsg_C2S &gghrMsg)
+void UnifiedRobotApiClient::Process_GetGoHomeResultMsg(const URMSG::Rpc_GetGoHomeResultMsg_C2S &gghrMsg)
 {
+    if(!GetEnableRpcMsgDebugFlag()){
+        return;
+    }
+
     qDebug()<< __func__ << gghrMsg.isgohomed();
 }
 
-void UnifiedRobotApiClient::Process_GetRobotThetaMsg(URMSG::Rpc_GetRobotThetaMsg_C2S &grtMsg)
+void UnifiedRobotApiClient::Process_GetRobotThetaMsg(const URMSG::Rpc_GetRobotThetaMsg_C2S &grtMsg)
 {
+    if(!GetEnableRpcMsgDebugFlag()){
+        return;
+    }
+
     for(int i=0; i<grtMsg.robottheta_size(); ++i){
         qDebug()<< __func__ << grtMsg.robottheta(i);
     }
 }
 
-void UnifiedRobotApiClient::Process_GetRobotMatrixMsg(URMSG::Rpc_GetRobotMatrixMsg_C2S &grmMsg)
+void UnifiedRobotApiClient::Process_GetRobotMatrixMsg(const URMSG::Rpc_GetRobotMatrixMsg_C2S &grmMsg)
 {
+    if(!GetEnableRpcMsgDebugFlag()){
+        return;
+    }
+
     for(int i=0; i<grmMsg.robotmatrix_size(); ++i){
         qDebug()<< __func__ << grmMsg.robotmatrix(i);
     }
 }
 
-void UnifiedRobotApiClient::Process_GetStatusStringMsg(URMSG::Rpc_GetStatusStringMsg_C2S &gssMsg)
+void UnifiedRobotApiClient::Process_GetStatusStringMsg(const URMSG::Rpc_GetStatusStringMsg_C2S &gssMsg)
 {
+    if(!GetEnableRpcMsgDebugFlag()){
+        return;
+    }
+
     if(gssMsg.has_isrequeststring() && gssMsg.isrequeststring()){
         qDebug()<< __func__ << gssMsg.statusstring().c_str();
     }
@@ -206,8 +250,12 @@ void UnifiedRobotApiClient::Process_GetStatusStringMsg(URMSG::Rpc_GetStatusStrin
     }
 }
 
-void UnifiedRobotApiClient::Process_GetPositionLimitConfMsg(URMSG::Rpc_GetPositionLimitConfMsg_C2S &gplcMsg)
+void UnifiedRobotApiClient::Process_GetPositionLimitConfMsg(const URMSG::Rpc_GetPositionLimitConfMsg_C2S &gplcMsg)
 {
+    if(!GetEnableRpcMsgDebugFlag()){
+        return;
+    }
+
     for(int i=0; i<gplcMsg.positionlimitpositive_size(); ++i){
         qDebug()<< __func__ << "positionLimitPositive=" << gplcMsg.positionlimitpositive(i);
     }
@@ -216,8 +264,12 @@ void UnifiedRobotApiClient::Process_GetPositionLimitConfMsg(URMSG::Rpc_GetPositi
     }
 }
 
-void UnifiedRobotApiClient::Process_ReceiveEmergencyStopSignalMsg(URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg)
+void UnifiedRobotApiClient::Process_ReceiveEmergencyStopSignalMsg(const URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg)
 {
+    if(!GetEnableRpcMsgDebugFlag()){
+        return;
+    }
+
     if(ressMsg.has_isstopsuccess()){
         qDebug()<< __func__ << "isStopSuccess=" << ressMsg.isstopsuccess();
     }else{
@@ -231,6 +283,8 @@ void UnifiedRobotApiClient::On_PingMsg(const std::__cxx11::string &requestMsg)
     PARSE_PROTOBUF_MSG(requestMsg, pingMsg);
 
     Process_PingMsg(pingMsg);
+    emit SignalProcess_PingMsg(pingMsg);
+    ReleaseThreadSyncSemaphore();
 }
 
 void UnifiedRobotApiClient::On_GetGoHomeResultMsg(const std::__cxx11::string &requestMsg)
@@ -239,6 +293,8 @@ void UnifiedRobotApiClient::On_GetGoHomeResultMsg(const std::__cxx11::string &re
     PARSE_PROTOBUF_MSG(requestMsg, gghrMsg);
 
     Process_GetGoHomeResultMsg(gghrMsg);
+    emit SignalProcess_GetGoHomeResultMsg(gghrMsg);
+    ReleaseThreadSyncSemaphore();
 }
 
 void UnifiedRobotApiClient::On_GetRobotThetaMsg(const std::__cxx11::string &requestMsg)
@@ -247,6 +303,8 @@ void UnifiedRobotApiClient::On_GetRobotThetaMsg(const std::__cxx11::string &requ
     PARSE_PROTOBUF_MSG(requestMsg, grtMsg);
 
     Process_GetRobotThetaMsg(grtMsg);
+    emit SignalProcess_GetRobotThetaMsg(grtMsg);
+    ReleaseThreadSyncSemaphore();
 }
 
 void UnifiedRobotApiClient::On_GetRobotMatrixMsg(const std::__cxx11::string &requestMsg)
@@ -255,6 +313,8 @@ void UnifiedRobotApiClient::On_GetRobotMatrixMsg(const std::__cxx11::string &req
     PARSE_PROTOBUF_MSG(requestMsg, grmMsg);
 
     Process_GetRobotMatrixMsg(grmMsg);
+    emit SignalProcess_GetRobotMatrixMsg(grmMsg);
+    ReleaseThreadSyncSemaphore();
 }
 
 void UnifiedRobotApiClient::On_GetStatusStringMsg(const std::__cxx11::string &requestMsg)
@@ -263,6 +323,8 @@ void UnifiedRobotApiClient::On_GetStatusStringMsg(const std::__cxx11::string &re
     PARSE_PROTOBUF_MSG(requestMsg, gssMsg);
 
     Process_GetStatusStringMsg(gssMsg);
+    emit SignalProcess_GetStatusStringMsg(gssMsg);
+    ReleaseThreadSyncSemaphore();
 }
 
 void UnifiedRobotApiClient::On_GetPositionLimitConfMsg(const std::__cxx11::string &requestMsg)
@@ -271,6 +333,8 @@ void UnifiedRobotApiClient::On_GetPositionLimitConfMsg(const std::__cxx11::strin
     PARSE_PROTOBUF_MSG(requestMsg, gplcMsg);
 
     Process_GetPositionLimitConfMsg(gplcMsg);
+    emit SignalProcess_GetPositionLimitConfMsg(gplcMsg);
+    ReleaseThreadSyncSemaphore();
 }
 
 void UnifiedRobotApiClient::On_ReceiveEmergencyStopSignalMsg(const std::__cxx11::string &requestMsg)
@@ -279,4 +343,13 @@ void UnifiedRobotApiClient::On_ReceiveEmergencyStopSignalMsg(const std::__cxx11:
     PARSE_PROTOBUF_MSG(requestMsg, ressMsg);
 
     Process_ReceiveEmergencyStopSignalMsg(ressMsg);
+    emit SignalProcess_ReceiveEmergencyStopSignalMsg(ressMsg);
+    ReleaseThreadSyncSemaphore();
+}
+
+void UnifiedRobotApiClient::ReleaseThreadSyncSemaphore()
+{
+    if(m_threadSyncSemaphore != Q_NULLPTR){
+        m_threadSyncSemaphore->release();
+    }
 }

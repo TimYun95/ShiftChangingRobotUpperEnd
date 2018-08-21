@@ -39,6 +39,13 @@ ShiftClutchUI::ShiftClutchUI(QWidget *parent) :
     // 初始化和重置部分控件
     initiallist();
     resetcomboBox();
+
+//    for (unsigned int i=0; i<6; ++i)
+//    {
+//        actionTheta.push_back(0.0);
+//        actionAxes.push_back(i);
+//        actionMethod.push_back(AutoDriveRobotApiClient::DeltaControlMethod);
+//    }
 }
 
 ShiftClutchUI::~ShiftClutchUI()
@@ -432,15 +439,22 @@ void ShiftClutchUI::examtimer_timeout()
     if(examtimer->isActive()){
         static int cnt = 0;
         if(++cnt%RobotParams::UITimerMultiplier != 0){
+//            AutoDriveRobotApiClient::GetInstance()->Send_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta);
             return;
         }
     }
+
+//    actionMethod.clear();
+//    actionAxes.clear();
+//    actionTheta.clear();
 
     ui->lineEdit_shiftnow->setText( QString::fromStdString( RobotParams::currentshiftvalue ) );
 
     if (examflag == 0)
     {
         SendMoveCommand(0,0,0,false,true,false);
+        PRINTF(LOG_ERR, "%s: stamp = %d; mode = %d; %s\n", __func__, timestamp_test, examflag, QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+        timestamp_test++;
     }
     else if (examflag == 1)
     {
@@ -603,6 +617,9 @@ void ShiftClutchUI::examtimer_timeout()
                 SendMoveCommandAll(values, ifABS);
 
                 round++;
+
+                PRINTF(LOG_ERR, "%s: stamp = %d; mode = %d; %s\n", __func__, timestamp_test, examflag, QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+                timestamp_test++;
             }
         }
         else
@@ -770,6 +787,9 @@ void ShiftClutchUI::examtimer_timeout()
                 ui->tab_examclutch->setEnabled(true);
                 PRINTF(LOG_INFO, "%s: this shift exam alreay done.\n", __func__);
                 SendMoveCommand(0,0,0,false,true,false);
+
+                PRINTF(LOG_ERR, "%s: stamp = %d; mode = %d; %s\n", __func__, timestamp_test, 0, QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+                timestamp_test++;
                 return;
             }
 
@@ -800,6 +820,8 @@ void ShiftClutchUI::examtimer_timeout()
                     ui->tab_examclutch->setEnabled(true);
                     PRINTF(LOG_INFO, "%s: this shift exam finishes.\n", __func__);
                     SendMoveCommand(0,0,0,false,true,false);
+                    PRINTF(LOG_ERR, "%s: stamp = %d; mode = %d; %s\n", __func__, timestamp_test, 0, QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+                    timestamp_test++;
                 }
                 else
                 {
@@ -811,9 +833,11 @@ void ShiftClutchUI::examtimer_timeout()
                     mySCControl->getconSft(shiftaims, round);
 
                     SendMoveCommand(0,*shiftaims,*(shiftaims + 1),true,false,false);
+                    PRINTF(LOG_ERR, "%s: stamp = %d; c#3 = %f; c#4 = %f; a#3 = %f; a#4 = %f; %s\n", __func__, timestamp_test, *shiftaims, *(shiftaims+1),RobotParams::angleRealTime[3], RobotParams::angleRealTime[4], QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+                    timestamp_test++;
                     delete shiftaims;
 
-                    round++;
+                    round++;                   
                 }
             }
             else
@@ -837,6 +861,8 @@ void ShiftClutchUI::examtimer_timeout()
                     mySCControl->getconSft(shiftaims, round);
 
                     SendMoveCommand(0,*shiftaims,*(shiftaims + 1),true,false,false);
+                    PRINTF(LOG_ERR, "%s: stamp = %d; c#3 = %f; c#4 = %f; a#3 = %f; a#4 = %f; %s\n", __func__, timestamp_test, *shiftaims, *(shiftaims+1),RobotParams::angleRealTime[3], RobotParams::angleRealTime[4], QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+                    timestamp_test++;
                     delete shiftaims;
 
                     round++;
@@ -851,6 +877,8 @@ void ShiftClutchUI::examtimer_timeout()
                     mySCControl->getconSft(shiftaims, round);
 
                     SendMoveCommand(0,*shiftaims,*(shiftaims + 1),true,false,false);
+                    PRINTF(LOG_ERR, "%s: stamp = %d; c#3 = %f; c#4 = %f; a#3 = %f; a#4 = %f; %s\n", __func__, timestamp_test, *shiftaims, *(shiftaims+1),RobotParams::angleRealTime[3], RobotParams::angleRealTime[4], QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+                    timestamp_test++;
                     delete shiftaims;
 
                     round++;
@@ -940,6 +968,8 @@ void ShiftClutchUI::examtimer_timeout()
             round = 1;
             PRINTF(LOG_INFO, "%s: clutch bottom exam finishes.\n", __func__);
             SendMoveCommand(0,0,0,false,true,false);
+            PRINTF(LOG_ERR, "%s: stamp = %d; mode = %d; %s\n", __func__, timestamp_test, 0, QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+            timestamp_test++;
         }
         else
         {
@@ -950,6 +980,8 @@ void ShiftClutchUI::examtimer_timeout()
             delete clutchaim;
 
             round++;
+            PRINTF(LOG_ERR, "%s: stamp = %d; mode = %d; %s\n", __func__, timestamp_test, examflag, QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+            timestamp_test++;
         }
     }
     else if (examflag == 4)
@@ -985,6 +1017,8 @@ void ShiftClutchUI::examtimer_timeout()
             round = 1;
             PRINTF(LOG_INFO, "%s: clutch top exam finishes.\n", __func__);
             SendMoveCommand(0,0,0,false,true,false);
+            PRINTF(LOG_ERR, "%s: stamp = %d; mode = %d; %s\n", __func__, timestamp_test, 0, QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+            timestamp_test++;
         }
         else
         {
@@ -995,6 +1029,8 @@ void ShiftClutchUI::examtimer_timeout()
             delete clutchaim;
 
             round++;
+            PRINTF(LOG_ERR, "%s: stamp = %d; mode = %d; %s\n", __func__, timestamp_test, examflag, QTime::currentTime().toString("hh:mm:ss:zzz").toStdString().c_str());
+            timestamp_test++;
         }
     }
     else if (examflag == 5)
