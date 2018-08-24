@@ -7,7 +7,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include "pedal/pedalrobotui.h"
-#include "shiftclutch/shiftclutchui.h"
 #include "autodriverobotapiclient.h"
 
 namespace Ui {

@@ -16,22 +16,22 @@ SOURCES += main.cpp\
     pedal/pedalrobot.cpp \
     pedal/pedalrobotui.cpp \
     pedal/syscontrol.cpp \
-    shiftclutch/shiftclutchui.cpp \
     autodriverobotapiclient.cpp \
     configuration.cpp \
     fileoperation/normalfile.cpp \
     fileoperation/excel/ExcelBase.cpp \
     fileoperation/excel/QVariantListListModel.cpp \
     mylogger/logger.cpp \
-    workerthread.cpp \
     settingui.cpp \
-    robotparams.cpp
+    robotparams.cpp \
+    shiftclutch/shiftclutch.cpp \
+    shiftclutch/syscontrolsc.cpp \
+    shiftclutch/shiftclutchui.cpp
 
 HEADERS  += mainwindow.h \
     pedal/pedalrobot.h \
     pedal/pedalrobotui.h \
     pedal/syscontrol.h \
-    shiftclutch/shiftclutchui.h \
     robotparams.h \
     autodriverobotapiclient.h \
     printf.h \
@@ -40,13 +40,15 @@ HEADERS  += mainwindow.h \
     fileoperation/excel/ExcelBase.h \
     fileoperation/excel/QVariantListListModel.h \
     mylogger/logger.h \
-    workerthread.h \
-    settingui.h
+    settingui.h \
+    shiftclutch/shiftclutch.h \
+    shiftclutch/syscontrolsc.h \
+    shiftclutch/shiftclutchui.h
 
 FORMS    += mainwindow.ui \
     pedal/pedalrobotui.ui \
-    shiftclutch/shiftclutchui.ui \
-    settingui.ui
+    settingui.ui \
+    shiftclutch/shiftclutchui.ui
 
 DEFINES += \
     DISABLE_STUDY_LIMIT

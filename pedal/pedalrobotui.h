@@ -9,7 +9,7 @@
 #include <QPushButton>
 #include <QThread>
 
-#include "shiftclutch/shiftclutchui.h"
+//#include "shiftclutch/shiftclutchui.h"
 #include "pedalrobot.h"
 #include "configuration.h"
 #include "settingui.h"
@@ -44,28 +44,28 @@ private slots:
     void on_pushButton_startAction_clicked(); // “曲线运行”按下
     void on_pushButton_saveLoggerFile_clicked(); // “保存日志”按下
 
-    void on_pushButton_nvh_start_clicked(); // NVH开始
-    void on_pushButton_nvh_stop_clicked(); // NVH结束
-    void on_pushButton_nvh_log_clicked(); // NVH曲线日志保存
-    void on_comboBox_nvh_mode_currentIndexChanged(int index); // 切换NVH模式
-    void on_pushButton_confirmaim_clicked(); // 确认目标点
+//    void on_pushButton_nvh_start_clicked(); // NVH开始
+//    void on_pushButton_nvh_stop_clicked(); // NVH结束
+//    void on_pushButton_nvh_log_clicked(); // NVH曲线日志保存
+//    void on_comboBox_nvh_mode_currentIndexChanged(int index); // 切换NVH模式
+//    void on_pushButton_confirmaim_clicked(); // 确认目标点
 
-    void on_pushButton_nvh_run_clicked(); // NVH曲线运行
-    void on_pushButton_nvh_softstop_clicked(); // NVH曲线停止
-    void on_pushButton_nvh_slowbrake_clicked(); // NVH曲线停止 缓踩刹车
+//    void on_pushButton_nvh_run_clicked(); // NVH曲线运行
+//    void on_pushButton_nvh_softstop_clicked(); // NVH曲线停止
+//    void on_pushButton_nvh_slowbrake_clicked(); // NVH曲线停止 缓踩刹车
 
-    /* <ACD> */
+//    /* <ACD> */
 
-    void on_pushButton_saveModelSelect_clicked();
-    void on_pushButton_refresh_clicked();
-    void on_pushButton_startACD_clicked();
-    void on_pushButton_stopAndLeft_clicked();
-    void on_pushButton_startACDonline_clicked();
-    void on_pushButton_refreshPredef_clicked();
-    void on_tabWidget_currentChanged(int index);
-    void on_pushButton_change_clicked();
+//    void on_pushButton_saveModelSelect_clicked();
+//    void on_pushButton_refresh_clicked();
+//    void on_pushButton_startACD_clicked();
+//    void on_pushButton_stopAndLeft_clicked();
+//    void on_pushButton_startACDonline_clicked();
+//    void on_pushButton_refreshPredef_clicked();
+//    void on_tabWidget_currentChanged(int index);
+//    void on_pushButton_change_clicked();
 
-    /* </ACD> */
+//    /* </ACD> */
 
 
 
@@ -95,7 +95,7 @@ protected:
     QLabel *statusL; // MainWindow状态栏
     QLabel *timeL; // MainWindow时间栏
 
-    ShiftClutchUI *scui; // 挡位离合界面
+//    ShiftClutchUI *scui; // 挡位离合界面
     SettingUI *stui; // 设置界面
 
     Configuration *conf; // 车型配置文件
