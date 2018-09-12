@@ -620,7 +620,6 @@ double PedalRobot::GetDisplayUpperBound(double value)
 double PedalRobot::GetCarSpeed()
 {
     switch (conf->getSpeedMethod){
-    case SettingWidgetPedalRobotGetSpeed::Voltage2Speed:
     case SettingWidgetPedalRobotGetSpeed::PulseFrequency2Speed:
         return RobotParams::pulseCarSpeed;
         break;

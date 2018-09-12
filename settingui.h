@@ -17,7 +17,11 @@ public:
     explicit SettingUI(QWidget *parent = 0);
     ~SettingUI();
 
-    void UpdateAllSetUI(); // 更新所有设置界面信息
+    void ConnectXMLSignalWithSlot(QWidget* sc); // 关联配置文件读取信号和槽
+
+signals:
+    void ReadXMLFromSetting(); // 从设置界面中读取配置文件
+    void SaveXMLFromSetting(); // 从设置界面中保存配置文件
 
 private slots:
     void on_listWidget_settings_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous); // 换设置界面
@@ -25,6 +29,8 @@ private slots:
     void on_pushButton_saveSettings_clicked(); // 保存
     void on_pushButton_readSettings_clicked(); // 读取
     void on_pushButton_loginSettings_clicked(); // 登录和退出
+
+    void UpdateAllSetUI(); // 更新所有设置界面信息
 
 private:
     Ui::SettingUI *ui;
@@ -34,12 +40,8 @@ private:
 
     void InitSettingsWidgetWithRobots(); // 初始设置界面
     void DisplaySettingWidget(SettingBase *sb, bool b); // 设置界面可见性
-    void ShowSettings(); // 显示设置
-    void RemoveSettings(); // 移除设置
-
-public:
-    bool haveReadXML; // 读取了车型配置文件
-    bool haveChangeUsage; // 更改了使用方式 NEDC/WLTC切换
+    void ShowSettings(int recoveryone = 0); // 显示设置
+    int RemoveSettings(); // 移除设置
 };
 
 #endif // SETTINGUI_H

@@ -70,11 +70,6 @@ public:
 
 //    static double tempVars[10]; // 预留的变量 含义人为赋值
 
-//    static bool ifConfirmSC; // 是否确认了挡位离合信息
-//    static bool ifConfirmCS; // 是否确认了换挡时刻
-
-//    static bool isExaming; // 正在测试挡位离合信息
-
 //    /**
 //     * @brief switchflag 切换标志位
 //     * 0 ---> 切换到曲线运行前的准备状态

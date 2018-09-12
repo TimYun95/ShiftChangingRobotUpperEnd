@@ -9,7 +9,7 @@
 #include <QPushButton>
 #include <QThread>
 
-//#include "shiftclutch/shiftclutchui.h"
+#include "shiftclutch/shiftclutchui.h"
 #include "pedalrobot.h"
 #include "configuration.h"
 #include "settingui.h"
@@ -40,7 +40,7 @@ private slots:
     void on_pushButton_softStop_clicked(); // “停止”按下
 
     void on_pushButton_softStop_liftPedals_clicked(); // “停止回抬”按下
-    void on_pushButton_slowlybrake_clicked(); // “缓踩刹车”按下
+//    void on_pushButton_slowlybrake_clicked(); // “缓踩刹车”按下
     void on_pushButton_startAction_clicked(); // “曲线运行”按下
     void on_pushButton_saveLoggerFile_clicked(); // “保存日志”按下
 
@@ -95,7 +95,7 @@ protected:
     QLabel *statusL; // MainWindow状态栏
     QLabel *timeL; // MainWindow时间栏
 
-//    ShiftClutchUI *scui; // 挡位离合界面
+    ShiftClutchUI *scui; // 挡位离合界面
     SettingUI *stui; // 设置界面
 
     Configuration *conf; // 车型配置文件
@@ -106,8 +106,6 @@ protected:
 
     bool ifSendGoHome; // 是否发送了回原指令
     unsigned int GoHomeRound; // 回原指令发送失效的界面周期轮数
-
-    QThread *timethread; // 定时器线程
 };
 
 #endif // PEDALROBOTUI_H

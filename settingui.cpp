@@ -19,9 +19,7 @@
 SettingUI::SettingUI(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::SettingUI),
-    ifhaveloggedin(false),
-    haveReadXML(false),
-    haveChangeUsage(false)
+    ifhaveloggedin(false)
 {
     ui->setupUi(this);
 
@@ -31,6 +29,11 @@ SettingUI::SettingUI(QWidget *parent) :
 SettingUI::~SettingUI()
 {
     delete ui;
+}
+
+void SettingUI::ConnectXMLSignalWithSlot(QWidget* sc)
+{
+    connect( sc, SIGNAL(ReadXMLFromShifting()), this, SLOT(UpdateAllSetUI()) );
 }
 
 void SettingUI::on_listWidget_settings_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
@@ -130,9 +133,10 @@ void SettingUI::on_pushButton_saveSettings_clicked()
 
     if(Configuration::GetInstance()->SaveToFile()==0){
         QMessageBox::information(this,"提示",QObject::tr("设置保存成功"));
-        RemoveSettings();
-        ShowSettings();
-        haveChangeUsage = true;
+        int tempindex = RemoveSettings();
+        ShowSettings(tempindex);
+
+        emit SaveXMLFromSetting();
     }else{
         QMessageBox::information(this,"提示",QObject::tr("!!!设置保存失败!!!"));
     }
@@ -140,24 +144,29 @@ void SettingUI::on_pushButton_saveSettings_clicked()
 
 void SettingUI::on_pushButton_readSettings_clicked()
 {
-    const QString txtpath = QString::fromStdString(Configuration::carTypeFilePath);
+    const QString txtpath = QString::fromStdString(Configuration::sysFilePath);
     QString fileName = QFileDialog::getOpenFileName(this, tr("读取"), txtpath, tr("XML Files(*.xml)"));
     if (fileName == "") return;
     std::string fn = NormalFile::GetFileName(fileName.toStdString().c_str());
 
+    std::string tempcarname = Configuration::GetInstance()->carTypeName;
     Configuration::GetInstance()->carTypeName = fn;
 
     if(Configuration::GetInstance()->ReadFromFile() == 0){
         QMessageBox::information( this,"提示", tr( (QString("读取").toStdString() + Configuration::GetInstance()->carTypeName + QString("成功").toStdString()).c_str() ) );
-        haveReadXML = true;
+        int tempindex = RemoveSettings();
+        ShowSettings(tempindex);
+
+        for(std::map<QListWidgetItem*,SettingBase*>::iterator iter=settingMap.begin(); iter!=settingMap.end(); iter++){
+            SettingBase* sb = iter->second;
+            sb->LoadParameters( *Configuration::GetInstance() );
+        }
+
+        emit ReadXMLFromSetting();
     }else{
         QMessageBox::information(this,"提示", tr( (QString("!!!读取").toStdString() + Configuration::GetInstance()->carTypeName + QString("失败!!!").toStdString()).c_str() ) );
+        Configuration::GetInstance()->carTypeName = tempcarname;
         return;
-    }
-
-    for(std::map<QListWidgetItem*,SettingBase*>::iterator iter=settingMap.begin(); iter!=settingMap.end(); iter++){
-        SettingBase* sb = iter->second;
-        sb->LoadParameters( *Configuration::GetInstance() );
     }
 }
 
@@ -196,7 +205,7 @@ void SettingUI::on_pushButton_loginSettings_clicked()
     }
 }
 
-void SettingUI::ShowSettings()
+void SettingUI::ShowSettings(int recoveryone)
 {
     for(std::map<QListWidgetItem*,SettingBase*>::iterator iter=settingMap.begin();iter!=settingMap.end();iter++){
         QListWidgetItem* lwi=iter->first;
@@ -213,11 +222,13 @@ void SettingUI::ShowSettings()
 
     }
     ui->listWidget_settings->sortItems();
-    ui->listWidget_settings->setCurrentRow(0);
+    ui->listWidget_settings->setCurrentRow(recoveryone);
 }
 
-void SettingUI::RemoveSettings()
+int SettingUI::RemoveSettings()
 {
+    int lastrow = ui->listWidget_settings->currentRow();
+
     while(ui->listWidget_settings->count()){
         ui->listWidget_settings->takeItem(0);
     }
@@ -226,10 +237,15 @@ void SettingUI::RemoveSettings()
         SettingBase* sb=iter->second;
         DisplaySettingWidget(sb,false);
     }
+
+    return lastrow;
 }
 
 void SettingUI::UpdateAllSetUI()
 {
+    int tempindex = RemoveSettings();
+    ShowSettings(tempindex);
+
     for(std::map<QListWidgetItem*,SettingBase*>::iterator iter=settingMap.begin(); iter!=settingMap.end(); iter++){
         SettingBase* sb = iter->second;
         sb->LoadParameters( *Configuration::GetInstance() );

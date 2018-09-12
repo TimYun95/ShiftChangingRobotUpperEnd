@@ -32,11 +32,14 @@ PedalRobotUI::PedalRobotUI(QWidget *parent, QLabel *_status, QLabel *_time) :
 
     conf = Configuration::GetInstance();
 
-//    scui = new ShiftClutchUI(this);
-//    ui->tabWidget->addTab( (QWidget*)scui, tr(" 换 挡 ") );
+    scui = new ShiftClutchUI(this);
+    ui->tabWidget->addTab( (QWidget*)scui, tr(" 换 挡 ") );
 
     stui = new SettingUI(this);
     ui->tabWidget->addTab( (QWidget*)stui, tr(" 设 置 ") );
+
+    scui->ConnectXMLSignalWithSlot(stui);
+    stui->ConnectXMLSignalWithSlot(scui);
 
     //connect(pUri, SIGNAL(EmergencyStopSignal()), this, SLOT(EmergencyStopSlot()));
     // 急停 should be solve
@@ -350,7 +353,7 @@ void PedalRobotUI::UpdateWidgets()
     ui->progressBar_brake->setValue( qRound(pdRobot->GetBrakePosition()) );
     ui->progressBar_accelerator->setValue( qRound(pdRobot->GetAcceleratorPosition()) );
 
-//    // 挡位离合位置
+    // 挡位离合位置
 //    QString shiftnow = QString::fromStdString(RobotParams::currentshiftvalue);
 //    if (shiftnow == QString("N_1&2") || shiftnow == QString("N_3&4") || shiftnow == QString("N_5&6"))
 //    {
@@ -358,7 +361,7 @@ void PedalRobotUI::UpdateWidgets()
 //    }
 //    ui->lineEdit_shiftcurrent->setText( shiftnow );
 //    ui->lineEdit_clutchcurrent->setText( QString::fromStdString(RobotParams::currentclutchvalue) );
-//    scui->UpdateSC();
+    scui->UpdateAnglesForShiftClutch();
 //    ui->lineEdit_cshift->setText( shiftnow );
 //    ui->lineEdit_cc->setText( QString::fromStdString(RobotParams::currentclutchvalue) );
 
@@ -417,34 +420,18 @@ void PedalRobotUI::UpdateWidgets()
         isGoHomedLast = RobotParams::ifGoHome;
         EnableButtonsForGoHome(true);
     }
+
+
 }
 
 void PedalRobotUI::UpdateCarTypeWidget()
 {
-    std::string carTypewithxml = NormalFile::GetFileName( (conf->carTypeFilePath + conf->carTypeName).c_str() );
+    std::string carTypewithxml = NormalFile::GetFileName( (conf->sysFilePath + conf->carTypeName).c_str() );
     const std::string carType = carTypewithxml.substr(0, carTypewithxml.length() - 4);
     static std::string carTypeLast = "";
     if(carTypeLast != carType){
         carTypeLast = carType;
         ui->lineEdit_carType->setText(carType.c_str());
-    }
-
-    if (stui->haveReadXML)
-    {
-//        scui->UpdateCar();
-        stui->haveReadXML = false;
-    }
-
-//    if (scui->haveReadXML)
-//    {
-//        stui->UpdateAllSetUI();
-////        scui->haveReadXML = false;
-//    }
-
-    if (stui->haveChangeUsage)
-    {
-//        scui->UpdateUsage();
-        stui->haveChangeUsage = false;
     }
 }
 
@@ -453,10 +440,9 @@ void PedalRobotUI::UpdateGetSpeedWidget()
     QString content="";
     switch (conf->getSpeedMethod){
     case 0:
-    case 1:
-        content = tr("USB AD/脉冲的车速");
+        content = tr("脉冲的车速");
         break;
-    case 2:
+    case 1:
         content = tr("CAN卡的车速");
         break;
     default:
@@ -695,73 +681,73 @@ void PedalRobotUI::on_pushButton_saveLoggerFile_clicked()
     QMessageBox::information(NULL, "提示", QObject::tr("日志文件已保存到:\n")+filePath);
 }
 
-void PedalRobotUI::on_pushButton_slowlybrake_clicked()
-{
-    // 停止
-    on_pushButton_softStop_clicked();
+//void PedalRobotUI::on_pushButton_slowlybrake_clicked()
+//{
+//    // 停止
+//    on_pushButton_softStop_clicked();
 
-    // 上抬踏板 缓踩刹车
-    std::fstream sb(Configuration::slowlyBrakeFilePath.c_str(), std::fstream::out | std::fstream::binary);
-    if(sb.fail()){
-        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, Configuration::slowlyBrakeFilePath.c_str());
-        return;
-    }
-    sb << RobotParams::robotType << "\n";
-    sb << 'R' << "\n";
-    sb << std::right << std::setw(15) << 0;
-    sb << std::right << std::setw(15) << 0;
-    sb << std::right << std::setw(15) << 2000;
-    sb << std::right << std::setw(15) << 0;
-    sb << std::right << std::setw(15) << 0 << "\n";
-    sb << 'T' << "\n";
-    sb << Configuration::GetInstance()->translateSpeed << "\n";
-    sb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[0];
-    sb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
+//    // 上抬踏板 缓踩刹车
+//    std::fstream sb(Configuration::slowlyBrakeFilePath.c_str(), std::fstream::out | std::fstream::binary);
+//    if(sb.fail()){
+//        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, Configuration::slowlyBrakeFilePath.c_str());
+//        return;
+//    }
+//    sb << RobotParams::robotType << "\n";
+//    sb << 'R' << "\n";
+//    sb << std::right << std::setw(15) << 0;
+//    sb << std::right << std::setw(15) << 0;
+//    sb << std::right << std::setw(15) << 2000;
+//    sb << std::right << std::setw(15) << 0;
+//    sb << std::right << std::setw(15) << 0 << "\n";
+//    sb << 'T' << "\n";
+//    sb << Configuration::GetInstance()->translateSpeed << "\n";
+//    sb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[0];
+//    sb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
 
-    if (Configuration::GetInstance()->ifManualShift)
-    {
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[0];
-        sb << std::right << std::setw(15) << RobotParams::angleRealTime[3];
-        sb << std::right << std::setw(15) << RobotParams::angleRealTime[4];
-        sb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+//    if (Configuration::GetInstance()->ifManualShift)
+//    {
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[0];
+//        sb << std::right << std::setw(15) << RobotParams::angleRealTime[3];
+//        sb << std::right << std::setw(15) << RobotParams::angleRealTime[4];
+//        sb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
 
-        // 踩刹车
-        sb << 'T' << "\n";
-        sb << Configuration::GetInstance()->translateSpeed/4 << "\n";
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->brakeThetaAfterGoHome;
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[0];
-        sb << std::right << std::setw(15) << RobotParams::angleRealTime[3];
-        sb << std::right << std::setw(15) << RobotParams::angleRealTime[4];
-        sb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
-    }
-    else
-    {
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[1];
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles1[1];
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles2[1];
-        sb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+//        // 踩刹车
+//        sb << 'T' << "\n";
+//        sb << Configuration::GetInstance()->translateSpeed/4 << "\n";
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->brakeThetaAfterGoHome;
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[0];
+//        sb << std::right << std::setw(15) << RobotParams::angleRealTime[3];
+//        sb << std::right << std::setw(15) << RobotParams::angleRealTime[4];
+//        sb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+//    }
+//    else
+//    {
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[1];
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles1[1];
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles2[1];
+//        sb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
 
-        // 踩刹车
-        sb << 'T' << "\n";
-        sb << Configuration::GetInstance()->translateSpeed/4 << "\n";
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->brakeThetaAfterGoHome;
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[1];
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles1[1];
-        sb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles2[1];
-        sb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
-    }
+//        // 踩刹车
+//        sb << 'T' << "\n";
+//        sb << Configuration::GetInstance()->translateSpeed/4 << "\n";
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->brakeThetaAfterGoHome;
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[1];
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[1];
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles1[1];
+//        sb << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles2[1];
+//        sb << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
+//    }
 
-    sb.close();
+//    sb.close();
 
-    std::string fileContent = FileAssistantFunc::ReadFileContent(Configuration::slowlyBrakeFilePath);
-    if(fileContent.empty()){
-        PRINTF(LOG_WARNING, "%s: read file error.\n", __func__);
-        return;
-    }
-    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToActionMsg(fileContent);
-}
+//    std::string fileContent = FileAssistantFunc::ReadFileContent(Configuration::slowlyBrakeFilePath);
+//    if(fileContent.empty()){
+//        PRINTF(LOG_WARNING, "%s: read file error.\n", __func__);
+//        return;
+//    }
+//    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToActionMsg(fileContent);
+//}
 
 //void PedalRobotUI::on_pushButton_nvh_start_clicked()
 //{

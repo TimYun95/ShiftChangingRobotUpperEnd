@@ -22,8 +22,7 @@ public:
 
     //和comboBox_selectLab的内容顺序一致
     enum tagGetSpeedMethod{
-        Voltage2Speed=0,
-        PulseFrequency2Speed,
+        PulseFrequency2Speed = 0,
         CANSpeed
     };
 

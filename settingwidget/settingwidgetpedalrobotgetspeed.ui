@@ -114,11 +114,6 @@
            </property>
            <item>
             <property name="text">
-             <string>电压转换车速</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
              <string>脉冲转换车速</string>
             </property>
            </item>

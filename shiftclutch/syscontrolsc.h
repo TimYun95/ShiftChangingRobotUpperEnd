@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <sys/time.h>
+#include <math.h>
 #include "printf.h"
 
 class syscontrolsc {
@@ -18,7 +19,8 @@ public:
     enum class clutchstatus {
         Released = 0,
         Pressed,
-        SlowlyReleasing = 9
+        SlowlyReleasing,
+        SlowlyReleasingAtDeparture
     };
 
     enum class manualshiftstatus {
@@ -28,10 +30,10 @@ public:
         Gear_3,
         Gear_4,
         Gear_5,
-        Gear_NLeft = 11,
+        Gear_NLeft,
         Gear_NRight,
-        Gear_NReverse,
-        Gear_6 = 19,
+        Gear_NBack,
+        Gear_6,
         Gear_R
     };
 
@@ -39,7 +41,7 @@ public:
         Gear_P = 0,
         Gear_N,
         Gear_D,
-        Gear_R = 9
+        Gear_R
     };
 
     enum class shiftchangingmode {
@@ -69,10 +71,12 @@ public:
         SlowlyWithRecovery
     };
 
-    typedef std::vector< std::pair<double, double> > doublepair;
+    typedef std::pair<double, double> doublecouple;
+    typedef std::vector< doublecouple > doublepair;
     typedef std::vector< std::pair<shiftchangingstatus, int> > changingpair;
     typedef std::vector< manualshiftstatus > manualshiftstatusvector;
     typedef std::vector< double > doublevector;
+
 
 private:
     gearstatus GearStatus; // 变速箱是手动还是自动
@@ -89,6 +93,7 @@ private:
     double angletolerance[3]; // 运动角度公差
     double percenttolerance; // 运动百分比公差
     double curvemotionspeed[3]; // 曲线运动速度
+    double slowlyreleasingclutchspeedatdeparture; // 起步换挡的离合缓抬速度
     double slowlyreleasingclutchspeed; // 离合缓抬速度
     double accstartangle; // 起步换挡最终的油门位置
     double pedalrecoverypercent[2]; // 踏板恢复百分比
@@ -115,9 +120,11 @@ public:
             double givenangletolerance[3],
             double givenpercenttolerance,
             double givencurvemotionspeed[3],
-            double givenslowlyreleasingclutchspeed,
+            double givenslowlyreleasingclutchspeed[2],
             double givenaccstartangle,
             double givenpedalrecoverypercent[2]);
+
+    bool resetshiftchangingprocess(bool isManualGear);
 
     /**
      * 返回vector说明
@@ -131,11 +138,11 @@ public:
     doublevector getshiftchangingangles(
             double actualangles[6],
             int howtochangeshift,
+            double pedallowlimits[2],
             int aimshift = 0,
             int aimclutch = 0,
             int howtoreleaseclutch = 0,
-            double pedalcommand[2] = {0.0, 0.0},
-            bool isabscommand[2] = {false, false},
+            double* pedalcommand = NULL,
             bool ifpaused = false);
 
 
@@ -143,11 +150,11 @@ public:
 private:
     double sgn(double x);
 
-    //     R ------- 1 ---- 3 ---- 5 ----------------
-    //     |         |      |      |                 |
-    // NReverse —— NLeft —— N —— NRight -->节点挡位    | --> 给定挡位
-    //               |      |      |                 |
-    //               2 ---- 4 ---- 6 ----------------
+    //       R ----------- 1 -------- 3 -------- 5 ----------------
+    //        |                   |             |               |                           |
+    // NBack —— NLeft —— N —— NRight -->节点挡位    | --> 给定挡位
+    //                            |             |               |                           |
+    //                           2 -------- 4 -------- 6 ----------------
     manualshiftstatus getnodeformanualshift(const manualshiftstatus s); // 获得给定挡位的节点挡位
 
     bool planshiftchangingsteps(
@@ -162,15 +169,19 @@ private:
             bool askclutchornot,
             const int aim,
             double actualangles[6],
+            bool isincludepedal = false,
+            double* pedalpos = NULL,
             bool ifduringprocess = false);
 
-    double angledistance(std::pair startangles, std::pair stopangles);
+    double angledistance(doublecouple startangles, doublecouple stopangles);
 
-    doublevector getinterpshift();
+    doublecouple getinterpshift();
 
-    double getinterpclutch();
+    double getinterpclutch(int modeofreleasing = 0);
 
-    doublevector makefeedbackvector(double anglescmd[6], bool wrongexist = false);
+    doublevector makefeedbackvector(
+            double anglescmd[6],
+            bool wrongexist = false);
 
     double caltimeinterval();
 

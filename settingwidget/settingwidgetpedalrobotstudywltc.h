@@ -34,7 +34,7 @@ private:
 private:
     Ui::SettingWidgetPedalRobotStudyWltc *ui;
 
-    const static int lineEditNum = 7;
+    const static int lineEditNum = 8;
     QLineEdit *mylineEdit[lineEditNum];
 };
 

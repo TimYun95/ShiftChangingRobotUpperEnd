@@ -1,5 +1,4 @@
 #include "syscontrolsc.h"
-#include <math.h>
 
 syscontrolsc::syscontrolsc() {
     // 给个初始值
@@ -14,14 +13,15 @@ syscontrolsc::syscontrolsc() {
 
     shiftpositions.clear();
     shiftpositions.reserve(16);
-    clutchpositons = {0.0, 0.0};
-    angletolerance = {1.0, 1.0, 1.0};
+    clutchpositons[0] = 0; clutchpositons[1] = 0;
+    angletolerance[0] = 1; angletolerance[1] = 1; angletolerance[2] = 1;
     percenttolerance = 0.1;
-    curvemotionspeed = {1, 1, 1};
+    curvemotionspeed[0] = 1; curvemotionspeed[1] = 1; curvemotionspeed[2] = 1;
+    slowlyreleasingclutchspeedatdeparture = 1;
     slowlyreleasingclutchspeed = 1;
     accstartangle = 20;
-    pedalrecoverypercent = {1.0, 1.0};
-    pedalrecoveryrecord = {0.0, 0.0};
+    pedalrecoverypercent[0] = 1; pedalrecoverypercent[1] = 1;
+    pedalrecoveryrecord[0] = 0; pedalrecoveryrecord[1] = 0;
 
     shiftchanginglist.clear();
     shiftchanginglist.reserve(8);
@@ -37,7 +37,11 @@ syscontrolsc::syscontrolsc() {
     gettimeofday(&sectionstarttime, NULL);
     gettimeofday(&sectionstoptime, NULL);
 
-    sectionsusingtime = {0.0, 0.0, 0.0, 0.0, 0.0};
+    sectionsusingtime[0] = 0;
+    sectionsusingtime[1] = 0;
+    sectionsusingtime[2] = 0;
+    sectionsusingtime[3] = 0;
+    sectionsusingtime[4] = 0;
 }
 
 bool syscontrolsc::settingshiftchanginginfos(
@@ -47,7 +51,7 @@ bool syscontrolsc::settingshiftchanginginfos(
         double givenangletolerance[],
         double givenpercenttolerance,
         double givencurvemotionspeed[],
-        double givenslowlyreleasingclutchspeed,
+        double givenslowlyreleasingclutchspeed[],
         double givenaccstartangle,
         double givenpedalrecoverypercent[]) {
     GearStatus = isManualGear ? gearstatus::Manual : gearstatus::Auto;
@@ -74,7 +78,8 @@ bool syscontrolsc::settingshiftchanginginfos(
     curvemotionspeed[0] = givencurvemotionspeed[0];
     curvemotionspeed[1] = givencurvemotionspeed[1];
     curvemotionspeed[2] = givencurvemotionspeed[2];
-    slowlyreleasingclutchspeed = givenslowlyreleasingclutchspeed;
+    slowlyreleasingclutchspeedatdeparture = givenslowlyreleasingclutchspeed[0];
+    slowlyreleasingclutchspeed = givenslowlyreleasingclutchspeed[1];
     accstartangle = givenaccstartangle;
     pedalrecoverypercent[0] = givenpedalrecoverypercent[0];
     pedalrecoverypercent[1] = givenpedalrecoverypercent[1];
@@ -85,22 +90,67 @@ bool syscontrolsc::settingshiftchanginginfos(
     shiftchangingpointer = 0;
 
     if (isManualGear) {
-        currentshiftindex = manualshiftstatus::Gear_N;
-        aimshiftindex = manualshiftstatus::Gear_1;
+        currentshiftindex = (int)manualshiftstatus::Gear_N;
+        aimshiftindex = (int)manualshiftstatus::Gear_1;
     }
     else {
-        currentshiftindex = autoshiftstatus::Gear_N;
-        aimshiftindex = autoshiftstatus::Gear_D;
+        currentshiftindex = (int)autoshiftstatus::Gear_N;
+        aimshiftindex = (int)autoshiftstatus::Gear_D;
     }
-    currentclutchindex = clutchstatus::Released;
-    aimclutchindex = clutchstatus::Pressed;
+    currentclutchindex = (int)clutchstatus::Released;
+    aimclutchindex = (int)clutchstatus::Pressed;
     round = 1;
     isshiftchangingplanned = false;
 
     gettimeofday(&sectionstarttime, NULL);
     gettimeofday(&sectionstoptime, NULL);
 
-    sectionsusingtime = {0.0, 0.0, 0.0, 0.0, 0.0};
+    sectionsusingtime[0] = 0;
+    sectionsusingtime[1] = 0;
+    sectionsusingtime[2] = 0;
+    sectionsusingtime[3] = 0;
+    sectionsusingtime[4] = 0;
+
+    return true;
+}
+
+bool syscontrolsc::resetshiftchangingprocess(bool isManualGear)
+{
+    GearStatus = isManualGear ? gearstatus::Manual : gearstatus::Auto;
+    ClutchStatus = clutchstatus::Released;
+    ManualShiftStatus = manualshiftstatus::Gear_N;
+    AutoShiftStatus = autoshiftstatus::Gear_N;
+    ShiftChangingMode = shiftchangingmode::OnlyClutch;
+    ShiftChangingStatus = shiftchangingstatus::Idle;
+    LastShiftChangingStatus = shiftchangingstatus::Idle;
+    ClutchReleasingMode = clutchreleasingmode::Normal;
+
+    shiftchanginglist.clear();
+    shiftchanginglist.reserve(8);
+    shiftchanginglength = 1;
+    shiftchangingpointer = 0;
+
+    if (isManualGear) {
+        currentshiftindex = (int)manualshiftstatus::Gear_N;
+        aimshiftindex = (int)manualshiftstatus::Gear_1;
+    }
+    else {
+        currentshiftindex = (int)autoshiftstatus::Gear_N;
+        aimshiftindex = (int)autoshiftstatus::Gear_D;
+    }
+    currentclutchindex = (int)clutchstatus::Released;
+    aimclutchindex = (int)clutchstatus::Pressed;
+    round = 1;
+    isshiftchangingplanned = false;
+
+    gettimeofday(&sectionstarttime, NULL);
+    gettimeofday(&sectionstoptime, NULL);
+
+    sectionsusingtime[0] = 0;
+    sectionsusingtime[1] = 0;
+    sectionsusingtime[2] = 0;
+    sectionsusingtime[3] = 0;
+    sectionsusingtime[4] = 0;
 
     return true;
 }
@@ -108,12 +158,18 @@ bool syscontrolsc::settingshiftchanginginfos(
 syscontrolsc::doublevector syscontrolsc::getshiftchangingangles(
         double actualangles[],
         int howtochangeshift,
+        double pedallowlimits[],
         int aimshift,
         int aimclutch,
         int howtoreleaseclutch,
-        double pedalcommand[],
-        bool isabscommand[],
+        double *pedalcommand,
         bool ifpaused) {
+    if (ifpaused)
+    {
+        double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
+        return makefeedbackvector(stopplaceholder);
+    }
+
     if (!isshiftchangingplanned) {
         isshiftchangingplanned = true;
         bool issuccessplan = planshiftchangingsteps(
@@ -122,15 +178,18 @@ syscontrolsc::doublevector syscontrolsc::getshiftchangingangles(
                     clutchreleasingmode(howtoreleaseclutch),
                     clutchstatus(aimclutch));
         if (!issuccessplan) {
-            double nullplaceholder = {0, 0, 0, 0, 0, 0};
-            return makefeedbackvector(nullplaceholder, true);
+            isshiftchangingplanned = false;
+            double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
+            return makefeedbackvector(stopplaceholder);
         }
+        pedalrecoveryrecord[0] = actualangles[0];
+        pedalrecoveryrecord[1] = actualangles[1];
     }
 
     if (shiftchangingpointer >= shiftchanginglength) {
         round = 1;
         LastShiftChangingStatus = ShiftChangingStatus;
-        double stopplaceholder = {-1, -1, -1, -1, -1, -1};
+        double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
         return makefeedbackvector(stopplaceholder);
     }
 
@@ -140,17 +199,26 @@ syscontrolsc::doublevector syscontrolsc::getshiftchangingangles(
         LastShiftChangingStatus = ShiftChangingStatus;
         gettimeofday(&sectionstarttime, NULL);
     }
+    if (ShiftChangingStatus == shiftchangingstatus::ShiftChanging)
+    {
+        if (aimshiftindex == currentshiftindex)
+        {
+            round = 1;
+            gettimeofday(&sectionstarttime, NULL);
+        }
+    }
     switch (ShiftChangingStatus) {
     case shiftchangingstatus::ClutchPressing: {
-        aimclutchindex = clutchstatus::Pressed;
+        aimclutchindex = (int)clutchstatus::Pressed;
         double clutchcmd = getinterpclutch();
-        bool ifachievedgoal = ifreachedaim(
-                    true,
-                    clutchstatus::Pressed,
-                    actualangles);
 
         switch (shiftchangingmode(howtochangeshift)) {
         case shiftchangingmode::OnlyClutch: {
+            bool ifachievedgoal = ifreachedaim(
+                        true,
+                        (int)clutchstatus::Pressed,
+                        actualangles);
+
             if (ifachievedgoal) {
                 gettimeofday(&sectionstoptime, NULL);
                 sectionsusingtime[shiftchangingpointer] = caltimeinterval();
@@ -158,22 +226,28 @@ syscontrolsc::doublevector syscontrolsc::getshiftchangingangles(
                 shiftchangingpointer++;
 
                 ClutchStatus = clutchstatus::Pressed;
-                currentclutchindex = ClutchStatus;
+                currentclutchindex = (int)ClutchStatus;
 
                 ShiftChangingStatus = shiftchangingstatus::Idle;
+                isshiftchangingplanned = false;
 
-                double stopplaceholder = {-1, -1, -1, -1, -1, -1};
+                double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
                 return makefeedbackvector(stopplaceholder);
             }
             else {
-                double anglescmd[6] = {-1, -1,
+                double anglescmd[6] = {-100, -100,
                                       clutchcmd,
-                                      -1, -1, -1};
+                                      -100, -100, -100};
                 return makefeedbackvector(anglescmd);
             }
             break;
         }
         case shiftchangingmode::ThreeAxis: {
+            bool ifachievedgoal = ifreachedaim(
+                        true,
+                        (int)clutchstatus::Pressed,
+                        actualangles);
+
             if (ifachievedgoal) {
                 gettimeofday(&sectionstoptime, NULL);
                 sectionsusingtime[shiftchangingpointer] = caltimeinterval();
@@ -181,17 +255,60 @@ syscontrolsc::doublevector syscontrolsc::getshiftchangingangles(
                 shiftchangingpointer++;
 
                 ClutchStatus = clutchstatus::Pressed;
-                currentclutchindex = ClutchStatus;
+                currentclutchindex = (int)ClutchStatus;
 
-                ShiftChangingStatus = shiftchangingstatus::Idle;
-                // 改到这里
-                double stopplaceholder = {-1, -1, -1, -1, -1, -1};
-                return makefeedbackvector(stopplaceholder);
+                return getshiftchangingangles(
+                            actualangles,
+                            howtochangeshift,
+                            pedallowlimits,
+                            aimshift,
+                            aimclutch,
+                            howtoreleaseclutch,
+                            pedalcommand,
+                            ifpaused);
             }
             else {
-                double anglescmd[6] = {-1, -1,
+                double anglescmd[6] = {-100, -100,
                                       clutchcmd,
-                                      -1, -1, -1};
+                                      -100, -100, -100};
+                return makefeedbackvector(anglescmd);
+            }
+            break;
+        }
+        case shiftchangingmode::FiveAxis:
+        case shiftchangingmode::ManualShift: {
+            bool ifachievedgoal = ifreachedaim(
+                        true,
+                        (int)clutchstatus::Pressed,
+                        actualangles,
+                        true,
+                        pedallowlimits);
+
+            if (ifachievedgoal) {
+                gettimeofday(&sectionstoptime, NULL);
+                sectionsusingtime[shiftchangingpointer] = caltimeinterval();
+
+                shiftchangingpointer++;
+
+                ClutchStatus = clutchstatus::Pressed;
+                currentclutchindex = (int)ClutchStatus;
+
+                return getshiftchangingangles(
+                            actualangles,
+                            howtochangeshift,
+                            pedallowlimits,
+                            aimshift,
+                            aimclutch,
+                            howtoreleaseclutch,
+                            pedalcommand,
+                            ifpaused);
+            }
+            else {
+                double anglescmd[6] = {
+                                      pedallowlimits[0],
+                                      pedallowlimits[1],
+                                      clutchcmd,
+                                      -100, -100, -100};
                 return makefeedbackvector(anglescmd);
             }
             break;
@@ -199,27 +316,342 @@ syscontrolsc::doublevector syscontrolsc::getshiftchangingangles(
         default:
             break;
         }
+        break;
+    }
+    case shiftchangingstatus::ShiftChanging: {
+        aimshiftindex = shiftchanginglist[shiftchangingpointer].second;
+        doublecouple shiftcmd = getinterpshift();
 
+        bool islastchange = shiftchangingpointer+1 == shiftchanginglength ? true : false;
+        bool islastshift = false;
+        if (islastchange) {
+            islastshift = true;
+        }
+        else {
+            if (shiftchanginglist[shiftchangingpointer + 1].first != shiftchangingstatus::ShiftChanging) {
+                islastshift = true;
+            }
+        }
 
+        bool ifachievedgoal = false;
+        if (islastshift) {
+            ifachievedgoal = ifreachedaim(
+                        false,
+                        aimshiftindex,
+                        actualangles,
+                        false,
+                        NULL,
+                        true);
+        }
+        else {
+            ifachievedgoal = ifreachedaim(
+                        false,
+                        aimshiftindex,
+                        actualangles);
+        }
 
+        if (ifachievedgoal) {
+            gettimeofday(&sectionstoptime, NULL);
+            sectionsusingtime[shiftchangingpointer] = caltimeinterval();
 
+            if (GearStatus == gearstatus::Auto) {
+                AutoShiftStatus = autoshiftstatus(shiftchanginglist[shiftchangingpointer].second);
+                currentshiftindex = (int)AutoShiftStatus;
+            }
+            else {
+                ManualShiftStatus = manualshiftstatus(shiftchanginglist[shiftchangingpointer].second);
+                currentshiftindex = (int)ManualShiftStatus;
+            }
 
+            shiftchangingpointer++;
+
+            if (islastchange) {
+                ShiftChangingStatus = shiftchangingstatus::Idle;
+                isshiftchangingplanned = false;
+
+                double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
+                return makefeedbackvector(stopplaceholder);
+            }
+            else {
+                return getshiftchangingangles(
+                            actualangles,
+                            howtochangeshift,
+                            pedallowlimits,
+                            aimshift,
+                            aimclutch,
+                            howtoreleaseclutch,
+                            pedalcommand,
+                            ifpaused);
+            }
+        }
+        else {
+            double anglescmd[6] = {-100, -100, -100,
+                                  shiftcmd.first,
+                                  shiftcmd.second,
+                                  -100};
+            return makefeedbackvector(anglescmd);
+        }
+        break;
+    }
+    case shiftchangingstatus::ClutchReleasing: {
+        aimclutchindex = (int)clutchstatus::Released;
+        double clutchcmd = getinterpclutch();
+
+        bool ifachievedgoal = ifreachedaim(
+                    true,
+                    (int)clutchstatus::Released,
+                    actualangles);
+
+        if (ifachievedgoal) {
+            gettimeofday(&sectionstoptime, NULL);
+            sectionsusingtime[shiftchangingpointer] = caltimeinterval();
+
+            shiftchangingpointer++;
+
+            ClutchStatus = clutchstatus::Released;
+            currentclutchindex = (int)ClutchStatus;
+
+            ShiftChangingStatus = shiftchangingstatus::Idle;
+            isshiftchangingplanned = false;
+
+            double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
+            return makefeedbackvector(stopplaceholder);
+        }
+        else {
+            double anglescmd[6] = {-100, -100,
+                                  clutchcmd,
+                                  -100, -100, -100};
+            return makefeedbackvector(anglescmd);
+        }
+        break;
+    }
+    case shiftchangingstatus::ClutchReleasingSlowly: {
+        aimclutchindex = (int)clutchstatus::Released;
+        ClutchStatus = clutchstatus::SlowlyReleasing;
+        double clutchcmd;
+
+        if (shiftchangingmode(howtochangeshift) == shiftchangingmode::OnlyClutch)
+        {
+            if (shiftchanginglist[shiftchangingpointer].second != 0)
+            {
+                clutchcmd = getinterpclutch(1);
+            }
+            else
+            {
+                clutchcmd = getinterpclutch(2);
+            }
+        }
+        else
+        {
+            if (ManualShiftStatus == manualshiftstatus::Gear_1) {
+                clutchcmd = getinterpclutch(1);
+            }
+            else {
+                clutchcmd = getinterpclutch(2);
+            }
+        }
+
+        bool ifachievedgoal = ifreachedaim(
+                    true,
+                    (int)clutchstatus::Released,
+                    actualangles);
+
+        if (ifachievedgoal)
+        {
+            gettimeofday(&sectionstoptime, NULL);
+            sectionsusingtime[shiftchangingpointer] = caltimeinterval();
+
+            shiftchangingpointer++;
+
+            ClutchStatus = clutchstatus::Released;
+            currentclutchindex = (int)ClutchStatus;
+
+            ShiftChangingStatus = shiftchangingstatus::Idle;
+            isshiftchangingplanned = false;
+
+            double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
+            return makefeedbackvector(stopplaceholder);
+        }
+        else
+        {
+            if ( ManualShiftStatus == manualshiftstatus::Gear_1 && (howtochangeshift == (int)shiftchangingmode::FiveAxis || howtochangeshift == (int)shiftchangingmode::ManualShift) )
+            {
+                double clutchrunningpercent = 1.0 - (clutchcmd - clutchpositons[(int)clutchstatus::Released]) / (clutchpositons[(int)clutchstatus::Pressed] - clutchpositons[(int)clutchstatus::Released]);
+                double accdelta = accstartangle - pedallowlimits[1];
+                double acccmd = clutchrunningpercent * pedalrecoverypercent[1] * accdelta + pedallowlimits[1];
+
+                double anglescmd[6] = {-100,
+                                      acccmd,
+                                      clutchcmd,
+                                      -100, -100, -100};
+                return makefeedbackvector(anglescmd);
+            }
+            else
+            {
+                double anglescmd[6] = {-100, -100,
+                                      clutchcmd,
+                                      -100, -100, -100};
+                return makefeedbackvector(anglescmd);
+            }
+        }
+        break;
+    }
+    case shiftchangingstatus::ClutchReleasingSlowlyWithPedalControl: {
+        aimclutchindex = (int)clutchstatus::Released;
+        ClutchStatus = clutchstatus::SlowlyReleasing;
+        double clutchcmd;
+        if (ManualShiftStatus == manualshiftstatus::Gear_1)
+        {
+            clutchcmd = getinterpclutch(1);
+        }
+        else
+        {
+            clutchcmd = getinterpclutch(2);
+        }
+
+        bool ifachievedgoal = ifreachedaim(
+                    true,
+                    (int)clutchstatus::Released,
+                    actualangles);
+
+        if (ifachievedgoal)
+        {
+            gettimeofday(&sectionstoptime, NULL);
+            sectionsusingtime[shiftchangingpointer] = caltimeinterval();
+
+            shiftchangingpointer++;
+
+            ClutchStatus = clutchstatus::Released;
+            currentclutchindex = (int)ClutchStatus;
+
+            ShiftChangingStatus = shiftchangingstatus::Idle;
+            isshiftchangingplanned = false;
+
+            if (!pedalcommand)
+            {
+                double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
+                return makefeedbackvector(stopplaceholder);
+            }
+            else
+            {
+                double onlypedalplaceholder[6] = {
+                    pedalcommand[0], pedalcommand[1],
+                    -100, -100, -100, -100};
+                return makefeedbackvector(onlypedalplaceholder);
+            }
+        }
+        else {
+            if ( ManualShiftStatus == manualshiftstatus::Gear_1 )
+            {
+                double clutchrunningpercent = 1.0 - (clutchcmd - clutchpositons[(int)clutchstatus::Released]) / (clutchpositons[(int)clutchstatus::Pressed] - clutchpositons[(int)clutchstatus::Released]);
+                double accdelta = accstartangle - pedallowlimits[1];
+                double acccmd = clutchrunningpercent * pedalrecoverypercent[1] * accdelta + pedallowlimits[1];
+
+                double anglescmd[6] = {-100,
+                                      acccmd,
+                                      clutchcmd,
+                                      -100, -100, -100};
+                return makefeedbackvector(anglescmd);
+            }
+            else
+            {
+            double anglescmd[6] = {
+                                  pedalcommand[0],
+                                  pedalcommand[1],
+                                  clutchcmd,
+                                  -100, -100, -100};
+            return makefeedbackvector(anglescmd);
+            }
+        }
+        break;
+    }
+    case shiftchangingstatus::ClutchReleasingSlowlyWithPedalRecovery: {
+        aimclutchindex = (int)clutchstatus::Released;
+        ClutchStatus = clutchstatus::SlowlyReleasing;
+        double clutchcmd;
+        if (ManualShiftStatus == manualshiftstatus::Gear_1)
+        {
+            clutchcmd = getinterpclutch(1);
+        }
+        else
+        {
+            clutchcmd = getinterpclutch(2);
+        }
+
+        bool ifachievedgoal = ifreachedaim(
+                    true,
+                    (int)clutchstatus::Released,
+                    actualangles);
+
+        if (ifachievedgoal)
+        {
+            gettimeofday(&sectionstoptime, NULL);
+            sectionsusingtime[shiftchangingpointer] = caltimeinterval();
+
+            shiftchangingpointer++;
+
+            ClutchStatus = clutchstatus::Released;
+            currentclutchindex = (int)ClutchStatus;
+
+            ShiftChangingStatus = shiftchangingstatus::Idle;
+            isshiftchangingplanned = false;
+
+            if (!pedalcommand)
+            {
+                double stopplaceholder[6] = {-100, -100, -100, -100, -100, -100};
+                return makefeedbackvector(stopplaceholder);
+            }
+            else
+            {
+                double onlypedalplaceholder[6] = {
+                    pedalcommand[0], pedalcommand[1],
+                    -100, -100, -100, -100};
+                return makefeedbackvector(onlypedalplaceholder);
+            }
+        }
+        else
+        {
+            double clutchrunningpercent = 1.0 - (clutchcmd - clutchpositons[(int)clutchstatus::Released]) / (clutchpositons[(int)clutchstatus::Pressed] - clutchpositons[(int)clutchstatus::Released]);
+            double brkdelta = pedalrecoveryrecord[0] - pedallowlimits[0];
+            double accdelta = pedalrecoveryrecord[1] - pedallowlimits[1];
+            double brkcmd = -100;
+            double acccmd = -100;
+            if (brkdelta >= 3 && accdelta < 3) {
+                brkcmd = clutchrunningpercent * pedalrecoverypercent[0] * brkdelta + pedallowlimits[0];
+            }
+            else if (brkdelta < 3 && accdelta >= 3) {
+                acccmd = clutchrunningpercent * pedalrecoverypercent[1] * accdelta + pedallowlimits[1];
+            }
+            else if (brkdelta >= 3 && accdelta >= 3) {
+                acccmd = clutchrunningpercent * pedalrecoverypercent[1] * accdelta + pedallowlimits[1];
+            }
+
+            if ( ManualShiftStatus == manualshiftstatus::Gear_1 )
+            {
+                double anglescmd[6] = {-100,
+                                      acccmd,
+                                      clutchcmd,
+                                      -100, -100, -100};
+                return makefeedbackvector(anglescmd);
+            }
+            else
+            {
+            double anglescmd[6] = {
+                                  brkcmd,
+                                  acccmd,
+                                  clutchcmd,
+                                  -100, -100, -100};
+            return makefeedbackvector(anglescmd);
+            }
+        }
         break;
     }
     default:
         break;
     }
 
-
-
-
-
-
-
-
-
-
-
+    double errornullplaceholder[6] = {0, 0, 0, 0, 0, 0};
+    return makefeedbackvector(errornullplaceholder, true);
 }
 
 double syscontrolsc::sgn(double x) {
@@ -245,13 +677,13 @@ syscontrolsc::manualshiftstatus syscontrolsc::getnodeformanualshift(const manual
     case manualshiftstatus::Gear_6:
         return manualshiftstatus::Gear_NRight;
         break;
-    case manualshiftstatus::Gear_NReverse:
+    case manualshiftstatus::Gear_NBack:
     case manualshiftstatus::Gear_R:
-        return manualshiftstatus::Gear_NReverse;
+        return manualshiftstatus::Gear_NBack;
         break;
     default:
         PRINTF(LOG_WARNING, "%s: no matched nodeshift.\n", __func__);
-        return manualshiftstatus(1);
+        return manualshiftstatus(0);
         break;
     }
 }
@@ -261,13 +693,24 @@ bool syscontrolsc::planshiftchangingsteps(
         shiftchangingmode howtochangeshift,
         clutchreleasingmode howtoreleaseclutch,
         clutchstatus aimclutch) {
-    if ( (GearStatus == gearstatus::Manual && aimshift == ManualShiftStatus) ||
-         (GearStatus == gearstatus::Auto && aimshift == AutoShiftStatus) ) {
-        PRINTF(LOG_WARNING, "%s: already at current shift.\n", __func__);
-        return false;
+    if (howtochangeshift != shiftchangingmode::OnlyClutch)
+    {
+        if ( (GearStatus == gearstatus::Manual && aimshift == (int)ManualShiftStatus) ||
+             (GearStatus == gearstatus::Auto && aimshift == (int)AutoShiftStatus) ) {
+            PRINTF(LOG_WARNING, "%s: already at current shift.\n", __func__);
+            return false;
+        }
+    }
+    else
+    {
+        if ( (aimclutch == ClutchStatus) ||
+             (ClutchStatus == clutchstatus::Released && aimclutch >= clutchstatus::SlowlyReleasing) ) {
+            PRINTF(LOG_WARNING, "%s: already at current clutch.\n", __func__);
+            return false;
+        }
     }
 
-    if (GearStatus == gearstatus::Manual && (aimshift > manualshiftstatus::Gear_5 && aimshift < manualshiftstatus::Gear_6) ) {
+    if (GearStatus == gearstatus::Manual && (aimshift > (int)manualshiftstatus::Gear_5 && aimshift < (int)manualshiftstatus::Gear_6) ) {
         PRINTF(LOG_WARNING, "%s: shiftaim is abnormal.\n", __func__);
         return false;
     }
@@ -287,6 +730,9 @@ bool syscontrolsc::planshiftchangingsteps(
         case clutchstatus::SlowlyReleasing:
             shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ClutchReleasingSlowly, 0) );
             break;
+        case clutchstatus::SlowlyReleasingAtDeparture:
+            shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ClutchReleasingSlowly, 1) );
+            break;
         default:
             break;
         }
@@ -296,7 +742,7 @@ bool syscontrolsc::planshiftchangingsteps(
         manualshiftstatusvector shifttransfer = planmanualshiftchangingpartforshifttransfer(manualshiftstatus(aimshift));
         unsigned int transferlength = shifttransfer.size();
         for (unsigned int i = 0; i < transferlength; ++i) {
-            shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ShiftChanging, shifttransfer[i]) );
+            shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ShiftChanging, (int)shifttransfer[i]) );
         }
         break;
     }
@@ -306,7 +752,7 @@ bool syscontrolsc::planshiftchangingsteps(
         manualshiftstatusvector shifttransfer = planmanualshiftchangingpartforshifttransfer(manualshiftstatus(aimshift));
         unsigned int transferlength = shifttransfer.size();
         for (unsigned int i = 0; i < transferlength; ++i) {
-            shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ShiftChanging, shifttransfer[i]) );
+            shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ShiftChanging, (int)shifttransfer[i]) );
         }
         shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ClutchReleasingSlowly, 0) );
         break;
@@ -316,7 +762,7 @@ bool syscontrolsc::planshiftchangingsteps(
         manualshiftstatusvector shifttransfer = planmanualshiftchangingpartforshifttransfer(manualshiftstatus(aimshift));
         unsigned int transferlength = shifttransfer.size();
         for (unsigned int i = 0; i < transferlength; ++i) {
-            shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ShiftChanging, shifttransfer[i]) );
+            shiftchanginglist.push_back( std::make_pair(shiftchangingstatus::ShiftChanging, (int)shifttransfer[i]) );
         }
         switch (howtoreleaseclutch) {
         case clutchreleasingmode::Normal:
@@ -352,7 +798,11 @@ bool syscontrolsc::planshiftchangingsteps(
     ShiftChangingStatus = shiftchangingstatus::Idle;
     LastShiftChangingStatus = shiftchangingstatus::Idle;
 
-    sectionsusingtime = {0.0, 0.0, 0.0, 0.0, 0.0};
+    sectionsusingtime[0] = 0;
+    sectionsusingtime[1] = 0;
+    sectionsusingtime[2] = 0;
+    sectionsusingtime[3] = 0;
+    sectionsusingtime[4] = 0;
 
     return true;
 }
@@ -398,7 +848,19 @@ bool syscontrolsc::ifreachedaim(
         bool askclutchornot,
         const int aim,
         double actualangles[],
+        bool isincludepedal,
+        double *pedalpos,
         bool ifduringprocess) {
+
+    if (isincludepedal) {
+        if (pedalpos[0] >= 0 && fabs(actualangles[0] - pedalpos[0]) > 0.5) {
+            return false;
+        }
+        if (pedalpos[1] >= 0 && fabs(actualangles[1] - pedalpos[1]) > 0.5) {
+            return false;
+        }
+    }
+
     if (askclutchornot) {
         if ( fabs(actualangles[2] - clutchpositons[aim]) < angletolerance[0] )
         {
@@ -411,7 +873,7 @@ bool syscontrolsc::ifreachedaim(
     }
     else {
         if (ifduringprocess) {
-            double err = min( percenttolerance * angledistance(shiftpositions[ManualShiftStatus], shiftpositions[aim]), min( angletolerance[1], angletolerance[2] ) );
+            double err = fmin( percenttolerance * angledistance(shiftpositions[(int)ManualShiftStatus], shiftpositions[aim]), fmin( angletolerance[1], angletolerance[2] ) );
             if ( angledistance(std::make_pair(actualangles[3], actualangles[4]), shiftpositions[aim]) < err ) {
                 return true;
             }
@@ -433,33 +895,71 @@ bool syscontrolsc::ifreachedaim(
     }
 }
 
-double syscontrolsc::angledistance(std::pair startangles, std::pair stopangles) {
+double syscontrolsc::angledistance(doublecouple startangles, doublecouple stopangles) {
    return sqrt( pow( (startangles.first - stopangles.first), 2 ) + pow( (startangles.second - stopangles.second), 2 ) );
 }
 
-syscontrolsc::doublevector syscontrolsc::getinterpshift() {
+syscontrolsc::doublecouple syscontrolsc::getinterpshift() {
+    const doublecouple startPos = shiftpositions[currentshiftindex];
+    const doublecouple stopPos = shiftpositions[aimshiftindex];
+    const doublecouple errPos = std::make_pair( fabs(startPos.first - stopPos.first), fabs(startPos.second - stopPos.second) );
 
+    // 分段线性 完全解耦
+    const doublecouple speed = std::make_pair( curvemotionspeed[1], curvemotionspeed[2] );
+    const doublecouple thresholdround = std::make_pair( ceil(0.9 * errPos.first / speed.first), ceil(0.9 * errPos.second / speed.second) );
+
+    doublecouple pos = std::make_pair( startPos.first + sgn(stopPos.first - startPos.first) * round * speed.first, startPos.second + sgn(stopPos.second - startPos.second) * round * speed.second );
+
+    if ((pos.first - startPos.first)/(stopPos.first - startPos.first) > 1.0) pos.first = stopPos.first;
+    else if ((pos.first - startPos.first)/(stopPos.first - startPos.first) > 0.9)
+    {
+        pos.first = startPos.first + sgn(stopPos.first - startPos.first) * thresholdround.first * speed.first + sgn(stopPos.first - startPos.first) * (round - thresholdround.first) * speed.first / 2;
+    }
+
+    if ((pos.second - startPos.second)/(stopPos.second - startPos.second) > 1.0) pos.second = stopPos.second;
+    else if ((pos.second - startPos.second)/(stopPos.second - startPos.second) > 0.9)
+    {
+        pos.second = startPos.second + sgn(stopPos.second - startPos.second) * thresholdround.second * speed.second + sgn(stopPos.second - startPos.second) * (round - thresholdround.second) * speed.second / 2;
+    }
+
+    // 为下次预备
+    round++;
+
+    // 返回计算结果
+    return pos;
 }
 
-double syscontrolsc::getinterpclutch() {
+double syscontrolsc::getinterpclutch(int modeofreleasing) {
     const double startPos = clutchpositons[currentclutchindex];
     const double stopPos = clutchpositons[aimclutchindex];
     const double errPos = fabs(startPos - stopPos);
 
     // 分段线性
-    const double speed = curvemotionspeed[0];
+    double speed;
+    switch (modeofreleasing) {
+    case 1:
+        speed = slowlyreleasingclutchspeedatdeparture;
+        break;
+    case 2:
+        speed = slowlyreleasingclutchspeed;
+        break;
+    default:
+        speed = curvemotionspeed[0];
+        break;
+    }
     double thresholdround = ceil(0.9 * errPos / speed);
 
     double pos = startPos + sgn(stopPos - startPos) * round * speed;
     if ((pos - startPos)/(stopPos - startPos) > 1.0) pos = stopPos;
     else if ((pos - startPos)/(stopPos - startPos) > 0.9)
     {
-        pos = startPos + sgn(stopPos - startPos) * thresholdround * speed + sgn(stopPos - startPos) * (round - thresholdround) * speed / 2;
+        if (modeofreleasing != 1) {
+            pos = startPos + sgn(stopPos - startPos) * thresholdround * speed + sgn(stopPos - startPos) * (round - thresholdround) * speed / 2;
+        }
     }
 
     // 为下次预备
     round++;
-
     // 返回计算结果
     return pos;
 }
@@ -481,7 +981,7 @@ syscontrolsc::doublevector syscontrolsc::makefeedbackvector(
         feedbackvector.push_back(-1.0);
     }
     else {
-        feedbackvector.push_back(ShiftChangingStatus);
+        feedbackvector.push_back((int)ShiftChangingStatus);
         feedbackvector.push_back(anglescmd[0]);
         feedbackvector.push_back(anglescmd[1]);
         feedbackvector.push_back(anglescmd[2]);
@@ -491,12 +991,12 @@ syscontrolsc::doublevector syscontrolsc::makefeedbackvector(
     }
 
     if (GearStatus == gearstatus::Auto) {
-        feedbackvector.push_back(AutoShiftStatus);
-        feedbackvector.push_back(clutchstatus::Released);
+        feedbackvector.push_back((int)AutoShiftStatus);
+        feedbackvector.push_back((int)clutchstatus::Released);
     }
     else {
-        feedbackvector.push_back(ManualShiftStatus);
-        feedbackvector.push_back(ClutchStatus);
+        feedbackvector.push_back((int)ManualShiftStatus);
+        feedbackvector.push_back((int)ClutchStatus);
     }
 
     double totaltime = 0.0;

@@ -20,6 +20,7 @@ SettingWidgetPedalRobotStudyWltc::SettingWidgetPedalRobotStudyWltc(QWidget *pare
     mylineEdit[4] = ui->lineEdit_5;
     mylineEdit[5] = ui->lineEdit_6;
     mylineEdit[6] = ui->lineEdit_7;
+    mylineEdit[7] = ui->lineEdit_8;
 }
 
 SettingWidgetPedalRobotStudyWltc::~SettingWidgetPedalRobotStudyWltc()
@@ -29,16 +30,18 @@ SettingWidgetPedalRobotStudyWltc::~SettingWidgetPedalRobotStudyWltc()
 
 void SettingWidgetPedalRobotStudyWltc::LoadParameters(Configuration &conf)
 {
-    for(int i=0; i<lineEditNum; ++i){
+    for(int i=0; i<7; ++i){
         SetLineEditValue(mylineEdit[i], conf.sysControlParamsWltc[i]);
     }
+    SetLineEditValue(mylineEdit[7], conf.sysControlParams[6]);
 }
 
 bool SettingWidgetPedalRobotStudyWltc::StoreParameters(Configuration &conf)
 {
-    for(int i=0; i<lineEditNum; ++i){
+    for(int i=0; i<7; ++i){
         conf.sysControlParamsWltc[i] = GetLineEditValue(mylineEdit[i]);
     }
+    conf.sysControlParams[6] = GetLineEditValue(mylineEdit[7]);
     return true;
 }
 
@@ -68,6 +71,6 @@ void SettingWidgetPedalRobotStudyWltc::on_pushButton_readCalibratedParams_clicke
         return;
     }
 
-    ReadCarTypeConfFile(str.toStdString().c_str());
-    emit UpdateWltcParamsSignal();
+//    ReadCarTypeConfFile(str.toStdString().c_str());
+//    emit UpdateWltcParamsSignal();
 }

@@ -13,7 +13,7 @@ const std::string RobotParams::robotFolder = "AutoDrivingRobot"; // 默认文件
 const double RobotParams::singleAxisBtnRatio = 2.0; // 单轴运动速度比例系数
 const double RobotParams::singleAxisBtnRatioC = 2.0; // 单轴运动速度比例系数 离合
 
-double RobotParams::angleRealTime[axisNum]; // 实时各轴角度
+double RobotParams::angleRealTime[axisNum] = {1,1,1,1,1,1}; // 实时各轴角度
 bool RobotParams::ifGoHome; // 是否已经回原
 std::string RobotParams::statusStr; // 程序状态字符串
 int RobotParams::statusStrIndex; // 程序状态字符串索引
@@ -57,11 +57,6 @@ bool RobotParams::readyToOrigin = false; // 准备执行回原文件
 //std::string RobotParams::autoShiftValues[3] = {"P", "N", "D"};
 
 //double RobotParams::tempVars[10] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};  // 预留的变量 含义人为赋值
-
-//bool RobotParams::ifConfirmSC = false; // 是否确认了挡位离合信息
-//bool RobotParams::ifConfirmCS = false; // 是否确认了换挡时刻
-
-//bool RobotParams::isExaming = false; // 正在测试挡位离合信息
 
 //bool RobotParams::switchflag[10] = {false, false, false, false, false, false, false, false, false, false}; // 状态切换
 //unsigned int RobotParams::NVHcurvestate = 9; //NVH状态下运行曲线标志位

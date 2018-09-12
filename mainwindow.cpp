@@ -27,10 +27,10 @@ MainWindow::MainWindow(QWidget *parent) :
         maindir.mkdir(QString::fromStdString(Configuration::mainFolder));
     }
 
-    QDir sysdir( QString::fromStdString(Configuration::carTypeFilePath) );
+    QDir sysdir( QString::fromStdString(Configuration::sysFilePath) );
     if (!sysdir.exists())
     {
-        sysdir.mkdir(QString::fromStdString(Configuration::carTypeFilePath));
+        sysdir.mkdir(QString::fromStdString(Configuration::sysFilePath));
     }
 
     QDir logdir( QString::fromStdString(Configuration::logFilePath) );
@@ -49,10 +49,10 @@ MainWindow::MainWindow(QWidget *parent) :
         logcoddir.mkdir(QString::fromStdString(Configuration::logCodePath));
     }
 
-    QDir sdddir( QString::fromStdString(Configuration::examFilePath) );
+    QDir sdddir( QString::fromStdString(Configuration::stdFilePath) );
     if (!sdddir.exists())
     {
-        sdddir.mkdir(QString::fromStdString(Configuration::examFilePath));
+        sdddir.mkdir(QString::fromStdString(Configuration::stdFilePath));
     }
 
     // 检查配置等文件是否存在 不存在的创建
@@ -65,46 +65,46 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     }
 
-    QFileInfo NEDCInfo( QString::fromStdString(Configuration::examFilePath + "NEDC") );
+    QFileInfo NEDCInfo( QString::fromStdString(Configuration::stdFilePath + "NEDC") );
     if(!NEDCInfo.isFile())
     {
         if ( !createNEDC() )
         {
-            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::examFilePath + "NEDC").c_str());
+            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::stdFilePath + "NEDC").c_str());
         }
     }
-    QFileInfo NEDCARMInfo( QString::fromStdString(Configuration::examFilePath + "NEDC_ARM") );
+    QFileInfo NEDCARMInfo( QString::fromStdString(Configuration::stdFilePath + "NEDC_ARM") );
     if(!NEDCARMInfo.isFile())
     {
         if ( !createNEDC_ARM() )
         {
-            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::examFilePath + "NEDC_ARM").c_str());
+            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::stdFilePath + "NEDC_ARM").c_str());
         }
     }
 
-    QFileInfo WLTCInfo( QString::fromStdString(Configuration::examFilePath + "WLTC") );
+    QFileInfo WLTCInfo( QString::fromStdString(Configuration::stdFilePath + "WLTC") );
     if(!WLTCInfo.isFile())
     {
         if ( !createWLTC() )
         {
-            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::examFilePath + "WLTC").c_str());
+            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::stdFilePath + "WLTC").c_str());
         }
     }
-    QFileInfo WLTCARMInfo( QString::fromStdString(Configuration::examFilePath + "WLTC_ARM") );
+    QFileInfo WLTCARMInfo( QString::fromStdString(Configuration::stdFilePath + "WLTC_ARM") );
     if(!WLTCARMInfo.isFile())
     {
         if ( !createWLTC_ARM() )
         {
-            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::examFilePath + "WLTC_ARM").c_str());
+            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::stdFilePath + "WLTC_ARM").c_str());
         }
     }
 
-    QFileInfo SCARMInfo( QString::fromStdString(Configuration::examFilePath + "SC_ARM") );
+    QFileInfo SCARMInfo( QString::fromStdString(Configuration::stdFilePath + "SC_ARM") );
     if(!SCARMInfo.isFile())
     {
         if ( !createSC_ARM() )
         {
-            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::examFilePath + "SC_ARM").c_str());
+            PRINTF(LOG_WARNING, "%s: can not create the file(%s)", __func__, (Configuration::stdFilePath + "SC_ARM").c_str());
         }
     }
 
@@ -246,9 +246,9 @@ bool MainWindow::createLogProperties()
 
 bool MainWindow::createNEDC()
 {
-    std::fstream nedc((Configuration::examFilePath + "NEDC").c_str(), std::fstream::out | std::fstream::binary);
+    std::fstream nedc((Configuration::stdFilePath + "NEDC").c_str(), std::fstream::out | std::fstream::binary);
     if(nedc.fail()){
-        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::examFilePath + "NEDC").c_str());
+        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::stdFilePath + "NEDC").c_str());
         return false;
     }
 
@@ -382,9 +382,9 @@ bool MainWindow::createNEDC()
 
 bool MainWindow::createNEDC_ARM()
 {
-    std::fstream nedc_arm((Configuration::examFilePath + "NEDC_ARM").c_str(), std::fstream::out | std::fstream::binary);
+    std::fstream nedc_arm((Configuration::stdFilePath + "NEDC_ARM").c_str(), std::fstream::out | std::fstream::binary);
     if(nedc_arm.fail()){
-        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::examFilePath + "NEDC_ARM").c_str());
+        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::stdFilePath + "NEDC_ARM").c_str());
         return false;
     }
 
@@ -407,9 +407,9 @@ bool MainWindow::createNEDC_ARM()
 
 bool MainWindow::createWLTC()
 {
-    std::fstream wltc((Configuration::examFilePath + "WLTC").c_str(), std::fstream::out | std::fstream::binary);
+    std::fstream wltc((Configuration::stdFilePath + "WLTC").c_str(), std::fstream::out | std::fstream::binary);
     if(wltc.fail()){
-        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::examFilePath + "WLTC").c_str());
+        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::stdFilePath + "WLTC").c_str());
         return false;
     }
 
@@ -2012,9 +2012,9 @@ bool MainWindow::createWLTC()
 
 bool MainWindow::createWLTC_ARM()
 {
-    std::fstream wltc_arm((Configuration::examFilePath + "WLTC_ARM").c_str(), std::fstream::out | std::fstream::binary);
+    std::fstream wltc_arm((Configuration::stdFilePath + "WLTC_ARM").c_str(), std::fstream::out | std::fstream::binary);
     if(wltc_arm.fail()){
-        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::examFilePath + "WLTC_ARM").c_str());
+        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::stdFilePath + "WLTC_ARM").c_str());
         return false;
     }
 
@@ -2037,9 +2037,9 @@ bool MainWindow::createWLTC_ARM()
 
 bool MainWindow::createSC_ARM()
 {
-    std::fstream sc_arm((Configuration::examFilePath + "SC_ARM").c_str(), std::fstream::out | std::fstream::binary);
+    std::fstream sc_arm((Configuration::stdFilePath + "SC_ARM").c_str(), std::fstream::out | std::fstream::binary);
     if(sc_arm.fail()){
-        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::examFilePath + "SC_ARM").c_str());
+        PRINTF(LOG_ERR, "%s: error open file=%s.\n", __func__, (Configuration::stdFilePath + "SC_ARM").c_str());
         return false;
     }
 
@@ -2051,7 +2051,7 @@ bool MainWindow::createSC_ARM()
     sc_arm << std::right << std::setw(15) << 0;
     sc_arm << std::right << std::setw(15) << 0 << "\n";
     sc_arm << 'M' << "\n";
-    sc_arm << std::right << std::setw(15) << 3600 << std::right << std::setw(15) << 1200 << "\n";
+    sc_arm << std::right << std::setw(15) << 7200 << std::right << std::setw(15) << 1200 << "\n";
     sc_arm << std::right << std::setw(15) << 1 << std::right << std::setw(15) << 1000000 << std::right << std::setw(15) << 1 << "\n";
     sc_arm << std::right << std::setw(15) << 10 << std::right << std::setw(15) << 10 << "\n";
     sc_arm << std::right << std::setw(15) << 0 << std::right << std::setw(15) << 0;

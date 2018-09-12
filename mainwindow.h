@@ -40,7 +40,6 @@ private:
     bool createWLTC(); // 创建WLTC
     bool createWLTC_ARM(); // 创建WLTC_ARM
     bool createSC_ARM(); // 创建SC_ARM
-
 };
 
 #endif // MAINWINDOW_H
