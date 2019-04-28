@@ -414,7 +414,7 @@
           </font>
          </property>
          <property name="text">
-          <string>油门</string>
+          <string> 油 门 </string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -442,7 +442,7 @@
           </font>
          </property>
          <property name="text">
-          <string>刹车</string>
+          <string> 刹 车 </string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>

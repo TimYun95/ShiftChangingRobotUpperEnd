@@ -20,6 +20,15 @@ public:
         CarSpeedIndex,
         PowerModeIndex,
 
+        MTAppIndex,
+        TransReqGrIndex,
+        CmndMdIndex,
+        VehStSpdIndex,
+        AcclStPosIndex,
+        AcclDlyTmrIndex,
+        BrkPdlStPosIndex,
+        BrkPdlDlyTmrIndex,
+
         MaxCanDataSize,
     };
 

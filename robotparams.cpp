@@ -21,7 +21,7 @@ double RobotParams::accOpenValue; // 油门开度
 double RobotParams::brakeOpenValue; // 刹车开度
 double RobotParams::canCarSpeed; // CAN口读取的车速
 double RobotParams::pulseCarSpeed; // PULSE计算的车速
-double RobotParams::powerMode; // 上电状态
+double RobotParams::powerMode = 2; // 上电状态
 
 bool RobotParams::askGoHomeatstart = false; // 是否已经在程序开始时询问了回原信息
 unsigned int RobotParams::askGoHomeatstartresult = 0; // 在开始询问回原信息的结果

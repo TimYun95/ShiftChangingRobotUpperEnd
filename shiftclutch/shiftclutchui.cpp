@@ -12,6 +12,7 @@
 #include <iostream>
 #include <iomanip>
 #include "printf.h"
+#include "shiftclutchparams.h"
 #include "robotparams.h"
 #include "autodriverobotapiclient.h"
 #include "robotapi/AssistantFunc/fileassistantfunc.h"
@@ -26,9 +27,6 @@ ShiftClutchUI::ShiftClutchUI(QWidget *parent) :
     ui->setupUi(this);
 
     ui->lineEdit_type->installEventFilter(this); // 注册事件过滤
-
-    // 初始化控制逻辑
-    mySCControl = new syscontrolsc();
 
     // 定时器初始化 用来测试
     examtimer = new QTimer(this);
@@ -112,8 +110,31 @@ void ShiftClutchUI::examtimer_timeout()
         }
     }
 
-    QVector<double> values = {0, 0, 0, 0, 0, 0};
-    QVector<int> cmdstate = {0, 0, 0, 0, 0, 0};
+    if (ShiftClutchParams::shiftclutchState < 0)
+    {
+        PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
+
+        // 停止
+        AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
+
+        examflag = -1;
+        isExaming = false;
+        examtimer->stop();
+
+        ui->pushButton_startexam->setEnabled(true);
+        return;
+    }
+
+    currentclutchindex = ShiftClutchParams::clutchState;
+    currentshiftindex = ShiftClutchParams::shiftState;
+    if (Configuration::GetInstance()->ifManualShift)
+    {
+        ui->lineEdit_shiftnow->setText(ManualShiftStateString[currentshiftindex]);
+    }
+    else
+    {
+        ui->lineEdit_shiftnow->setText(AutoShiftStateString[currentshiftindex]);
+    }
 
     if (examflag == -1)
     {
@@ -121,14 +142,14 @@ void ShiftClutchUI::examtimer_timeout()
     }
     else if (examflag == 0)
     {
-        values[0] = relativebrk;
-        values[1] = relativeacc;
-        SendMoveCommandAll(values, cmdstate);
+        SendMotionCmd(relativebrk, relativeacc);
     }
     else if (examflag == 1)
     {
         if (pauseflag == 0)
         {
+            ui->lineEdit_shifttime->setText("");
+
             bool ifsuccesschangefile = false;
             if (Configuration::GetInstance()->ifManualShift)
             {
@@ -232,37 +253,7 @@ void ShiftClutchUI::examtimer_timeout()
     {
         if (shiftexampause)
         {
-            std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                        RobotParams::angleRealTime,
-                        (int)ShiftChangingMode::OnlyShift,
-                        Configuration::GetInstance()->deathPos,
-                        nextshiftindex,
-                        (int)ClutchState::Released,
-                        0, NULL, true);
-
-            double state = controlcmd[0];
-            double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                         controlcmd[4], controlcmd[5], controlcmd[6]};
-            currentshiftindex = (int)controlcmd[7];
-            currentclutchindex = (int)controlcmd[8];
-
-            if (state < 0)
-            {
-                PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                // 停止
-                AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                examflag = -1;
-                isExaming = false;
-                examtimer->stop();
-
-                ui->pushButton_startexam->setEnabled(true);
-            }
-            else
-            {
-                ResolveAndSendCmd(abscontrolangles);
-            }
+            SendMotionCmd(0, 0, false, true);
             return;
         }
 
@@ -270,92 +261,44 @@ void ShiftClutchUI::examtimer_timeout()
         {
             examflag = 0;
             pauseflag = 0;
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime);
             PRINTF(LOG_INFO, "%s: only shift change finished.\n", __func__);
             return;
         }
 
-        std::vector<double> controlcmd;
-        if (Configuration::GetInstance()->ifManualShift)
+        if (pauseflag == 0)
         {
-         controlcmd = mySCControl->getshiftchangingangles(
-                        RobotParams::angleRealTime,
-                        (int)ShiftChangingMode::OnlyShift,
-                        Configuration::GetInstance()->deathPos,
-                        nextshiftindex,
-                        (int)ClutchState::Released);
+            if (Configuration::GetInstance()->ifManualShift)
+            {
+                SendMotionCmd(0, 0, true, false,
+                              nextshiftindex,
+                              (int)ClutchState::Released,
+                              (int)ShiftChangingMode::OnlyShift);
+            }
+            else
+            {
+                SendMotionCmd(0, 0, true, false,
+                              nextshiftindex,
+                              (int)ClutchState::Released,
+                              (int)ShiftChangingMode::AutoShift);
+            }
         }
         else
         {
-            controlcmd = mySCControl->getshiftchangingangles(
-                           RobotParams::angleRealTime,
-                           (int)ShiftChangingMode::AutoShift,
-                           Configuration::GetInstance()->deathPos,
-                           nextshiftindex,
-                           (int)ClutchState::Released);
+            SendMotionCmd(0, 0);
         }
+        pauseflag++;
 
-        double state = controlcmd[0];
-        double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                      controlcmd[4], controlcmd[5], controlcmd[6]};
-        currentshiftindex = (int)controlcmd[7];
-        currentclutchindex = (int)controlcmd[8];
-        double totaltime = controlcmd[9];
-        double partialtime[5] = {controlcmd[10], controlcmd[11], controlcmd[12], controlcmd[13], controlcmd[14]};
-
-        if (state < 0)
+        if (pauseflag > 7)
         {
-            PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-            // 停止
-            AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-            examflag = -1;
-            isExaming = false;
-            examtimer->stop();
-
-            ui->pushButton_startexam->setEnabled(true);
-        }
-        else
-        {
-            ResolveAndSendCmd(abscontrolangles);
-            ResolveAndShowTime(totaltime, partialtime);
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime);
         }
     }
     else if (examflag == 3)
     {
         if (clutchexampause)
         {
-            std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                        RobotParams::angleRealTime,
-                        (int)ShiftChangingMode::OnlyClutch,
-                        Configuration::GetInstance()->deathPos,
-                        (int)ManualShiftState::Gear_N,
-                        (int)ClutchState::Pressed,
-                        0, NULL, true);
-
-            double state = controlcmd[0];
-            double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                         controlcmd[4], controlcmd[5], controlcmd[6]};
-            currentshiftindex = (int)controlcmd[7];
-            currentclutchindex = (int)controlcmd[8];
-
-            if (state < 0)
-            {
-                PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                // 停止
-                AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                examflag = -1;
-                isExaming = false;
-                examtimer->stop();
-
-                ui->pushButton_startexam->setEnabled(true);
-            }
-            else
-            {
-                ResolveAndSendCmd(abscontrolangles);
-            }
+            SendMotionCmd(0, 0, false, true);
             return;
         }
 
@@ -363,79 +306,34 @@ void ShiftClutchUI::examtimer_timeout()
         {
             examflag = 0;
             pauseflag = 0;
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime, true);
             PRINTF(LOG_INFO, "%s: only clutch pressed finished.\n", __func__);
             return;
         }
 
-        std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                    RobotParams::angleRealTime,
-                    (int)ShiftChangingMode::OnlyClutch,
-                    Configuration::GetInstance()->deathPos,
-                    (int)ManualShiftState::Gear_N,
-                    (int)ClutchState::Pressed);
-
-        double state = controlcmd[0];
-        double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                      controlcmd[4], controlcmd[5], controlcmd[6]};
-        currentshiftindex = (int)controlcmd[7];
-        currentclutchindex = (int)controlcmd[8];
-        double totaltime = controlcmd[9];
-        double partialtime[5] = {controlcmd[10], controlcmd[11], controlcmd[12], controlcmd[13], controlcmd[14]};
-
-        if (state < 0)
+        if (pauseflag == 0)
         {
-            PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-            // 停止
-            AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-            examflag = -1;
-            isExaming = false;
-            examtimer->stop();
-
-            ui->pushButton_startexam->setEnabled(true);
+            SendMotionCmd(0, 0, true, false,
+                          (int)ManualShiftState::Gear_N,
+                          (int)ClutchState::Pressed,
+                          (int)ShiftChangingMode::OnlyClutch);
         }
         else
         {
-            ResolveAndSendCmd(abscontrolangles);
-            ResolveAndShowTime(totaltime, partialtime, true);
+            SendMotionCmd(0, 0);
+        }
+        pauseflag++;
+
+        if (pauseflag > 7)
+        {
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime, true);
         }
     }
     else if (examflag == 4)
     {
         if (clutchexampause)
         {
-            std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                        RobotParams::angleRealTime,
-                        (int)ShiftChangingMode::OnlyClutch,
-                        Configuration::GetInstance()->deathPos,
-                        (int)ManualShiftState::Gear_N,
-                        (int)ClutchState::Released,
-                        0, NULL, true);
-
-            double state = controlcmd[0];
-            double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                         controlcmd[4], controlcmd[5], controlcmd[6]};
-            currentshiftindex = (int)controlcmd[7];
-            currentclutchindex = (int)controlcmd[8];
-
-            if (state < 0)
-            {
-                PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                // 停止
-                AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                examflag = -1;
-                isExaming = false;
-                examtimer->stop();
-
-                ui->pushButton_startexam->setEnabled(true);
-            }
-            else
-            {
-                ResolveAndSendCmd(abscontrolangles);
-            }
+            SendMotionCmd(0, 0, false, true);
             return;
         }
 
@@ -443,42 +341,27 @@ void ShiftClutchUI::examtimer_timeout()
         {
             examflag = 0;
             pauseflag = 0;
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime, true);
             PRINTF(LOG_INFO, "%s: only clutch released finished.\n", __func__);
             return;
         }
 
-        std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                    RobotParams::angleRealTime,
-                    (int)ShiftChangingMode::OnlyClutch,
-                    Configuration::GetInstance()->deathPos,
-                    (int)ManualShiftState::Gear_N,
-                    (int)ClutchState::Released);
-
-        double state = controlcmd[0];
-        double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                      controlcmd[4], controlcmd[5], controlcmd[6]};
-        currentshiftindex = (int)controlcmd[7];
-        currentclutchindex = (int)controlcmd[8];
-        double totaltime = controlcmd[9];
-        double partialtime[5] = {controlcmd[10], controlcmd[11], controlcmd[12], controlcmd[13], controlcmd[14]};
-
-        if (state < 0)
+        if (pauseflag == 0)
         {
-            PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-            // 停止
-            AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-            examflag = -1;
-            isExaming = false;
-            examtimer->stop();
-
-            ui->pushButton_startexam->setEnabled(true);
+            SendMotionCmd(0, 0, true, false,
+                          (int)ManualShiftState::Gear_N,
+                          (int)ClutchState::Released,
+                          (int)ShiftChangingMode::OnlyClutch);
         }
         else
         {
-            ResolveAndSendCmd(abscontrolangles);
-            ResolveAndShowTime(totaltime, partialtime, true);
+            SendMotionCmd(0, 0);
+        }
+        pauseflag++;
+
+        if (pauseflag > 7)
+        {
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime, true);
         }
     }
     else if (examflag == 5)
@@ -495,38 +378,7 @@ void ShiftClutchUI::examtimer_timeout()
 
         if (clutchexampause)
         {
-            std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                        RobotParams::angleRealTime,
-                        (int)ShiftChangingMode::OnlyClutch,
-                        Configuration::GetInstance()->deathPos,
-                        (int)ManualShiftState::Gear_N,
-                        clutchaim,
-                        0, NULL, true);
-
-            double state = controlcmd[0];
-            double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                         controlcmd[4], controlcmd[5], controlcmd[6]};
-            currentshiftindex = (int)controlcmd[7];
-            currentclutchindex = (int)controlcmd[8];
-
-            if (state < 0)
-            {
-                PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                // 停止
-                AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                examflag = -1;
-                isExaming = false;
-                examtimer->stop();
-
-                ui->pushButton_startexam->setEnabled(true);
-                ui->checkBox_departure->setEnabled(true);
-            }
-            else
-            {
-                ResolveAndSendCmd(abscontrolangles);
-            }
+            SendMotionCmd(0, 0, false, true);
             return;
         }
 
@@ -534,82 +386,36 @@ void ShiftClutchUI::examtimer_timeout()
         {
             examflag = 0;
             pauseflag = 0;
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime, true);
 
             ui->checkBox_departure->setEnabled(true);
             PRINTF(LOG_INFO, "%s: only clutch slowly releasing finished.\n", __func__);
             return;
         }
 
-        std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                    RobotParams::angleRealTime,
-                    (int)ShiftChangingMode::OnlyClutch,
-                    Configuration::GetInstance()->deathPos,
-                    (int)ManualShiftState::Gear_N,
-                    clutchaim);
-
-        double state = controlcmd[0];
-        double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                      controlcmd[4], controlcmd[5], controlcmd[6]};
-        currentshiftindex = (int)controlcmd[7];
-        currentclutchindex = (int)controlcmd[8];
-        double totaltime = controlcmd[9];
-        double partialtime[5] = {controlcmd[10], controlcmd[11], controlcmd[12], controlcmd[13], controlcmd[14]};
-
-        if (state < 0)
+        if (pauseflag == 0)
         {
-            PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-            // 停止
-            AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-            examflag = -1;
-            isExaming = false;
-            examtimer->stop();
-
-            ui->pushButton_startexam->setEnabled(true);
-            ui->checkBox_departure->setEnabled(true);
+            SendMotionCmd(0, 0, true, false,
+                          (int)ManualShiftState::Gear_N,
+                          clutchaim,
+                          (int)ShiftChangingMode::OnlyClutch);
         }
         else
         {
-            ResolveAndSendCmd(abscontrolangles);
-            ResolveAndShowTime(totaltime, partialtime, true);
+            SendMotionCmd(0, 0);
+        }
+        pauseflag++;
+
+        if (pauseflag > 7)
+        {
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime, true);
         }
     }
     else if (examflag == 6)
     {
         if (exampause)
         {
-            std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                        RobotParams::angleRealTime,
-                        (int)ShiftChangingMode::ThreeAxis,
-                        Configuration::GetInstance()->deathPos,
-                        nextshiftindex,
-                        (int)ClutchState::Released,
-                        0, NULL, true);
-
-            double state = controlcmd[0];
-            double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                         controlcmd[4], controlcmd[5], controlcmd[6]};
-            currentshiftindex = (int)controlcmd[7];
-            currentclutchindex = (int)controlcmd[8];
-
-            if (state < 0)
-            {
-                PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                // 停止
-                AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                examflag = -1;
-                isExaming = false;
-                examtimer->stop();
-
-                ui->pushButton_startexam->setEnabled(true);
-            }
-            else
-            {
-                ResolveAndSendCmd(abscontrolangles);
-            }
+            SendMotionCmd(0, 0, false, true);
             return;
         }
 
@@ -617,79 +423,34 @@ void ShiftClutchUI::examtimer_timeout()
         {
             examflag = 0;
             pauseflag = 0;
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime);
             PRINTF(LOG_INFO, "%s: 3-axis shift change finished.\n", __func__);
             return;
         }
 
-        std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                    RobotParams::angleRealTime,
-                    (int)ShiftChangingMode::ThreeAxis,
-                    Configuration::GetInstance()->deathPos,
-                    nextshiftindex,
-                    (int)ClutchState::Released);
-
-        double state = controlcmd[0];
-        double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                      controlcmd[4], controlcmd[5], controlcmd[6]};
-        currentshiftindex = (int)controlcmd[7];
-        currentclutchindex = (int)controlcmd[8];
-        double totaltime = controlcmd[9];
-        double partialtime[5] = {controlcmd[10], controlcmd[11], controlcmd[12], controlcmd[13], controlcmd[14]};
-
-        if (state < 0)
+        if (pauseflag == 0)
         {
-            PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-            // 停止
-            AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-            examflag = -1;
-            isExaming = false;
-            examtimer->stop();
-
-            ui->pushButton_startexam->setEnabled(true);
+            SendMotionCmd(0, 0, true, false,
+                          nextshiftindex,
+                          (int)ClutchState::Released,
+                          (int)ShiftChangingMode::ThreeAxis);
         }
         else
         {
-            ResolveAndSendCmd(abscontrolangles);
-            ResolveAndShowTime(totaltime, partialtime);
+            SendMotionCmd(0, 0);
+        }
+        pauseflag++;
+
+        if (pauseflag > 7)
+        {
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime);
         }
     }
     else if (examflag == 7)
     {
         if (exampause)
         {
-            std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                        RobotParams::angleRealTime,
-                        (int)ShiftChangingMode::FiveAxis,
-                        Configuration::GetInstance()->deathPos,
-                        nextshiftindex,
-                        (int)ClutchState::Released,
-                        0, NULL, true);
-
-            double state = controlcmd[0];
-            double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                         controlcmd[4], controlcmd[5], controlcmd[6]};
-            currentshiftindex = (int)controlcmd[7];
-            currentclutchindex = (int)controlcmd[8];
-
-            if (state < 0)
-            {
-                PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                // 停止
-                AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                examflag = -1;
-                isExaming = false;
-                examtimer->stop();
-
-                ui->pushButton_startexam->setEnabled(true);
-            }
-            else
-            {
-                ResolveAndSendCmd(abscontrolangles);
-            }
+            SendMotionCmd(0, 0, false, true);
             return;
         }
 
@@ -697,93 +458,64 @@ void ShiftClutchUI::examtimer_timeout()
         {
             examflag = 0;
             pauseflag = 0;
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime);
             PRINTF(LOG_INFO, "%s: 5-axis shift change finished.\n", __func__);
             return;
         }
 
-        std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                    RobotParams::angleRealTime,
-                    (int)ShiftChangingMode::FiveAxis,
-                    Configuration::GetInstance()->deathPos,
-                    nextshiftindex,
-                    (int)ClutchState::Released);
-
-        double state = controlcmd[0];
-        double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                      controlcmd[4], controlcmd[5], controlcmd[6]};
-        currentshiftindex = (int)controlcmd[7];
-        currentclutchindex = (int)controlcmd[8];
-        double totaltime = controlcmd[9];
-        double partialtime[5] = {controlcmd[10], controlcmd[11], controlcmd[12], controlcmd[13], controlcmd[14]};
-
-        if (state < 0)
+        if (pauseflag == 0)
         {
-            PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-            // 停止
-            AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-            examflag = -1;
-            isExaming = false;
-            examtimer->stop();
-
-            ui->pushButton_startexam->setEnabled(true);
+            SendMotionCmd(0, 0, true, false,
+                          nextshiftindex,
+                          (int)ClutchState::Released,
+                          (int)ShiftChangingMode::FiveAxis);
         }
         else
         {
-            ResolveAndSendCmd(abscontrolangles);
-            ResolveAndShowTime(totaltime, partialtime);
+            SendMotionCmd(0, 0);
+        }
+        pauseflag++;
+
+        if (pauseflag > 7)
+        {
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime);
         }
     }
     else if (examflag == 8)
     {
         int howtoreleaseclutch = ui->radioButton_keep->isChecked() ? (int)ClutchReleasingMode::Slowly : (int)ClutchReleasingMode::SlowlyWithRecovery;
 
-        std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                    RobotParams::angleRealTime,
-                    (int)ShiftChangingMode::ManualShift,
-                    Configuration::GetInstance()->deathPos,
-                    nextshiftindex,
-                    (int)ClutchState::Released,
-                    howtoreleaseclutch);
-
-        double state = controlcmd[0];
-        double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                      controlcmd[4], controlcmd[5], controlcmd[6]};
-        currentshiftindex = (int)controlcmd[7];
-        currentclutchindex = (int)controlcmd[8];
-        double totaltime = controlcmd[9];
-        double partialtime[5] = {controlcmd[10], controlcmd[11], controlcmd[12], controlcmd[13], controlcmd[14]};
-
-        if (state < 0)
+        if (pauseflag == 0)
         {
-            PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-            // 停止
-            AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-            examflag = -1;
-            isExaming = false;
-            examtimer->stop();
-
-            ui->pushButton_startexam->setEnabled(true);
-        }
-        else if (state > 0)
-        {
-            ResolveAndSendCmd(abscontrolangles);
-            ResolveAndShowTime(totaltime, partialtime);
+            SendMotionCmd(0, 0, true, false,
+                          nextshiftindex,
+                          (int)ClutchState::Released,
+                          (int)ShiftChangingMode::ManualShift,
+                          howtoreleaseclutch);
         }
         else
         {
-            examflag = 0;
-            pauseflag = 0;
-            ResolveAndShowTime(totaltime, partialtime);
-            PRINTF(LOG_INFO, "%s: manual shift change finished.\n", __func__);
-            return;
+            SendMotionCmd(0, 0);
+        }
+        pauseflag++;
+
+        if (pauseflag > 7)
+        {
+            ResolveAndShowTime(ShiftClutchParams::totalTime, ShiftClutchParams::partialTime);
+
+            if (ShiftClutchParams::shiftclutchState == 0)
+            {
+                examflag = 0;
+                pauseflag = 0;
+                PRINTF(LOG_INFO, "%s: manual shift change finished.\n", __func__);
+                return;
+            }
         }
     }
     else if (examflag == 19)
     {
+        ui->lineEdit_shifttime->setText("");
+
         if (Configuration::GetInstance()->ifManualShift)
         {
             if (currentshiftindex == (int)ManualShiftState::Gear_N)
@@ -803,75 +535,54 @@ void ShiftClutchUI::examtimer_timeout()
                     }
                     else
                     {
-                        values[0] = -100;
-                        values[1]= -100;
-                        SendMoveCommandAll(values, cmdstate);
+                        SendMotionCmd(-100, -100);
                     }
                 }
                 else
                 {
-                    std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                                RobotParams::angleRealTime,
-                                (int)ShiftChangingMode::OnlyClutch,
-                                Configuration::GetInstance()->deathPos,
-                                (int)ManualShiftState::Gear_N,
-                                (int)ClutchState::Released);
-
-                    double state = controlcmd[0];
-                    double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                                 controlcmd[4], controlcmd[5], controlcmd[6]};
-                    currentshiftindex = (int)controlcmd[7];
-                    currentclutchindex = (int)controlcmd[8];
-
-                    if (state < 0)
+                    if (pauseflag == 0)
                     {
-                        PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                        // 停止
-                        AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                        examflag = -1;
-                        isExaming = false;
-                        examtimer->stop();
-
-                        ui->pushButton_startexam->setEnabled(true);
+                        SendMotionCmd(0, 0, true, false,
+                                      (int)ManualShiftState::Gear_N,
+                                      (int)ClutchState::Released,
+                                      (int)ShiftChangingMode::OnlyClutch);
                     }
                     else
                     {
-                        ResolveAndSendCmd(abscontrolangles);
+                        SendMotionCmd(0, 0);
+                    }
+                    pauseflag++;
+
+                    if (pauseflag > 7)
+                    {
+                        if (ShiftClutchParams::shiftclutchState == 0)
+                        {
+                            pauseflag = 0;
+                        }
                     }
                 }
             }
             else
             {
-                std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                            RobotParams::angleRealTime,
-                            (int)ShiftChangingMode::FiveAxis,
-                            Configuration::GetInstance()->deathPos,
-                            (int)ManualShiftState::Gear_N);
-
-                double state = controlcmd[0];
-                double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                             controlcmd[4], controlcmd[5], controlcmd[6]};
-                currentshiftindex = (int)controlcmd[7];
-                currentclutchindex = (int)controlcmd[8];
-
-                if (state < 0)
+                if (pauseflag == 0)
                 {
-                    PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                    // 停止
-                    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                    examflag = -1;
-                    isExaming = false;
-                    examtimer->stop();
-
-                    ui->pushButton_startexam->setEnabled(true);
+                    SendMotionCmd(0, 0, true, false,
+                                  (int)ManualShiftState::Gear_N,
+                                  (int)ClutchState::Released,
+                                  (int)ShiftChangingMode::FiveAxis);
                 }
                 else
                 {
-                    ResolveAndSendCmd(abscontrolangles);
+                    SendMotionCmd(0, 0);
+                }
+                pauseflag++;
+
+                if (pauseflag > 7)
+                {
+                    if (ShiftClutchParams::shiftclutchState == 0)
+                    {
+                        pauseflag = 0;
+                    }
                 }
             }
         }
@@ -879,7 +590,7 @@ void ShiftClutchUI::examtimer_timeout()
         {
             if (currentshiftindex == (int)AutoShiftState::Gear_N)
             {
-                if (ifPedalAtPositions(false, true))
+                if (ifPedalAtPositions(true, true))
                 {
                     // 停止
                     AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
@@ -892,41 +603,30 @@ void ShiftClutchUI::examtimer_timeout()
                 }
                 else
                 {
-                    values[0] = 100;
-                    values[1]= -100;
-                    SendMoveCommandAll(values, cmdstate);
+                    SendMotionCmd(-100, -100);
                 }
             }
             else
             {
-                std::vector<double> controlcmd = mySCControl->getshiftchangingangles(
-                            RobotParams::angleRealTime,
-                            (int)ShiftChangingMode::AutoShift,
-                            Configuration::GetInstance()->deathPos,
-                            (int)ManualShiftState::Gear_N);
-
-                double state = controlcmd[0];
-                double abscontrolangles[6] = {controlcmd[1], controlcmd[2], controlcmd[3],
-                                             controlcmd[4], controlcmd[5], controlcmd[6]};
-                currentshiftindex = (int)controlcmd[7];
-                currentclutchindex = (int)controlcmd[8];
-
-                if (state < 0)
+                if (pauseflag == 0)
                 {
-                    PRINTF(LOG_ERR, "%s: error in shift changing.\n", __func__);
-
-                    // 停止
-                    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
-
-                    examflag = -1;
-                    isExaming = false;
-                    examtimer->stop();
-
-                    ui->pushButton_startexam->setEnabled(true);
+                    SendMotionCmd(0, 0, true, false,
+                                  (int)AutoShiftState::Gear_N,
+                                  (int)ClutchState::Released,
+                                  (int)ShiftChangingMode::AutoShift);
                 }
                 else
                 {
-                    ResolveAndSendCmd(abscontrolangles);
+                    SendMotionCmd(0, 0);
+                }
+                pauseflag++;
+
+                if (pauseflag > 7)
+                {
+                    if (ShiftClutchParams::shiftclutchState == 0)
+                    {
+                        pauseflag = 0;
+                    }
                 }
             }
         }
@@ -935,16 +635,8 @@ void ShiftClutchUI::examtimer_timeout()
     {
         PRINTF(LOG_WARNING, "%s: (%d) state does not exist in exam.\n", __func__, examflag);
     }
+    return;
 }
-
-
-
-
-
-
-
-
-
 
 
 void ShiftClutchUI::on_comboBox_way_currentIndexChanged(int index)
@@ -1016,51 +708,17 @@ void ShiftClutchUI::on_pushButton_confirmSC_clicked()
 
         RefreshConfirmShiftClutchInfoState();
 
-        // 发送挡位离合信息
-        syscontrolsc::doublepair teachedpositions;
-        teachedpositions.clear();
-        teachedpositions.reserve(16);
-        for (int i = 0; i < 11; i++)
-        {
-            teachedpositions.push_back(std::make_pair(Configuration::GetInstance()->shiftAxisAngles1[i], Configuration::GetInstance()->shiftAxisAngles2[i]));
-        }
-        double slowlyclutchspeed[2] = {Configuration::GetInstance()->clutchUpSpeedAtDeparture, Configuration::GetInstance()->clutchUpSpeed};
-        double recoverypercent[2] = {Configuration::GetInstance()->pedalRecoveryPercent[0] / 100.0, Configuration::GetInstance()->pedalRecoveryPercent[1] / 100.0};
+        // 发送重置信息
+        SendResetSignal();
 
-        mySCControl->settingshiftchanginginfos(
-                    Configuration::GetInstance()->ifManualShift,
-                    teachedpositions,
-                    Configuration::GetInstance()->clutchAngles,
-                    Configuration::GetInstance()->angleErr_A,
-                    Configuration::GetInstance()->angleErr_P,
-                    Configuration::GetInstance()->curveMotionSpeed,
-                    slowlyclutchspeed,
-                    Configuration::GetInstance()->startAccAngleValue,
-                    recoverypercent);
+        // 发送挡位离合信息
+        SendShiftClutchInfo();
 
         // 发送急停位置消息
-//        int emergencyStopType = !Configuration::GetInstance()->ifManualShift;
+        SendEmergencyStopInfo();
 
-//        std::vector<double> emergencyStopTheta;
-//        emergencyStopTheta.push_back( Configuration::GetInstance()->deathPos[0] );
-//        emergencyStopTheta.push_back( Configuration::GetInstance()->deathPos[1] );
-
-//        if (Configuration::GetInstance()->ifManualShift)
-//        {
-//            emergencyStopTheta.push_back( Configuration::GetInstance()->clutchAngles[0] );
-//            emergencyStopTheta.push_back( 0.0 );
-//            emergencyStopTheta.push_back( 0.0 );
-//        }
-//        else
-//        {
-//            emergencyStopTheta.push_back( 0.0 );
-//            emergencyStopTheta.push_back( Configuration::GetInstance()->shiftAxisAngles1[1] );
-//            emergencyStopTheta.push_back( Configuration::GetInstance()->shiftAxisAngles2[1] );
-//        }
-
-//        emergencyStopTheta.push_back( RobotParams::angleRealTime[5] );
-
-//        AutoDriveRobotApiClient::GetInstance()->Send_SetPedalRobotEmergencyStopThetaMsg(emergencyStopType, emergencyStopTheta);
+        // 保存并发送配置文件
+        AutoDriveRobotApiClient::GetInstance()->Send_SaveAndSendConfMsg(true, true);
     }
 }
 
@@ -1078,6 +736,7 @@ void ShiftClutchUI::on_checkBox_sixshift_stateChanged(int arg1)
     Configuration::GetInstance()->shiftAxisAngles1[9] = 0;
     Configuration::GetInstance()->shiftAxisAngles2[9] = 0;
 
+    RefreshShiftMap();
     RefreshShiftLists(true, false);
     RefreshShiftComboBox();
 }
@@ -1096,6 +755,7 @@ void ShiftClutchUI::on_checkBox_backshift_stateChanged(int arg1)
     Configuration::GetInstance()->shiftAxisAngles1[10] = 0;
     Configuration::GetInstance()->shiftAxisAngles2[10] = 0;
 
+    RefreshShiftMap();
     RefreshShiftLists(true, false);
     RefreshShiftComboBox();
 }
@@ -1390,7 +1050,7 @@ void ShiftClutchUI::on_pushButton_stopexam_clicked()
 void ShiftClutchUI::on_pushButton_stopnow_clicked()
 {
     // 重置换挡过程信息
-    mySCControl->resetshiftchangingprocess(Configuration::GetInstance()->ifManualShift);
+//    SendShiftClutchInfo(true);
 
     // 停止
     AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
@@ -1712,97 +1372,102 @@ void ShiftClutchUI::on_pushButton_runtest_accm_released()
     }
 }
 
-//void ShiftClutchUI::on_pushButton_run_clicked()
-//{
-//    if (RobotParams::powerMode == PedalRobot::Off || RobotParams::powerMode == PedalRobot::Accessory)
-//    {
-//        // 测试生成的换挡路径
-//        examflag = 6;
 
-//        // 设置界面
-//        ui->pushButton_shiftrun->setEnabled(false);
-//        ui->pushButton_shiftpause->setEnabled(false);
-//        ui->pushButton_run->setEnabled(false);
-//        ui->pushButton_pause->setEnabled(true);
-//        ui->pushButton_0to1->setEnabled(false);
-//        ui->pushButton_1to0->setEnabled(false);
-//        ui->tab_examclutch->setEnabled(false);
-//        ui->lineEdit_shifttime->setText("");
-//    }
-//    else
-//    {
-//        QMessageBox::information(NULL, tr("提示"), tr("车辆已发动，不能进行换挡测试！"));
-//    }
-//}
+void ShiftClutchUI::SendMotionCmd(const double deltabrk, const double deltaacc, const bool ifshiftmode, const bool ifpause, const int aimshift, const int aimclutch, const int howtochangeshift, const int howtoreleaseclutch)
+{
+    QVector<double> values(6, 0.0);
+    QVector<int> cmdstate(6, 0);
 
+    if (ifshiftmode)
+    {
+        int stateflag = 0;
+        stateflag += ifshiftmode ? 1 : 0;
+        stateflag += (ifpause ? 1 : 0) * 10;
+        stateflag += howtoreleaseclutch * 100;
+        stateflag += howtochangeshift * 1000;
 
+        values[0] = deltabrk;
+        values[1] = deltaacc;
 
-//void ShiftClutchUI::on_pushButton_0to1_clicked()
-//{
-//    if (RobotParams::powerMode == PedalRobot::Run)
-//    {
-//        if (RobotParams::currentshiftindex == 1)
-//        {
-//            if (RobotParams::currentclutchindex == 1)
-//            {
-//                // 测试起步
-//                examflag = 7;
+        cmdstate[2] = aimclutch;
+        cmdstate[3] = aimshift;
 
-//                // 设置界面
-//                ui->pushButton_shiftrun->setEnabled(false);
-//                ui->pushButton_shiftpause->setEnabled(false);
-//                ui->pushButton_run->setEnabled(false);
-//                ui->pushButton_pause->setEnabled(false);
-//                ui->pushButton_0to1->setEnabled(false);
-//                ui->pushButton_1to0->setEnabled(false);
-//                ui->tab_examclutch->setEnabled(false);
-//                ui->lineEdit_shifttime->setText("");
-//            }
-//            else
-//            {
-//                QMessageBox::information(NULL, tr("提示"), tr("起步测试前请保证离合踏板抬起！"));
-//            }
-//        }
-//        else
-//        {
-//            QMessageBox::information(NULL, tr("提示"), tr("起步测试前请保证挡位在空挡！"));
-//        }
-//    }
-//    else
-//    {
-//        QMessageBox::information(NULL, tr("提示"), tr("起步测试前请先发动车辆！"));
-//    }
-//}
+        SendMoveCommandAll(values, cmdstate, stateflag);
+    }
+    else
+    {
+        values[0] = deltabrk;
+        values[1] = deltaacc;
+        SendMoveCommandAll(values, cmdstate);
+    }
+}
 
-//void ShiftClutchUI::on_pushButton_1to0_clicked()
-//{
-//    if (RobotParams::powerMode == PedalRobot::Run)
-//    {
-//        if (RobotParams::currentshiftindex == 3)
-//        {
-//            if (RobotParams::currentclutchindex == 1)
-//            {
-//                // 测试起步
-//                examflag = 8;
+void ShiftClutchUI::SendShiftClutchInfo()
+{
+    std::vector<double> reservedParam;
+    reservedParam.clear();
+    reservedParam.reserve(64);
 
-//                // 设置界面
-//                ui->lineEdit_shifttime->setText("");
-//            }
-//            else
-//            {
-//                QMessageBox::information(NULL, tr("提示"), tr("起步测试前请保证离合踏板抬起！"));
-//            }
-//        }
-//        else
-//        {
-//            QMessageBox::information(NULL, tr("提示"), tr("起步停止测试前请保证挡位在1挡！"));
-//        }
-//    }
-//    else
-//    {
-//        QMessageBox::information(NULL, tr("提示"), tr("起步停止测试前请先发动车辆！"));
-//    }
-//}
+    reservedParam.push_back(Configuration::GetInstance()->ifManualShift ? 1.0 : 0.0);
+    for (int i = 0; i < 11; ++i)
+    {
+        reservedParam.push_back(Configuration::GetInstance()->shiftAxisAngles1[i]);
+        reservedParam.push_back(Configuration::GetInstance()->shiftAxisAngles2[i]);
+    }
+    for (int i = 0; i < 2; ++i)
+    {
+        reservedParam.push_back(Configuration::GetInstance()->clutchAngles[i]);
+    }
+    for (int i =0; i < 3; ++i)
+    {
+        reservedParam.push_back(Configuration::GetInstance()->angleErr_A[i]);
+    }
+    reservedParam.push_back(Configuration::GetInstance()->angleErr_P);
+    for (int i = 0; i < 3; ++i)
+    {
+        reservedParam.push_back(Configuration::GetInstance()->curveMotionSpeed[i]);
+    }
+    reservedParam.push_back(Configuration::GetInstance()->clutchUpSpeedAtDeparture);
+    reservedParam.push_back(Configuration::GetInstance()->clutchUpSpeed);
+    reservedParam.push_back(Configuration::GetInstance()->startAccAngleValue);
+    for (int i = 0; i < 2; ++i)
+    {
+        reservedParam.push_back(Configuration::GetInstance()->pedalRecoveryPercent[i]);
+    }
+
+    AutoDriveRobotApiClient::GetInstance()->Send_SetReservedParamConf(reservedParam);
+}
+
+void ShiftClutchUI::SendResetSignal()
+{
+    AutoDriveRobotApiClient::GetInstance()->Send_MessageInformMsg(1);
+}
+
+void ShiftClutchUI::SendEmergencyStopInfo()
+{
+    int emergencyStopType = !Configuration::GetInstance()->ifManualShift;
+
+    std::vector<double> emergencyStopTheta;
+    emergencyStopTheta.push_back( Configuration::GetInstance()->deathPos[0] );
+    emergencyStopTheta.push_back( Configuration::GetInstance()->deathPos[1] );
+
+    if (Configuration::GetInstance()->ifManualShift)
+    {
+        emergencyStopTheta.push_back( Configuration::GetInstance()->clutchAngles[(int)ClutchState::Pressed] );
+        emergencyStopTheta.push_back( 0.0 );
+        emergencyStopTheta.push_back( 0.0 );
+    }
+    else
+    {
+        emergencyStopTheta.push_back( Configuration::GetInstance()->clutchAngles[(int)ClutchState::Released] );
+        emergencyStopTheta.push_back( Configuration::GetInstance()->shiftAxisAngles1[(int)AutoShiftState::Gear_N] );
+        emergencyStopTheta.push_back( Configuration::GetInstance()->shiftAxisAngles2[(int)AutoShiftState::Gear_N] );
+    }
+
+    emergencyStopTheta.push_back( RobotParams::angleRealTime[5] );
+
+    AutoDriveRobotApiClient::GetInstance()->Send_SetPedalRobotEmergencyStopThetaMsg(emergencyStopType, emergencyStopTheta);
+}
 
 
 bool ShiftClutchUI::ifPedalAtPositions(bool isbrklow, bool isacclow)
@@ -2791,7 +2456,7 @@ void ShiftClutchUI::InitialUI()
     RefreshChangeShiftPanel();
 }
 
-void ShiftClutchUI::SendMoveCommandAll(QVector<double> values, QVector<int> cmdstate)
+void ShiftClutchUI::SendMoveCommandAll(QVector<double> values, QVector<int> cmdstate, const int customvariable)
 {
     std::vector<int> actionMethod;
     std::vector<int> actionAxes;
@@ -2802,17 +2467,24 @@ void ShiftClutchUI::SendMoveCommandAll(QVector<double> values, QVector<int> cmds
         actionAxes.push_back(i);
         actionTheta.push_back(values[i]);
 
-        if (cmdstate[i] == 1)
+        if (customvariable == 0)
         {
-            actionMethod.push_back(AutoDriveRobotApiClient::AbsControlMethod);
+            if (cmdstate[i] == 1)
+            {
+                actionMethod.push_back(AutoDriveRobotApiClient::AbsControlMethod);
+            }
+            else
+            {
+                actionMethod.push_back(AutoDriveRobotApiClient::DeltaControlMethod);
+            }
         }
         else
         {
-            actionMethod.push_back(AutoDriveRobotApiClient::DeltaControlMethod);
+            actionMethod.push_back(cmdstate[i]);
         }
     }
 
-    AutoDriveRobotApiClient::GetInstance()->Send_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta);
+    AutoDriveRobotApiClient::GetInstance()->Send_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta, customvariable);
 }
 
 void ShiftClutchUI::ResolveAndSendCmd(double *cmd)

@@ -21,10 +21,16 @@ void SettingWidgetPedalRobotDeathZone::LoadParameters(Configuration &conf)
     // 监听模式的正极限
     SetLineEditValue(ui->lineEdit_brakePositionLimit, conf.limPos[0]);
     SetLineEditValue(ui->lineEdit_accPositionLimit, conf.limPos[1]);
+    SetLineEditValue(ui->lineEdit_clutchPositionLimit, conf.limPos[2]);
+    SetLineEditValue(ui->lineEdit_shift1PositionLimit, conf.limPos[3]);
+    SetLineEditValue(ui->lineEdit_shift2PositionLimit, conf.limPos[4]);
 
-    // 死区开度
+    // 死区位置
     SetLineEditValue(ui->lineEdit_brakeDeathOpenValue, conf.deathPos[0]);
     SetLineEditValue(ui->lineEdit_accDeathOpenValue, conf.deathPos[1]);
+    SetLineEditValue(ui->lineEdit_clutchDeathOpenValue, conf.deathPos[2]);
+    SetLineEditValue(ui->lineEdit_shift1DeathOpenValue, conf.deathPos[3]);
+    SetLineEditValue(ui->lineEdit_shift2DeathOpenValue, conf.deathPos[4]);
 
     // 回原后刹车位置
     SetLineEditValue(ui->lineEdit_brakeThetaAfterGoHome, conf.brakeThetaAfterGoHome);
@@ -38,10 +44,16 @@ bool SettingWidgetPedalRobotDeathZone::StoreParameters(Configuration &conf)
     // 监听模式的正极限
     conf.limPos[0] = GetLineEditValue(ui->lineEdit_brakePositionLimit);
     conf.limPos[1] = GetLineEditValue(ui->lineEdit_accPositionLimit);
+    conf.limPos[2] = GetLineEditValue(ui->lineEdit_clutchPositionLimit);
+    conf.limPos[3] = GetLineEditValue(ui->lineEdit_shift1PositionLimit);
+    conf.limPos[4] = GetLineEditValue(ui->lineEdit_shift2PositionLimit);
 
-    // 死区开度
+    // 死区位置
     conf.deathPos[0] = GetLineEditValue(ui->lineEdit_brakeDeathOpenValue);
     conf.deathPos[1] = GetLineEditValue(ui->lineEdit_accDeathOpenValue);
+    conf.deathPos[2] = GetLineEditValue(ui->lineEdit_clutchDeathOpenValue);
+    conf.deathPos[3] = GetLineEditValue(ui->lineEdit_shift1DeathOpenValue);
+    conf.deathPos[4] = GetLineEditValue(ui->lineEdit_shift2DeathOpenValue);
 
     // 回原后刹车位置
     conf.brakeThetaAfterGoHome = GetLineEditValue(ui->lineEdit_brakeThetaAfterGoHome);

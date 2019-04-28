@@ -25,7 +25,8 @@ SOURCES += main.cpp\
     settingui.cpp \
     robotparams.cpp \
     shiftclutch/syscontrolsc.cpp \
-    shiftclutch/shiftclutchui.cpp
+    shiftclutch/shiftclutchui.cpp \
+    shiftclutchparams.cpp
 
 HEADERS  += mainwindow.h \
     pedal/pedalrobot.h \
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     mylogger/logger.h \
     settingui.h \
     shiftclutch/syscontrolsc.h \
-    shiftclutch/shiftclutchui.h
+    shiftclutch/shiftclutchui.h \
+    shiftclutchparams.h
 
 FORMS    += mainwindow.ui \
     pedal/pedalrobotui.ui \

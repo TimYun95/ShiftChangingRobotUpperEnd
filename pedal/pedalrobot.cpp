@@ -142,6 +142,17 @@ void PedalRobot::StartQCustomPlot(const std::__cxx11::string &fileNameARM)
     pQCustomPlot->graph(lowerCurve)->setData(lowerTime,lowerSpeed);
     pQCustomPlot->replot();
 
+    vp_data_upperbound.clear();
+    vp_data_upperbound.reserve(sz);
+    vp_data_lowerbound.clear();
+    vp_data_lowerbound.reserve(sz);
+    for (size_t i = 0; i < sz; i++)
+    {
+        vp_data_upperbound.push_back( std::make_pair(upperTime[i],upperSpeed[i]) );
+        vp_data_lowerbound.push_back( std::make_pair(lowerTime[i],lowerSpeed[i]) );
+    }
+
+
     // 运动时间的记录
     gettimeofday(&actionStartTime, NULL);
     PRINTF(LOG_DEBUG, "%s: actionStartTime=%ld:%ld\n", __func__, actionStartTime.tv_sec, actionStartTime.tv_usec);

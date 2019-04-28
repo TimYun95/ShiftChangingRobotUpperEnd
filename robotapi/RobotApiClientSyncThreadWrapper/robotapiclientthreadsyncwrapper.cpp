@@ -1,8 +1,5 @@
 #include "robotapiclientthreadsyncwrapper.h"
 
-#define WRAPPER_CONNECT_SEND(SendMsgFunc)\
-    connect(this, SIGNAL(Signal##SendMsgFunc), m_robotApiClient, SLOT(SendMsgFunc), Qt::ConnectionType::QueuedConnection)
-
 RobotApiClientThreadSyncWrapper::RobotApiClientThreadSyncWrapper(QObject *parent, bool threadSyncFlag)
     : QObject(parent),
       m_robotApiClientParent(Q_NULLPTR),
@@ -102,14 +99,44 @@ void RobotApiClientThreadSyncWrapper::ThreadSend_SwitchToActionMsg(const std::__
     emit SignalSend_SwitchToActionMsg(actionFileContent);
 }
 
-void RobotApiClientThreadSyncWrapper::ThreadSend_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta)
+void RobotApiClientThreadSyncWrapper::ThreadSend_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta, const int customVariable)
 {
-    emit SignalSend_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta);
+    emit SignalSend_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta, customVariable);
 }
 
 void RobotApiClientThreadSyncWrapper::ThreadSend_SwitchToIdleStateMsg()
 {
     emit SignalSend_SwitchToIdleStateMsg();
+}
+
+void RobotApiClientThreadSyncWrapper::ThreadSend_SetVelocityActionSpeedMsg(const std::vector<double> &actionSpeed)
+{
+    emit SignalSend_SetVelocityActionSpeedMsg(actionSpeed);
+}
+
+void RobotApiClientThreadSyncWrapper::ThreadSend_SetSerialPort(int serialDeviceIndex)
+{
+    emit SignalSend_SetSerialPort(serialDeviceIndex);
+}
+
+void RobotApiClientThreadSyncWrapper::ThreadSend_SetPositionLimitConf(const std::vector<double> &positiveLimit, const std::vector<double> &negativeLimit)
+{
+    emit SignalSend_SetPositionLimitConf(positiveLimit, negativeLimit);
+}
+
+void RobotApiClientThreadSyncWrapper::ThreadSend_SetReservedParamConf(const std::vector<double> &reservedParam)
+{
+    emit SignalSend_SetReservedParamConf(reservedParam);
+}
+
+void RobotApiClientThreadSyncWrapper::ThreadSend_SaveAndSendConfMsg(bool saveFlag, bool sendFlag)
+{
+    emit SignalSend_SaveAndSendConfMsg(saveFlag, sendFlag);
+}
+
+void RobotApiClientThreadSyncWrapper::ThreadSend_MessageInformMsg(int informType, double informValue)
+{
+    emit SignalSend_MessageInformMsg(informType, informValue);
 }
 
 void RobotApiClientThreadSyncWrapper::ThreadSend_PingMsg(int32_t timestamp, const std::__cxx11::string &content, const std::vector<double> &array)
@@ -170,28 +197,34 @@ void RobotApiClientThreadSyncWrapper::InitApiClientSendSignalAndSlots()
     qRegisterMetaType<std::vector<int>>( "std::vector<int>" );
     qRegisterMetaType<std::vector<double>>( "std::vector<double>" );
 
-    WRAPPER_CONNECT_SEND( StartUnifiedRobotApiClient(QString,int) );
-    WRAPPER_CONNECT_SEND( StopUnifiedRobotApiClient() );
+    connect(this, SIGNAL(SignalStartUnifiedRobotApiClient(QString,int)), m_robotApiClient, SLOT(StartUnifiedRobotApiClient(QString,int)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalStopUnifiedRobotApiClient()), m_robotApiClient, SLOT(StopUnifiedRobotApiClient()), Qt::ConnectionType::QueuedConnection);
 
-    WRAPPER_CONNECT_SEND( Send_ShowWidgetMsg(bool) );
-    WRAPPER_CONNECT_SEND( Send_GoHomeMsg(bool) );
-    WRAPPER_CONNECT_SEND( Send_StopSingleAxisMsg(std::vector<int>) );
-    WRAPPER_CONNECT_SEND( Send_MoveSingleAxisMsg(std::vector<int>, std::vector<double>) );
-    WRAPPER_CONNECT_SEND( Send_SwitchToActionMsg(std::string) );
-    WRAPPER_CONNECT_SEND( Send_SetMonitorActionThetaMsg(std::vector<int>, std::vector<int>, std::vector<double>) );
-    WRAPPER_CONNECT_SEND( Send_SwitchToIdleStateMsg() );
+    connect(this, SIGNAL(SignalSend_ShowWidgetMsg(bool)), m_robotApiClient, SLOT(Send_ShowWidgetMsg(bool)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_GoHomeMsg(bool)), m_robotApiClient, SLOT(Send_GoHomeMsg(bool)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_StopSingleAxisMsg(std::vector<int>)), m_robotApiClient, SLOT(Send_StopSingleAxisMsg(std::vector<int>)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_MoveSingleAxisMsg(std::vector<int>, std::vector<double>)), m_robotApiClient, SLOT(Send_MoveSingleAxisMsg(std::vector<int>, std::vector<double>)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SwitchToActionMsg(std::string)), m_robotApiClient, SLOT(Send_SwitchToActionMsg(std::string)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SetMonitorActionThetaMsg(std::vector<int>, std::vector<int>, std::vector<double>, int)), m_robotApiClient, SLOT(Send_SetMonitorActionThetaMsg(std::vector<int>, std::vector<int>, std::vector<double>, int)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SwitchToIdleStateMsg()), m_robotApiClient, SLOT(Send_SwitchToIdleStateMsg()), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SetVelocityActionSpeedMsg(std::vector<double>)), m_robotApiClient, SLOT(Send_SetVelocityActionSpeedMsg(std::vector<double>)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SetSerialPort(int)), m_robotApiClient, SLOT(Send_SetSerialPort(int)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SetPositionLimitConf(std::vector<double>,std::vector<double>)), m_robotApiClient, SLOT(Send_SetPositionLimitConf(std::vector<double>,std::vector<double>)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SetReservedParamConf(std::vector<double>)), m_robotApiClient, SLOT(Send_SetReservedParamConf(std::vector<double>)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SaveAndSendConfMsg(bool,bool)), m_robotApiClient, SLOT(Send_SaveAndSendConfMsg(bool,bool)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_MessageInformMsg(int,double)), m_robotApiClient, SLOT(Send_MessageInformMsg(int,double)), Qt::ConnectionType::QueuedConnection);
 
-    WRAPPER_CONNECT_SEND( Send_PingMsg(int32_t,std::string,std::vector<double>) );
-    WRAPPER_CONNECT_SEND( Send_GetGoHomeResultMsg() );
-    WRAPPER_CONNECT_SEND( Send_GetRobotThetaMsg() );
-    WRAPPER_CONNECT_SEND( Send_GetRobotMatrixMsg() );
-    WRAPPER_CONNECT_SEND( Send_GetStatusStringMsg(bool, bool) );
-    WRAPPER_CONNECT_SEND( Send_GetPositionLimitConfMsg() );
+    connect(this, SIGNAL(SignalSend_PingMsg(int32_t,std::string,std::vector<double>)), m_robotApiClient, SLOT(Send_PingMsg(int32_t,std::string,std::vector<double>)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_GetGoHomeResultMsg()), m_robotApiClient, SLOT(Send_GetGoHomeResultMsg()), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_GetRobotThetaMsg()), m_robotApiClient, SLOT(Send_GetRobotThetaMsg()), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_GetRobotMatrixMsg()), m_robotApiClient, SLOT(Send_GetRobotMatrixMsg()), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_GetStatusStringMsg(bool, bool)), m_robotApiClient, SLOT(Send_GetStatusStringMsg(bool, bool)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_GetPositionLimitConfMsg()), m_robotApiClient, SLOT(Send_GetPositionLimitConfMsg()), Qt::ConnectionType::QueuedConnection);
 
-    WRAPPER_CONNECT_SEND( Send_SetPedalRobotDeviceDataMsg(std::vector<double>) );
-    WRAPPER_CONNECT_SEND( Send_SetPedalRobotEmergencyStopThetaMsg(int, std::vector<double>) );
+    connect(this, SIGNAL(SignalSend_SetPedalRobotDeviceDataMsg(std::vector<double>)), m_robotApiClient, SLOT(Send_SetPedalRobotDeviceDataMsg(std::vector<double>)), Qt::ConnectionType::QueuedConnection);
+    connect(this, SIGNAL(SignalSend_SetPedalRobotEmergencyStopThetaMsg(int, std::vector<double>)), m_robotApiClient, SLOT(Send_SetPedalRobotEmergencyStopThetaMsg(int, std::vector<double>)), Qt::ConnectionType::QueuedConnection);
 
-    WRAPPER_CONNECT_SEND( Send_GetPedalRobotDeviceDataMsg() );
+    connect(this, SIGNAL(SignalSend_GetPedalRobotDeviceDataMsg()), m_robotApiClient, SLOT(Send_GetPedalRobotDeviceDataMsg()), Qt::ConnectionType::QueuedConnection);
 }
 
 void RobotApiClientThreadSyncWrapper::AcquireThreadSyncSemaphore(int num)

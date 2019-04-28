@@ -42,8 +42,14 @@ public slots:
     bool Send_StopSingleAxisMsg(const std::vector<int> &stopAxes);
     bool Send_MoveSingleAxisMsg(const std::vector<int> &moveAxes, const std::vector<double> &moveSpeed);
     bool Send_SwitchToActionMsg(const std::string &actionFileContent);
-    bool Send_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta);
+    bool Send_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta, const int customVariable);
     bool Send_SwitchToIdleStateMsg();
+    bool Send_SetVelocityActionSpeedMsg(const std::vector<double> &actionSpeed);
+    bool Send_SetSerialPort(int serialDeviceIndex);
+    bool Send_SetPositionLimitConf(const std::vector<double> &positiveLimit, const std::vector<double> &negativeLimit);
+    bool Send_SetReservedParamConf(const std::vector<double> &reservedParam);
+    bool Send_SaveAndSendConfMsg(bool saveFlag, bool sendFlag);
+    bool Send_MessageInformMsg(int informType, double informValue);
 
     //Unified Rpc msg
     bool Send_PingMsg(int32_t timestamp, const std::string &content, const std::vector<double> &array);
@@ -65,6 +71,7 @@ protected:
 
     //Unified Pptc msg
     virtual void Process_ReceiveEmergencyStopSignalMsg(const URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg);
+    virtual void Process_ReceiveUnifiedInformSignalMsg(const URMSG::Pptc_ReceiveUnifiedInformSignalMsg_S2C &ruisMsg);
 
 signals:
     void SignalProcess_PingMsg(const URMSG::Rpc_PingMsg_C2S &pingMsg);
@@ -75,6 +82,7 @@ signals:
     void SignalProcess_GetPositionLimitConfMsg(const URMSG::Rpc_GetPositionLimitConfMsg_C2S &gplcMsg);
 
     void SignalProcess_ReceiveEmergencyStopSignalMsg(const URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg);
+    void SignalProcess_ReceiveUnifiedInformSignalMsg(const URMSG::Pptc_ReceiveUnifiedInformSignalMsg_S2C &ruisMsg);
 
 protected:
     //Unified Rpc msg
@@ -87,9 +95,10 @@ protected:
 
     //Unified Pptc msg
     void On_ReceiveEmergencyStopSignalMsg(const std::string &requestMsg);
+    void On_ReceiveUnifiedInformSignalMsg(const std::string &requestMsg);
 
 protected:
-    void ReleaseThreadSyncSemaphore();
+    void ReleaseThreadSyncSemaphore(int num=1);
 
 private:
     bool m_enableRpcMsgDebugFlag;

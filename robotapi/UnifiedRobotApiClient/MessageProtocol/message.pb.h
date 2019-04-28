@@ -37,7 +37,7 @@ namespace protobuf_message_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[17];
+  static const ::google::protobuf::internal::ParseTable schema[24];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -57,6 +57,18 @@ void InitDefaultsPtc_SetMonitorActionThetaMsg_C2SImpl();
 void InitDefaultsPtc_SetMonitorActionThetaMsg_C2S();
 void InitDefaultsPtc_SwitchToIdleStateMsg_C2SImpl();
 void InitDefaultsPtc_SwitchToIdleStateMsg_C2S();
+void InitDefaultsPtc_SetVelocityActionSpeedMsg_C2SImpl();
+void InitDefaultsPtc_SetVelocityActionSpeedMsg_C2S();
+void InitDefaultsPtc_SetSerialPortMsg_C2SImpl();
+void InitDefaultsPtc_SetSerialPortMsg_C2S();
+void InitDefaultsPtc_SetPositionLimitConfMsg_C2SImpl();
+void InitDefaultsPtc_SetPositionLimitConfMsg_C2S();
+void InitDefaultsPtc_SetReservedParamConfMsg_C2SImpl();
+void InitDefaultsPtc_SetReservedParamConfMsg_C2S();
+void InitDefaultsPtc_SaveAndSendConfMsg_C2SImpl();
+void InitDefaultsPtc_SaveAndSendConfMsg_C2S();
+void InitDefaultsPtc_MessageInformMsg_C2SImpl();
+void InitDefaultsPtc_MessageInformMsg_C2S();
 void InitDefaultsPtc_SetPedalRobotDeviceDataMsg_C2SImpl();
 void InitDefaultsPtc_SetPedalRobotDeviceDataMsg_C2S();
 void InitDefaultsPtc_SetPedalRobotEmergencyStopThetaMsg_C2SImpl();
@@ -77,6 +89,8 @@ void InitDefaultsRpc_GetPositionLimitConfMsg_C2SImpl();
 void InitDefaultsRpc_GetPositionLimitConfMsg_C2S();
 void InitDefaultsPptc_ReceiveEmergencyStopSignalMsg_S2CImpl();
 void InitDefaultsPptc_ReceiveEmergencyStopSignalMsg_S2C();
+void InitDefaultsPptc_ReceiveUnifiedInformSignalMsg_S2CImpl();
+void InitDefaultsPptc_ReceiveUnifiedInformSignalMsg_S2C();
 inline void InitDefaults() {
   InitDefaultsPtc_ShowWidgetMsg_C2S();
   InitDefaultsPtc_GoHomeMsg_C2S();
@@ -85,6 +99,12 @@ inline void InitDefaults() {
   InitDefaultsPtc_SwitchToActionMsg_C2S();
   InitDefaultsPtc_SetMonitorActionThetaMsg_C2S();
   InitDefaultsPtc_SwitchToIdleStateMsg_C2S();
+  InitDefaultsPtc_SetVelocityActionSpeedMsg_C2S();
+  InitDefaultsPtc_SetSerialPortMsg_C2S();
+  InitDefaultsPtc_SetPositionLimitConfMsg_C2S();
+  InitDefaultsPtc_SetReservedParamConfMsg_C2S();
+  InitDefaultsPtc_SaveAndSendConfMsg_C2S();
+  InitDefaultsPtc_MessageInformMsg_C2S();
   InitDefaultsPtc_SetPedalRobotDeviceDataMsg_C2S();
   InitDefaultsPtc_SetPedalRobotEmergencyStopThetaMsg_C2S();
   InitDefaultsRpc_PingMsg_C2S();
@@ -95,18 +115,28 @@ inline void InitDefaults() {
   InitDefaultsRpc_GetPedalRobotDeviceDataMsg_C2S();
   InitDefaultsRpc_GetPositionLimitConfMsg_C2S();
   InitDefaultsPptc_ReceiveEmergencyStopSignalMsg_S2C();
+  InitDefaultsPptc_ReceiveUnifiedInformSignalMsg_S2C();
 }
 }  // namespace protobuf_message_2eproto
 namespace URMSG {
 class Pptc_ReceiveEmergencyStopSignalMsg_S2C;
 class Pptc_ReceiveEmergencyStopSignalMsg_S2CDefaultTypeInternal;
 extern Pptc_ReceiveEmergencyStopSignalMsg_S2CDefaultTypeInternal _Pptc_ReceiveEmergencyStopSignalMsg_S2C_default_instance_;
+class Pptc_ReceiveUnifiedInformSignalMsg_S2C;
+class Pptc_ReceiveUnifiedInformSignalMsg_S2CDefaultTypeInternal;
+extern Pptc_ReceiveUnifiedInformSignalMsg_S2CDefaultTypeInternal _Pptc_ReceiveUnifiedInformSignalMsg_S2C_default_instance_;
 class Ptc_GoHomeMsg_C2S;
 class Ptc_GoHomeMsg_C2SDefaultTypeInternal;
 extern Ptc_GoHomeMsg_C2SDefaultTypeInternal _Ptc_GoHomeMsg_C2S_default_instance_;
+class Ptc_MessageInformMsg_C2S;
+class Ptc_MessageInformMsg_C2SDefaultTypeInternal;
+extern Ptc_MessageInformMsg_C2SDefaultTypeInternal _Ptc_MessageInformMsg_C2S_default_instance_;
 class Ptc_MoveSingleAxisMsg_C2S;
 class Ptc_MoveSingleAxisMsg_C2SDefaultTypeInternal;
 extern Ptc_MoveSingleAxisMsg_C2SDefaultTypeInternal _Ptc_MoveSingleAxisMsg_C2S_default_instance_;
+class Ptc_SaveAndSendConfMsg_C2S;
+class Ptc_SaveAndSendConfMsg_C2SDefaultTypeInternal;
+extern Ptc_SaveAndSendConfMsg_C2SDefaultTypeInternal _Ptc_SaveAndSendConfMsg_C2S_default_instance_;
 class Ptc_SetMonitorActionThetaMsg_C2S;
 class Ptc_SetMonitorActionThetaMsg_C2SDefaultTypeInternal;
 extern Ptc_SetMonitorActionThetaMsg_C2SDefaultTypeInternal _Ptc_SetMonitorActionThetaMsg_C2S_default_instance_;
@@ -116,6 +146,18 @@ extern Ptc_SetPedalRobotDeviceDataMsg_C2SDefaultTypeInternal _Ptc_SetPedalRobotD
 class Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S;
 class Ptc_SetPedalRobotEmergencyStopThetaMsg_C2SDefaultTypeInternal;
 extern Ptc_SetPedalRobotEmergencyStopThetaMsg_C2SDefaultTypeInternal _Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S_default_instance_;
+class Ptc_SetPositionLimitConfMsg_C2S;
+class Ptc_SetPositionLimitConfMsg_C2SDefaultTypeInternal;
+extern Ptc_SetPositionLimitConfMsg_C2SDefaultTypeInternal _Ptc_SetPositionLimitConfMsg_C2S_default_instance_;
+class Ptc_SetReservedParamConfMsg_C2S;
+class Ptc_SetReservedParamConfMsg_C2SDefaultTypeInternal;
+extern Ptc_SetReservedParamConfMsg_C2SDefaultTypeInternal _Ptc_SetReservedParamConfMsg_C2S_default_instance_;
+class Ptc_SetSerialPortMsg_C2S;
+class Ptc_SetSerialPortMsg_C2SDefaultTypeInternal;
+extern Ptc_SetSerialPortMsg_C2SDefaultTypeInternal _Ptc_SetSerialPortMsg_C2S_default_instance_;
+class Ptc_SetVelocityActionSpeedMsg_C2S;
+class Ptc_SetVelocityActionSpeedMsg_C2SDefaultTypeInternal;
+extern Ptc_SetVelocityActionSpeedMsg_C2SDefaultTypeInternal _Ptc_SetVelocityActionSpeedMsg_C2S_default_instance_;
 class Ptc_ShowWidgetMsg_C2S;
 class Ptc_ShowWidgetMsg_C2SDefaultTypeInternal;
 extern Ptc_ShowWidgetMsg_C2SDefaultTypeInternal _Ptc_ShowWidgetMsg_C2S_default_instance_;
@@ -163,6 +205,12 @@ enum MsgIdType {
   Id_Ptc_SwitchToActionMsg_C2S = 4005,
   Id_Ptc_SetMonitorActionThetaMsg_C2S = 4006,
   Id_Ptc_SwitchToIdleStateMsg_C2S = 4007,
+  Id_Ptc_SetVelocityActionSpeedMsg_C2S = 4008,
+  Id_Ptc_SetSerialPortMsg_C2S = 4009,
+  Id_Ptc_SetPositionLimitConfMsg_C2S = 4010,
+  Id_Ptc_SetReservedParamConfMsg_C2S = 4011,
+  Id_Ptc_SaveAndSendConfMsg_C2S = 4012,
+  Id_Ptc_MessageInformMsg_C2S = 4013,
   Id_Ptc_SetPedalRobotDeviceDataMsg_C2S = 5001,
   Id_Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S = 5002,
   Id_Rpc_PingMsg_C2S = 6001,
@@ -172,11 +220,12 @@ enum MsgIdType {
   Id_Rpc_GetStatusStringMsg_C2S = 6005,
   Id_Rpc_GetPositionLimitConfMsg_C2S = 6006,
   Id_Rpc_GetPedalRobotDeviceDataMsg_C2S = 7001,
-  Id_Pptc_ReceiveEmergencyStopSignalMsg_S2C = 8001
+  Id_Pptc_ReceiveEmergencyStopSignalMsg_S2C = 8001,
+  Id_Pptc_ReceiveUnifiedInformSignalMsg_S2C = 8002
 };
 bool MsgIdType_IsValid(int value);
 const MsgIdType MsgIdType_MIN = Id_NoResponseMsg;
-const MsgIdType MsgIdType_MAX = Id_Pptc_ReceiveEmergencyStopSignalMsg_S2C;
+const MsgIdType MsgIdType_MAX = Id_Pptc_ReceiveUnifiedInformSignalMsg_S2C;
 const int MsgIdType_ARRAYSIZE = MsgIdType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* MsgIdType_descriptor();
@@ -911,8 +960,17 @@ class Ptc_SetMonitorActionThetaMsg_C2S : public ::google::protobuf::Message /* @
   ::google::protobuf::RepeatedField< double >*
       mutable_actiontheta();
 
+  // optional int32 customVariable = 4;
+  bool has_customvariable() const;
+  void clear_customvariable();
+  static const int kCustomVariableFieldNumber = 4;
+  ::google::protobuf::int32 customvariable() const;
+  void set_customvariable(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:URMSG.Ptc_SetMonitorActionThetaMsg_C2S)
  private:
+  void set_has_customvariable();
+  void clear_has_customvariable();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -920,6 +978,7 @@ class Ptc_SetMonitorActionThetaMsg_C2S : public ::google::protobuf::Message /* @
   ::google::protobuf::RepeatedField< ::google::protobuf::int32 > actionmethod_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int32 > actionaxes_;
   ::google::protobuf::RepeatedField< double > actiontheta_;
+  ::google::protobuf::int32 customvariable_;
   friend struct ::protobuf_message_2eproto::TableStruct;
   friend void ::protobuf_message_2eproto::InitDefaultsPtc_SetMonitorActionThetaMsg_C2SImpl();
 };
@@ -1035,6 +1094,708 @@ class Ptc_SwitchToIdleStateMsg_C2S : public ::google::protobuf::Message /* @@pro
 };
 // -------------------------------------------------------------------
 
+class Ptc_SetVelocityActionSpeedMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Ptc_SetVelocityActionSpeedMsg_C2S) */ {
+ public:
+  Ptc_SetVelocityActionSpeedMsg_C2S();
+  virtual ~Ptc_SetVelocityActionSpeedMsg_C2S();
+
+  Ptc_SetVelocityActionSpeedMsg_C2S(const Ptc_SetVelocityActionSpeedMsg_C2S& from);
+
+  inline Ptc_SetVelocityActionSpeedMsg_C2S& operator=(const Ptc_SetVelocityActionSpeedMsg_C2S& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Ptc_SetVelocityActionSpeedMsg_C2S(Ptc_SetVelocityActionSpeedMsg_C2S&& from) noexcept
+    : Ptc_SetVelocityActionSpeedMsg_C2S() {
+    *this = ::std::move(from);
+  }
+
+  inline Ptc_SetVelocityActionSpeedMsg_C2S& operator=(Ptc_SetVelocityActionSpeedMsg_C2S&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Ptc_SetVelocityActionSpeedMsg_C2S& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Ptc_SetVelocityActionSpeedMsg_C2S* internal_default_instance() {
+    return reinterpret_cast<const Ptc_SetVelocityActionSpeedMsg_C2S*>(
+               &_Ptc_SetVelocityActionSpeedMsg_C2S_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    7;
+
+  void Swap(Ptc_SetVelocityActionSpeedMsg_C2S* other);
+  friend void swap(Ptc_SetVelocityActionSpeedMsg_C2S& a, Ptc_SetVelocityActionSpeedMsg_C2S& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Ptc_SetVelocityActionSpeedMsg_C2S* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Ptc_SetVelocityActionSpeedMsg_C2S* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Ptc_SetVelocityActionSpeedMsg_C2S& from);
+  void MergeFrom(const Ptc_SetVelocityActionSpeedMsg_C2S& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Ptc_SetVelocityActionSpeedMsg_C2S* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated double actionSpeed = 1;
+  int actionspeed_size() const;
+  void clear_actionspeed();
+  static const int kActionSpeedFieldNumber = 1;
+  double actionspeed(int index) const;
+  void set_actionspeed(int index, double value);
+  void add_actionspeed(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      actionspeed() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_actionspeed();
+
+  // @@protoc_insertion_point(class_scope:URMSG.Ptc_SetVelocityActionSpeedMsg_C2S)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedField< double > actionspeed_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPtc_SetVelocityActionSpeedMsg_C2SImpl();
+};
+// -------------------------------------------------------------------
+
+class Ptc_SetSerialPortMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Ptc_SetSerialPortMsg_C2S) */ {
+ public:
+  Ptc_SetSerialPortMsg_C2S();
+  virtual ~Ptc_SetSerialPortMsg_C2S();
+
+  Ptc_SetSerialPortMsg_C2S(const Ptc_SetSerialPortMsg_C2S& from);
+
+  inline Ptc_SetSerialPortMsg_C2S& operator=(const Ptc_SetSerialPortMsg_C2S& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Ptc_SetSerialPortMsg_C2S(Ptc_SetSerialPortMsg_C2S&& from) noexcept
+    : Ptc_SetSerialPortMsg_C2S() {
+    *this = ::std::move(from);
+  }
+
+  inline Ptc_SetSerialPortMsg_C2S& operator=(Ptc_SetSerialPortMsg_C2S&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Ptc_SetSerialPortMsg_C2S& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Ptc_SetSerialPortMsg_C2S* internal_default_instance() {
+    return reinterpret_cast<const Ptc_SetSerialPortMsg_C2S*>(
+               &_Ptc_SetSerialPortMsg_C2S_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    8;
+
+  void Swap(Ptc_SetSerialPortMsg_C2S* other);
+  friend void swap(Ptc_SetSerialPortMsg_C2S& a, Ptc_SetSerialPortMsg_C2S& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Ptc_SetSerialPortMsg_C2S* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Ptc_SetSerialPortMsg_C2S* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Ptc_SetSerialPortMsg_C2S& from);
+  void MergeFrom(const Ptc_SetSerialPortMsg_C2S& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Ptc_SetSerialPortMsg_C2S* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 serialDeviceIndex = 1;
+  bool has_serialdeviceindex() const;
+  void clear_serialdeviceindex();
+  static const int kSerialDeviceIndexFieldNumber = 1;
+  ::google::protobuf::int32 serialdeviceindex() const;
+  void set_serialdeviceindex(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:URMSG.Ptc_SetSerialPortMsg_C2S)
+ private:
+  void set_has_serialdeviceindex();
+  void clear_has_serialdeviceindex();
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::int32 serialdeviceindex_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPtc_SetSerialPortMsg_C2SImpl();
+};
+// -------------------------------------------------------------------
+
+class Ptc_SetPositionLimitConfMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Ptc_SetPositionLimitConfMsg_C2S) */ {
+ public:
+  Ptc_SetPositionLimitConfMsg_C2S();
+  virtual ~Ptc_SetPositionLimitConfMsg_C2S();
+
+  Ptc_SetPositionLimitConfMsg_C2S(const Ptc_SetPositionLimitConfMsg_C2S& from);
+
+  inline Ptc_SetPositionLimitConfMsg_C2S& operator=(const Ptc_SetPositionLimitConfMsg_C2S& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Ptc_SetPositionLimitConfMsg_C2S(Ptc_SetPositionLimitConfMsg_C2S&& from) noexcept
+    : Ptc_SetPositionLimitConfMsg_C2S() {
+    *this = ::std::move(from);
+  }
+
+  inline Ptc_SetPositionLimitConfMsg_C2S& operator=(Ptc_SetPositionLimitConfMsg_C2S&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Ptc_SetPositionLimitConfMsg_C2S& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Ptc_SetPositionLimitConfMsg_C2S* internal_default_instance() {
+    return reinterpret_cast<const Ptc_SetPositionLimitConfMsg_C2S*>(
+               &_Ptc_SetPositionLimitConfMsg_C2S_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    9;
+
+  void Swap(Ptc_SetPositionLimitConfMsg_C2S* other);
+  friend void swap(Ptc_SetPositionLimitConfMsg_C2S& a, Ptc_SetPositionLimitConfMsg_C2S& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Ptc_SetPositionLimitConfMsg_C2S* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Ptc_SetPositionLimitConfMsg_C2S* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Ptc_SetPositionLimitConfMsg_C2S& from);
+  void MergeFrom(const Ptc_SetPositionLimitConfMsg_C2S& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Ptc_SetPositionLimitConfMsg_C2S* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated double positiveLimit = 1;
+  int positivelimit_size() const;
+  void clear_positivelimit();
+  static const int kPositiveLimitFieldNumber = 1;
+  double positivelimit(int index) const;
+  void set_positivelimit(int index, double value);
+  void add_positivelimit(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      positivelimit() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_positivelimit();
+
+  // repeated double negativeLimit = 2;
+  int negativelimit_size() const;
+  void clear_negativelimit();
+  static const int kNegativeLimitFieldNumber = 2;
+  double negativelimit(int index) const;
+  void set_negativelimit(int index, double value);
+  void add_negativelimit(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      negativelimit() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_negativelimit();
+
+  // @@protoc_insertion_point(class_scope:URMSG.Ptc_SetPositionLimitConfMsg_C2S)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedField< double > positivelimit_;
+  ::google::protobuf::RepeatedField< double > negativelimit_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPtc_SetPositionLimitConfMsg_C2SImpl();
+};
+// -------------------------------------------------------------------
+
+class Ptc_SetReservedParamConfMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Ptc_SetReservedParamConfMsg_C2S) */ {
+ public:
+  Ptc_SetReservedParamConfMsg_C2S();
+  virtual ~Ptc_SetReservedParamConfMsg_C2S();
+
+  Ptc_SetReservedParamConfMsg_C2S(const Ptc_SetReservedParamConfMsg_C2S& from);
+
+  inline Ptc_SetReservedParamConfMsg_C2S& operator=(const Ptc_SetReservedParamConfMsg_C2S& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Ptc_SetReservedParamConfMsg_C2S(Ptc_SetReservedParamConfMsg_C2S&& from) noexcept
+    : Ptc_SetReservedParamConfMsg_C2S() {
+    *this = ::std::move(from);
+  }
+
+  inline Ptc_SetReservedParamConfMsg_C2S& operator=(Ptc_SetReservedParamConfMsg_C2S&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Ptc_SetReservedParamConfMsg_C2S& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Ptc_SetReservedParamConfMsg_C2S* internal_default_instance() {
+    return reinterpret_cast<const Ptc_SetReservedParamConfMsg_C2S*>(
+               &_Ptc_SetReservedParamConfMsg_C2S_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    10;
+
+  void Swap(Ptc_SetReservedParamConfMsg_C2S* other);
+  friend void swap(Ptc_SetReservedParamConfMsg_C2S& a, Ptc_SetReservedParamConfMsg_C2S& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Ptc_SetReservedParamConfMsg_C2S* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Ptc_SetReservedParamConfMsg_C2S* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Ptc_SetReservedParamConfMsg_C2S& from);
+  void MergeFrom(const Ptc_SetReservedParamConfMsg_C2S& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Ptc_SetReservedParamConfMsg_C2S* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated double reservedParam = 1;
+  int reservedparam_size() const;
+  void clear_reservedparam();
+  static const int kReservedParamFieldNumber = 1;
+  double reservedparam(int index) const;
+  void set_reservedparam(int index, double value);
+  void add_reservedparam(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      reservedparam() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_reservedparam();
+
+  // @@protoc_insertion_point(class_scope:URMSG.Ptc_SetReservedParamConfMsg_C2S)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedField< double > reservedparam_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPtc_SetReservedParamConfMsg_C2SImpl();
+};
+// -------------------------------------------------------------------
+
+class Ptc_SaveAndSendConfMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Ptc_SaveAndSendConfMsg_C2S) */ {
+ public:
+  Ptc_SaveAndSendConfMsg_C2S();
+  virtual ~Ptc_SaveAndSendConfMsg_C2S();
+
+  Ptc_SaveAndSendConfMsg_C2S(const Ptc_SaveAndSendConfMsg_C2S& from);
+
+  inline Ptc_SaveAndSendConfMsg_C2S& operator=(const Ptc_SaveAndSendConfMsg_C2S& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Ptc_SaveAndSendConfMsg_C2S(Ptc_SaveAndSendConfMsg_C2S&& from) noexcept
+    : Ptc_SaveAndSendConfMsg_C2S() {
+    *this = ::std::move(from);
+  }
+
+  inline Ptc_SaveAndSendConfMsg_C2S& operator=(Ptc_SaveAndSendConfMsg_C2S&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Ptc_SaveAndSendConfMsg_C2S& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Ptc_SaveAndSendConfMsg_C2S* internal_default_instance() {
+    return reinterpret_cast<const Ptc_SaveAndSendConfMsg_C2S*>(
+               &_Ptc_SaveAndSendConfMsg_C2S_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    11;
+
+  void Swap(Ptc_SaveAndSendConfMsg_C2S* other);
+  friend void swap(Ptc_SaveAndSendConfMsg_C2S& a, Ptc_SaveAndSendConfMsg_C2S& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Ptc_SaveAndSendConfMsg_C2S* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Ptc_SaveAndSendConfMsg_C2S* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Ptc_SaveAndSendConfMsg_C2S& from);
+  void MergeFrom(const Ptc_SaveAndSendConfMsg_C2S& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Ptc_SaveAndSendConfMsg_C2S* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional bool saveFlag = 1;
+  bool has_saveflag() const;
+  void clear_saveflag();
+  static const int kSaveFlagFieldNumber = 1;
+  bool saveflag() const;
+  void set_saveflag(bool value);
+
+  // optional bool sendFlag = 2;
+  bool has_sendflag() const;
+  void clear_sendflag();
+  static const int kSendFlagFieldNumber = 2;
+  bool sendflag() const;
+  void set_sendflag(bool value);
+
+  // @@protoc_insertion_point(class_scope:URMSG.Ptc_SaveAndSendConfMsg_C2S)
+ private:
+  void set_has_saveflag();
+  void clear_has_saveflag();
+  void set_has_sendflag();
+  void clear_has_sendflag();
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  bool saveflag_;
+  bool sendflag_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPtc_SaveAndSendConfMsg_C2SImpl();
+};
+// -------------------------------------------------------------------
+
+class Ptc_MessageInformMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Ptc_MessageInformMsg_C2S) */ {
+ public:
+  Ptc_MessageInformMsg_C2S();
+  virtual ~Ptc_MessageInformMsg_C2S();
+
+  Ptc_MessageInformMsg_C2S(const Ptc_MessageInformMsg_C2S& from);
+
+  inline Ptc_MessageInformMsg_C2S& operator=(const Ptc_MessageInformMsg_C2S& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Ptc_MessageInformMsg_C2S(Ptc_MessageInformMsg_C2S&& from) noexcept
+    : Ptc_MessageInformMsg_C2S() {
+    *this = ::std::move(from);
+  }
+
+  inline Ptc_MessageInformMsg_C2S& operator=(Ptc_MessageInformMsg_C2S&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Ptc_MessageInformMsg_C2S& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Ptc_MessageInformMsg_C2S* internal_default_instance() {
+    return reinterpret_cast<const Ptc_MessageInformMsg_C2S*>(
+               &_Ptc_MessageInformMsg_C2S_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    12;
+
+  void Swap(Ptc_MessageInformMsg_C2S* other);
+  friend void swap(Ptc_MessageInformMsg_C2S& a, Ptc_MessageInformMsg_C2S& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Ptc_MessageInformMsg_C2S* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Ptc_MessageInformMsg_C2S* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Ptc_MessageInformMsg_C2S& from);
+  void MergeFrom(const Ptc_MessageInformMsg_C2S& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Ptc_MessageInformMsg_C2S* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional double informValue = 2;
+  bool has_informvalue() const;
+  void clear_informvalue();
+  static const int kInformValueFieldNumber = 2;
+  double informvalue() const;
+  void set_informvalue(double value);
+
+  // optional int32 informType = 1;
+  bool has_informtype() const;
+  void clear_informtype();
+  static const int kInformTypeFieldNumber = 1;
+  ::google::protobuf::int32 informtype() const;
+  void set_informtype(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:URMSG.Ptc_MessageInformMsg_C2S)
+ private:
+  void set_has_informtype();
+  void clear_has_informtype();
+  void set_has_informvalue();
+  void clear_has_informvalue();
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  double informvalue_;
+  ::google::protobuf::int32 informtype_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPtc_MessageInformMsg_C2SImpl();
+};
+// -------------------------------------------------------------------
+
 class Ptc_SetPedalRobotDeviceDataMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Ptc_SetPedalRobotDeviceDataMsg_C2S) */ {
  public:
   Ptc_SetPedalRobotDeviceDataMsg_C2S();
@@ -1077,7 +1838,7 @@ class Ptc_SetPedalRobotDeviceDataMsg_C2S : public ::google::protobuf::Message /*
                &_Ptc_SetPedalRobotDeviceDataMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    7;
+    13;
 
   void Swap(Ptc_SetPedalRobotDeviceDataMsg_C2S* other);
   friend void swap(Ptc_SetPedalRobotDeviceDataMsg_C2S& a, Ptc_SetPedalRobotDeviceDataMsg_C2S& b) {
@@ -1200,7 +1961,7 @@ class Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S : public ::google::protobuf::Me
                &_Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    14;
 
   void Swap(Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S* other);
   friend void swap(Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& a, Ptc_SetPedalRobotEmergencyStopThetaMsg_C2S& b) {
@@ -1323,7 +2084,7 @@ class Rpc_PingMsg_C2S : public ::google::protobuf::Message /* @@protoc_insertion
                &_Rpc_PingMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    9;
+    15;
 
   void Swap(Rpc_PingMsg_C2S* other);
   friend void swap(Rpc_PingMsg_C2S& a, Rpc_PingMsg_C2S& b) {
@@ -1464,7 +2225,7 @@ class Rpc_GetGoHomeResultMsg_C2S : public ::google::protobuf::Message /* @@proto
                &_Rpc_GetGoHomeResultMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    10;
+    16;
 
   void Swap(Rpc_GetGoHomeResultMsg_C2S* other);
   friend void swap(Rpc_GetGoHomeResultMsg_C2S& a, Rpc_GetGoHomeResultMsg_C2S& b) {
@@ -1574,7 +2335,7 @@ class Rpc_GetRobotThetaMsg_C2S : public ::google::protobuf::Message /* @@protoc_
                &_Rpc_GetRobotThetaMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    11;
+    17;
 
   void Swap(Rpc_GetRobotThetaMsg_C2S* other);
   friend void swap(Rpc_GetRobotThetaMsg_C2S& a, Rpc_GetRobotThetaMsg_C2S& b) {
@@ -1687,7 +2448,7 @@ class Rpc_GetRobotMatrixMsg_C2S : public ::google::protobuf::Message /* @@protoc
                &_Rpc_GetRobotMatrixMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    12;
+    18;
 
   void Swap(Rpc_GetRobotMatrixMsg_C2S* other);
   friend void swap(Rpc_GetRobotMatrixMsg_C2S& a, Rpc_GetRobotMatrixMsg_C2S& b) {
@@ -1800,7 +2561,7 @@ class Rpc_GetStatusStringMsg_C2S : public ::google::protobuf::Message /* @@proto
                &_Rpc_GetStatusStringMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    13;
+    19;
 
   void Swap(Rpc_GetStatusStringMsg_C2S* other);
   friend void swap(Rpc_GetStatusStringMsg_C2S& a, Rpc_GetStatusStringMsg_C2S& b) {
@@ -1948,7 +2709,7 @@ class Rpc_GetPedalRobotDeviceDataMsg_C2S : public ::google::protobuf::Message /*
                &_Rpc_GetPedalRobotDeviceDataMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    14;
+    20;
 
   void Swap(Rpc_GetPedalRobotDeviceDataMsg_C2S* other);
   friend void swap(Rpc_GetPedalRobotDeviceDataMsg_C2S& a, Rpc_GetPedalRobotDeviceDataMsg_C2S& b) {
@@ -2071,7 +2832,7 @@ class Rpc_GetPositionLimitConfMsg_C2S : public ::google::protobuf::Message /* @@
                &_Rpc_GetPositionLimitConfMsg_C2S_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    15;
+    21;
 
   void Swap(Rpc_GetPositionLimitConfMsg_C2S* other);
   friend void swap(Rpc_GetPositionLimitConfMsg_C2S& a, Rpc_GetPositionLimitConfMsg_C2S& b) {
@@ -2197,7 +2958,7 @@ class Pptc_ReceiveEmergencyStopSignalMsg_S2C : public ::google::protobuf::Messag
                &_Pptc_ReceiveEmergencyStopSignalMsg_S2C_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    16;
+    22;
 
   void Swap(Pptc_ReceiveEmergencyStopSignalMsg_S2C* other);
   friend void swap(Pptc_ReceiveEmergencyStopSignalMsg_S2C& a, Pptc_ReceiveEmergencyStopSignalMsg_S2C& b) {
@@ -2262,6 +3023,132 @@ class Pptc_ReceiveEmergencyStopSignalMsg_S2C : public ::google::protobuf::Messag
   bool isstopsuccess_;
   friend struct ::protobuf_message_2eproto::TableStruct;
   friend void ::protobuf_message_2eproto::InitDefaultsPptc_ReceiveEmergencyStopSignalMsg_S2CImpl();
+};
+// -------------------------------------------------------------------
+
+class Pptc_ReceiveUnifiedInformSignalMsg_S2C : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C) */ {
+ public:
+  Pptc_ReceiveUnifiedInformSignalMsg_S2C();
+  virtual ~Pptc_ReceiveUnifiedInformSignalMsg_S2C();
+
+  Pptc_ReceiveUnifiedInformSignalMsg_S2C(const Pptc_ReceiveUnifiedInformSignalMsg_S2C& from);
+
+  inline Pptc_ReceiveUnifiedInformSignalMsg_S2C& operator=(const Pptc_ReceiveUnifiedInformSignalMsg_S2C& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Pptc_ReceiveUnifiedInformSignalMsg_S2C(Pptc_ReceiveUnifiedInformSignalMsg_S2C&& from) noexcept
+    : Pptc_ReceiveUnifiedInformSignalMsg_S2C() {
+    *this = ::std::move(from);
+  }
+
+  inline Pptc_ReceiveUnifiedInformSignalMsg_S2C& operator=(Pptc_ReceiveUnifiedInformSignalMsg_S2C&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Pptc_ReceiveUnifiedInformSignalMsg_S2C& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Pptc_ReceiveUnifiedInformSignalMsg_S2C* internal_default_instance() {
+    return reinterpret_cast<const Pptc_ReceiveUnifiedInformSignalMsg_S2C*>(
+               &_Pptc_ReceiveUnifiedInformSignalMsg_S2C_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    23;
+
+  void Swap(Pptc_ReceiveUnifiedInformSignalMsg_S2C* other);
+  friend void swap(Pptc_ReceiveUnifiedInformSignalMsg_S2C& a, Pptc_ReceiveUnifiedInformSignalMsg_S2C& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Pptc_ReceiveUnifiedInformSignalMsg_S2C* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Pptc_ReceiveUnifiedInformSignalMsg_S2C* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Pptc_ReceiveUnifiedInformSignalMsg_S2C& from);
+  void MergeFrom(const Pptc_ReceiveUnifiedInformSignalMsg_S2C& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Pptc_ReceiveUnifiedInformSignalMsg_S2C* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated int32 intDataArray = 1;
+  int intdataarray_size() const;
+  void clear_intdataarray();
+  static const int kIntDataArrayFieldNumber = 1;
+  ::google::protobuf::int32 intdataarray(int index) const;
+  void set_intdataarray(int index, ::google::protobuf::int32 value);
+  void add_intdataarray(::google::protobuf::int32 value);
+  const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      intdataarray() const;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_intdataarray();
+
+  // repeated double doubleDataArray = 2;
+  int doubledataarray_size() const;
+  void clear_doubledataarray();
+  static const int kDoubleDataArrayFieldNumber = 2;
+  double doubledataarray(int index) const;
+  void set_doubledataarray(int index, double value);
+  void add_doubledataarray(double value);
+  const ::google::protobuf::RepeatedField< double >&
+      doubledataarray() const;
+  ::google::protobuf::RepeatedField< double >*
+      mutable_doubledataarray();
+
+  // @@protoc_insertion_point(class_scope:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable int _cached_size_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > intdataarray_;
+  ::google::protobuf::RepeatedField< double > doubledataarray_;
+  friend struct ::protobuf_message_2eproto::TableStruct;
+  friend void ::protobuf_message_2eproto::InitDefaultsPptc_ReceiveUnifiedInformSignalMsg_S2CImpl();
 };
 // ===================================================================
 
@@ -2648,6 +3535,30 @@ Ptc_SetMonitorActionThetaMsg_C2S::mutable_actiontheta() {
   return &actiontheta_;
 }
 
+// optional int32 customVariable = 4;
+inline bool Ptc_SetMonitorActionThetaMsg_C2S::has_customvariable() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Ptc_SetMonitorActionThetaMsg_C2S::set_has_customvariable() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Ptc_SetMonitorActionThetaMsg_C2S::clear_has_customvariable() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Ptc_SetMonitorActionThetaMsg_C2S::clear_customvariable() {
+  customvariable_ = 0;
+  clear_has_customvariable();
+}
+inline ::google::protobuf::int32 Ptc_SetMonitorActionThetaMsg_C2S::customvariable() const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SetMonitorActionThetaMsg_C2S.customVariable)
+  return customvariable_;
+}
+inline void Ptc_SetMonitorActionThetaMsg_C2S::set_customvariable(::google::protobuf::int32 value) {
+  set_has_customvariable();
+  customvariable_ = value;
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SetMonitorActionThetaMsg_C2S.customVariable)
+}
+
 // -------------------------------------------------------------------
 
 // Ptc_SwitchToIdleStateMsg_C2S
@@ -2674,6 +3585,270 @@ inline void Ptc_SwitchToIdleStateMsg_C2S::set_placeholder(bool value) {
   set_has_placeholder();
   placeholder_ = value;
   // @@protoc_insertion_point(field_set:URMSG.Ptc_SwitchToIdleStateMsg_C2S.placeholder)
+}
+
+// -------------------------------------------------------------------
+
+// Ptc_SetVelocityActionSpeedMsg_C2S
+
+// repeated double actionSpeed = 1;
+inline int Ptc_SetVelocityActionSpeedMsg_C2S::actionspeed_size() const {
+  return actionspeed_.size();
+}
+inline void Ptc_SetVelocityActionSpeedMsg_C2S::clear_actionspeed() {
+  actionspeed_.Clear();
+}
+inline double Ptc_SetVelocityActionSpeedMsg_C2S::actionspeed(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SetVelocityActionSpeedMsg_C2S.actionSpeed)
+  return actionspeed_.Get(index);
+}
+inline void Ptc_SetVelocityActionSpeedMsg_C2S::set_actionspeed(int index, double value) {
+  actionspeed_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SetVelocityActionSpeedMsg_C2S.actionSpeed)
+}
+inline void Ptc_SetVelocityActionSpeedMsg_C2S::add_actionspeed(double value) {
+  actionspeed_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Ptc_SetVelocityActionSpeedMsg_C2S.actionSpeed)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Ptc_SetVelocityActionSpeedMsg_C2S::actionspeed() const {
+  // @@protoc_insertion_point(field_list:URMSG.Ptc_SetVelocityActionSpeedMsg_C2S.actionSpeed)
+  return actionspeed_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Ptc_SetVelocityActionSpeedMsg_C2S::mutable_actionspeed() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Ptc_SetVelocityActionSpeedMsg_C2S.actionSpeed)
+  return &actionspeed_;
+}
+
+// -------------------------------------------------------------------
+
+// Ptc_SetSerialPortMsg_C2S
+
+// optional int32 serialDeviceIndex = 1;
+inline bool Ptc_SetSerialPortMsg_C2S::has_serialdeviceindex() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Ptc_SetSerialPortMsg_C2S::set_has_serialdeviceindex() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Ptc_SetSerialPortMsg_C2S::clear_has_serialdeviceindex() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Ptc_SetSerialPortMsg_C2S::clear_serialdeviceindex() {
+  serialdeviceindex_ = 0;
+  clear_has_serialdeviceindex();
+}
+inline ::google::protobuf::int32 Ptc_SetSerialPortMsg_C2S::serialdeviceindex() const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SetSerialPortMsg_C2S.serialDeviceIndex)
+  return serialdeviceindex_;
+}
+inline void Ptc_SetSerialPortMsg_C2S::set_serialdeviceindex(::google::protobuf::int32 value) {
+  set_has_serialdeviceindex();
+  serialdeviceindex_ = value;
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SetSerialPortMsg_C2S.serialDeviceIndex)
+}
+
+// -------------------------------------------------------------------
+
+// Ptc_SetPositionLimitConfMsg_C2S
+
+// repeated double positiveLimit = 1;
+inline int Ptc_SetPositionLimitConfMsg_C2S::positivelimit_size() const {
+  return positivelimit_.size();
+}
+inline void Ptc_SetPositionLimitConfMsg_C2S::clear_positivelimit() {
+  positivelimit_.Clear();
+}
+inline double Ptc_SetPositionLimitConfMsg_C2S::positivelimit(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SetPositionLimitConfMsg_C2S.positiveLimit)
+  return positivelimit_.Get(index);
+}
+inline void Ptc_SetPositionLimitConfMsg_C2S::set_positivelimit(int index, double value) {
+  positivelimit_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SetPositionLimitConfMsg_C2S.positiveLimit)
+}
+inline void Ptc_SetPositionLimitConfMsg_C2S::add_positivelimit(double value) {
+  positivelimit_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Ptc_SetPositionLimitConfMsg_C2S.positiveLimit)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Ptc_SetPositionLimitConfMsg_C2S::positivelimit() const {
+  // @@protoc_insertion_point(field_list:URMSG.Ptc_SetPositionLimitConfMsg_C2S.positiveLimit)
+  return positivelimit_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Ptc_SetPositionLimitConfMsg_C2S::mutable_positivelimit() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Ptc_SetPositionLimitConfMsg_C2S.positiveLimit)
+  return &positivelimit_;
+}
+
+// repeated double negativeLimit = 2;
+inline int Ptc_SetPositionLimitConfMsg_C2S::negativelimit_size() const {
+  return negativelimit_.size();
+}
+inline void Ptc_SetPositionLimitConfMsg_C2S::clear_negativelimit() {
+  negativelimit_.Clear();
+}
+inline double Ptc_SetPositionLimitConfMsg_C2S::negativelimit(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SetPositionLimitConfMsg_C2S.negativeLimit)
+  return negativelimit_.Get(index);
+}
+inline void Ptc_SetPositionLimitConfMsg_C2S::set_negativelimit(int index, double value) {
+  negativelimit_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SetPositionLimitConfMsg_C2S.negativeLimit)
+}
+inline void Ptc_SetPositionLimitConfMsg_C2S::add_negativelimit(double value) {
+  negativelimit_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Ptc_SetPositionLimitConfMsg_C2S.negativeLimit)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Ptc_SetPositionLimitConfMsg_C2S::negativelimit() const {
+  // @@protoc_insertion_point(field_list:URMSG.Ptc_SetPositionLimitConfMsg_C2S.negativeLimit)
+  return negativelimit_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Ptc_SetPositionLimitConfMsg_C2S::mutable_negativelimit() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Ptc_SetPositionLimitConfMsg_C2S.negativeLimit)
+  return &negativelimit_;
+}
+
+// -------------------------------------------------------------------
+
+// Ptc_SetReservedParamConfMsg_C2S
+
+// repeated double reservedParam = 1;
+inline int Ptc_SetReservedParamConfMsg_C2S::reservedparam_size() const {
+  return reservedparam_.size();
+}
+inline void Ptc_SetReservedParamConfMsg_C2S::clear_reservedparam() {
+  reservedparam_.Clear();
+}
+inline double Ptc_SetReservedParamConfMsg_C2S::reservedparam(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SetReservedParamConfMsg_C2S.reservedParam)
+  return reservedparam_.Get(index);
+}
+inline void Ptc_SetReservedParamConfMsg_C2S::set_reservedparam(int index, double value) {
+  reservedparam_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SetReservedParamConfMsg_C2S.reservedParam)
+}
+inline void Ptc_SetReservedParamConfMsg_C2S::add_reservedparam(double value) {
+  reservedparam_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Ptc_SetReservedParamConfMsg_C2S.reservedParam)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Ptc_SetReservedParamConfMsg_C2S::reservedparam() const {
+  // @@protoc_insertion_point(field_list:URMSG.Ptc_SetReservedParamConfMsg_C2S.reservedParam)
+  return reservedparam_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Ptc_SetReservedParamConfMsg_C2S::mutable_reservedparam() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Ptc_SetReservedParamConfMsg_C2S.reservedParam)
+  return &reservedparam_;
+}
+
+// -------------------------------------------------------------------
+
+// Ptc_SaveAndSendConfMsg_C2S
+
+// optional bool saveFlag = 1;
+inline bool Ptc_SaveAndSendConfMsg_C2S::has_saveflag() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Ptc_SaveAndSendConfMsg_C2S::set_has_saveflag() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Ptc_SaveAndSendConfMsg_C2S::clear_has_saveflag() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Ptc_SaveAndSendConfMsg_C2S::clear_saveflag() {
+  saveflag_ = false;
+  clear_has_saveflag();
+}
+inline bool Ptc_SaveAndSendConfMsg_C2S::saveflag() const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SaveAndSendConfMsg_C2S.saveFlag)
+  return saveflag_;
+}
+inline void Ptc_SaveAndSendConfMsg_C2S::set_saveflag(bool value) {
+  set_has_saveflag();
+  saveflag_ = value;
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SaveAndSendConfMsg_C2S.saveFlag)
+}
+
+// optional bool sendFlag = 2;
+inline bool Ptc_SaveAndSendConfMsg_C2S::has_sendflag() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Ptc_SaveAndSendConfMsg_C2S::set_has_sendflag() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Ptc_SaveAndSendConfMsg_C2S::clear_has_sendflag() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Ptc_SaveAndSendConfMsg_C2S::clear_sendflag() {
+  sendflag_ = false;
+  clear_has_sendflag();
+}
+inline bool Ptc_SaveAndSendConfMsg_C2S::sendflag() const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_SaveAndSendConfMsg_C2S.sendFlag)
+  return sendflag_;
+}
+inline void Ptc_SaveAndSendConfMsg_C2S::set_sendflag(bool value) {
+  set_has_sendflag();
+  sendflag_ = value;
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_SaveAndSendConfMsg_C2S.sendFlag)
+}
+
+// -------------------------------------------------------------------
+
+// Ptc_MessageInformMsg_C2S
+
+// optional int32 informType = 1;
+inline bool Ptc_MessageInformMsg_C2S::has_informtype() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Ptc_MessageInformMsg_C2S::set_has_informtype() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Ptc_MessageInformMsg_C2S::clear_has_informtype() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Ptc_MessageInformMsg_C2S::clear_informtype() {
+  informtype_ = 0;
+  clear_has_informtype();
+}
+inline ::google::protobuf::int32 Ptc_MessageInformMsg_C2S::informtype() const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_MessageInformMsg_C2S.informType)
+  return informtype_;
+}
+inline void Ptc_MessageInformMsg_C2S::set_informtype(::google::protobuf::int32 value) {
+  set_has_informtype();
+  informtype_ = value;
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_MessageInformMsg_C2S.informType)
+}
+
+// optional double informValue = 2;
+inline bool Ptc_MessageInformMsg_C2S::has_informvalue() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Ptc_MessageInformMsg_C2S::set_has_informvalue() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Ptc_MessageInformMsg_C2S::clear_has_informvalue() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Ptc_MessageInformMsg_C2S::clear_informvalue() {
+  informvalue_ = 0;
+  clear_has_informvalue();
+}
+inline double Ptc_MessageInformMsg_C2S::informvalue() const {
+  // @@protoc_insertion_point(field_get:URMSG.Ptc_MessageInformMsg_C2S.informValue)
+  return informvalue_;
+}
+inline void Ptc_MessageInformMsg_C2S::set_informvalue(double value) {
+  set_has_informvalue();
+  informvalue_ = value;
+  // @@protoc_insertion_point(field_set:URMSG.Ptc_MessageInformMsg_C2S.informValue)
 }
 
 // -------------------------------------------------------------------
@@ -3298,9 +4473,87 @@ inline void Pptc_ReceiveEmergencyStopSignalMsg_S2C::set_isstopsuccess(bool value
   // @@protoc_insertion_point(field_set:URMSG.Pptc_ReceiveEmergencyStopSignalMsg_S2C.isStopSuccess)
 }
 
+// -------------------------------------------------------------------
+
+// Pptc_ReceiveUnifiedInformSignalMsg_S2C
+
+// repeated int32 intDataArray = 1;
+inline int Pptc_ReceiveUnifiedInformSignalMsg_S2C::intdataarray_size() const {
+  return intdataarray_.size();
+}
+inline void Pptc_ReceiveUnifiedInformSignalMsg_S2C::clear_intdataarray() {
+  intdataarray_.Clear();
+}
+inline ::google::protobuf::int32 Pptc_ReceiveUnifiedInformSignalMsg_S2C::intdataarray(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.intDataArray)
+  return intdataarray_.Get(index);
+}
+inline void Pptc_ReceiveUnifiedInformSignalMsg_S2C::set_intdataarray(int index, ::google::protobuf::int32 value) {
+  intdataarray_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.intDataArray)
+}
+inline void Pptc_ReceiveUnifiedInformSignalMsg_S2C::add_intdataarray(::google::protobuf::int32 value) {
+  intdataarray_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.intDataArray)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+Pptc_ReceiveUnifiedInformSignalMsg_S2C::intdataarray() const {
+  // @@protoc_insertion_point(field_list:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.intDataArray)
+  return intdataarray_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+Pptc_ReceiveUnifiedInformSignalMsg_S2C::mutable_intdataarray() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.intDataArray)
+  return &intdataarray_;
+}
+
+// repeated double doubleDataArray = 2;
+inline int Pptc_ReceiveUnifiedInformSignalMsg_S2C::doubledataarray_size() const {
+  return doubledataarray_.size();
+}
+inline void Pptc_ReceiveUnifiedInformSignalMsg_S2C::clear_doubledataarray() {
+  doubledataarray_.Clear();
+}
+inline double Pptc_ReceiveUnifiedInformSignalMsg_S2C::doubledataarray(int index) const {
+  // @@protoc_insertion_point(field_get:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.doubleDataArray)
+  return doubledataarray_.Get(index);
+}
+inline void Pptc_ReceiveUnifiedInformSignalMsg_S2C::set_doubledataarray(int index, double value) {
+  doubledataarray_.Set(index, value);
+  // @@protoc_insertion_point(field_set:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.doubleDataArray)
+}
+inline void Pptc_ReceiveUnifiedInformSignalMsg_S2C::add_doubledataarray(double value) {
+  doubledataarray_.Add(value);
+  // @@protoc_insertion_point(field_add:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.doubleDataArray)
+}
+inline const ::google::protobuf::RepeatedField< double >&
+Pptc_ReceiveUnifiedInformSignalMsg_S2C::doubledataarray() const {
+  // @@protoc_insertion_point(field_list:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.doubleDataArray)
+  return doubledataarray_;
+}
+inline ::google::protobuf::RepeatedField< double >*
+Pptc_ReceiveUnifiedInformSignalMsg_S2C::mutable_doubledataarray() {
+  // @@protoc_insertion_point(field_mutable_list:URMSG.Pptc_ReceiveUnifiedInformSignalMsg_S2C.doubleDataArray)
+  return &doubledataarray_;
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

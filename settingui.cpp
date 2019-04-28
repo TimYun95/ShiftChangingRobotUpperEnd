@@ -11,6 +11,7 @@
 #include "settingwidget/settingwidgetpedalrobotstudy.h"
 #include "settingwidget/settingwidgetpedalrobotstudywltc.h"
 #include "settingwidget/settingwidgetscrobot.h"
+#include "autodriverobotapiclient.h"
 
 #ifndef ENABLE_LOGIN_PASSWORD
 #define ENABLE_LOGIN_PASSWORD
@@ -55,7 +56,7 @@ void SettingUI::InitSettingsWidgetWithRobots()
 {
     QListWidgetItem* pdGetSpeed=new QListWidgetItem(QObject::tr("测速"));
     settingMap[pdGetSpeed]= new SettingWidgetPedalRobotGetSpeed();
-    QListWidgetItem* pdDeathZone=new QListWidgetItem(QObject::tr("死区"));
+    QListWidgetItem* pdDeathZone=new QListWidgetItem(QObject::tr("极限"));
     settingMap[pdDeathZone]=new SettingWidgetPedalRobotDeathZone();
 
     QListWidgetItem* study=new QListWidgetItem(QObject::tr("学习N"));
@@ -137,6 +138,26 @@ void SettingUI::on_pushButton_saveSettings_clicked()
         ShowSettings(tempindex);
 
         emit SaveXMLFromSetting();
+
+        std::vector<double> positiveLimit
+                = {Configuration::GetInstance()->limPos[0],
+                     Configuration::GetInstance()->limPos[1],
+                     Configuration::GetInstance()->limPos[2],
+                     Configuration::GetInstance()->limPos[3],
+                     Configuration::GetInstance()->limPos[4],
+                     Configuration::GetInstance()->limPos[5]};
+
+        std::vector<double> negativeLimit
+                = {Configuration::GetInstance()->deathPos[0],
+                     Configuration::GetInstance()->deathPos[1],
+                     Configuration::GetInstance()->deathPos[2],
+                     Configuration::GetInstance()->deathPos[3],
+                     Configuration::GetInstance()->deathPos[4],
+                     Configuration::GetInstance()->deathPos[5]};
+
+        AutoDriveRobotApiClient::GetInstance()->Send_SetPositionLimitConf(positiveLimit, negativeLimit);
+
+        AutoDriveRobotApiClient::GetInstance()->Send_SaveAndSendConfMsg(true, true);
     }else{
         QMessageBox::information(this,"提示",QObject::tr("!!!设置保存失败!!!"));
     }
@@ -201,7 +222,7 @@ void SettingUI::on_pushButton_loginSettings_clicked()
         ui->pushButton_changePassword->setEnabled(false);
         ui->pushButton_saveSettings->setEnabled(false);
         ui->pushButton_readSettings->setEnabled(false);
-        ui->pushButton_loginSettings->setText( tr("登录") );
+        ui->pushButton_loginSettings->setText( tr("登录设置") );
     }
 }
 

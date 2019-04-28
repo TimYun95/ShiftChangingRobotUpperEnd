@@ -5,8 +5,6 @@
 #include <QtWidgets/QComboBox>
 #include<QVector>
 #include <QPair>
-#include "shiftclutch/syscontrolsc.h"
-//#include "settingui.h"
 #include <sys/time.h>
 
 namespace Ui {
@@ -143,6 +141,11 @@ private slots:
 private:
     Ui::ShiftClutchUI *ui;
 
+    void SendMotionCmd(const double deltabrk, const double deltaacc, const bool ifshiftmode = false, const bool ifpause = false, const int aimshift = 0, const int aimclutch = (int)ClutchState::Released, const int howtochangeshift = (int)ShiftChangingMode::OnlyClutch, const int howtoreleaseclutch = (int)ClutchReleasingMode::Normal);
+    void SendShiftClutchInfo(); // 发送挡位离合信息
+    void SendResetSignal(); // 发送重置信号
+    void SendEmergencyStopInfo(); // 发送急停位置信息
+
     bool ifPedalAtPositions(bool isbrklow, bool isacclow); // 踏板是否到位置
     bool SetTempArrivalFile(QVector<QVector<double>> anglelist, int length); // 设置临时到达问文件
     bool ifReachedPositionbyHand(int index); // 手动拉挡位是否到位
@@ -187,12 +190,11 @@ private:
 
     void InitialUI(); // 界面初始化
 
-    void SendMoveCommandAll(QVector<double> values, QVector<int> cmdstate); // 发送移动指令 供换挡测试用
+    void SendMoveCommandAll(QVector<double> values, QVector<int> cmdstate, const int customvariable = 0); // 发送移动指令 供换挡测试用
     void ResolveAndSendCmd(double* cmd); // 解析并发送指令
     void ResolveAndShowTime(double totaltime, double* partialtime, bool ifclutchused = false); // 解析并显示时间
 
 private:
-    syscontrolsc* mySCControl; // 控制逻辑
 
     QTimer* examtimer; // 测试用定时器
     QPixmap pic; // 输入的图像
@@ -230,6 +232,7 @@ private:
     double relativebrk = 0; // 刹车增量
     double relativeacc = 0; // 油门增量
     const double relativevalue = 1; // 增量大小
+
 public:
     bool ifConfirmShiftClutchInfo = false; // 是否确认了挡位离合信息
     bool ifConfirmChangingShiftTime = false; // 是否确认了换挡时刻

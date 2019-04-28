@@ -32,8 +32,13 @@ public:
     void Send_StopSingleAxisMsg(const std::vector<int> &stopAxes);
     void Send_MoveSingleAxisMsg(const std::vector<int> &moveAxes, const std::vector<double> &moveSpeed);
     void Send_SwitchToActionMsg(const std::string &actionFileContent);
-    void Send_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta);
+    void Send_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta, const int customVariable = 0);
     void Send_SwitchToIdleStateMsg();
+
+    void Send_SetPositionLimitConf(const std::vector<double> &positiveLimit, const std::vector<double> &negativeLimit);
+    void Send_SetReservedParamConf(const std::vector<double> &reservedParam);
+    void Send_SaveAndSendConfMsg(bool saveFlag, bool sendFlag);
+    void Send_MessageInformMsg(int informType, double informValue = 0.0);
 
     void Send_SetPedalRobotDeviceDataMsg(const std::vector<double> &canDataValues);
     void Send_SetPedalRobotEmergencyStopThetaMsg(int emergencyStopType, const std::vector<double> &emergencyStopTheta);
@@ -57,7 +62,7 @@ private slots:
     void SlotProcess_GetPositionLimitConfMsg(const URMSG::Rpc_GetPositionLimitConfMsg_C2S &gplcMsg);
     void SlotProcess_ReceiveEmergencyStopSignalMsg(const URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg);
     void SlotProcess_GetPedalRobotDeviceDataMsg(const URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg);
-
+    void SlotProcess_ReceiveUnifiedInformSignalMsg(const URMSG::Pptc_ReceiveUnifiedInformSignalMsg_S2C &ruisMsg);
 };
 
 #endif // AUTODRIVEROBOTAPICLIENT_H

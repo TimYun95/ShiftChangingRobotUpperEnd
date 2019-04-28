@@ -35,8 +35,14 @@ public:
     void ThreadSend_StopSingleAxisMsg(const std::vector<int> &stopAxes);
     void ThreadSend_MoveSingleAxisMsg(const std::vector<int> &moveAxes, const std::vector<double> &moveSpeed);
     void ThreadSend_SwitchToActionMsg(const std::string &actionFileContent);
-    void ThreadSend_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta);
+    void ThreadSend_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta, const int customVariable);
     void ThreadSend_SwitchToIdleStateMsg();
+    void ThreadSend_SetVelocityActionSpeedMsg(const std::vector<double> &actionSpeed);
+    void ThreadSend_SetSerialPort(int serialDeviceIndex);
+    void ThreadSend_SetPositionLimitConf(const std::vector<double> &positiveLimit, const std::vector<double> &negativeLimit);
+    void ThreadSend_SetReservedParamConf(const std::vector<double> &reservedParam);
+    void ThreadSend_SaveAndSendConfMsg(bool saveFlag, bool sendFlag);
+    void ThreadSend_MessageInformMsg(int informType, double informValue);
 
     //Unified Rpc msg
     void ThreadSend_PingMsg(int32_t timestamp, const std::string &content, const std::vector<double> &array);
@@ -62,8 +68,14 @@ signals:
     void SignalSend_StopSingleAxisMsg(const std::vector<int> &stopAxes);
     void SignalSend_MoveSingleAxisMsg(const std::vector<int> &moveAxes, const std::vector<double> &moveSpeed);
     void SignalSend_SwitchToActionMsg(const std::string &actionFileContent);
-    void SignalSend_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta);
+    void SignalSend_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta, const int customVariable);
     void SignalSend_SwitchToIdleStateMsg();
+    void SignalSend_SetVelocityActionSpeedMsg(const std::vector<double> &actionSpeed);
+    void SignalSend_SetSerialPort(int serialDeviceIndex);
+    void SignalSend_SetPositionLimitConf(const std::vector<double> &positiveLimit, const std::vector<double> &negativeLimit);
+    void SignalSend_SetReservedParamConf(const std::vector<double> &reservedParam);
+    void SignalSend_SaveAndSendConfMsg(bool saveFlag, bool sendFlag);
+    void SignalSend_MessageInformMsg(int informType, double informValue);
 
     void SignalSend_PingMsg(int32_t timestamp, const std::string &content, const std::vector<double> &array);
     void SignalSend_GetGoHomeResultMsg();

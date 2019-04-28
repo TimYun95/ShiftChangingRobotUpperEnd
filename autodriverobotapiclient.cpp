@@ -1,5 +1,6 @@
 #include "autodriverobotapiclient.h"
 #include "robotparams.h"
+#include "shiftclutchparams.h"
 #include "printf.h"
 #include "sys/time.h"
 
@@ -32,6 +33,7 @@ AutoDriveRobotApiClient::AutoDriveRobotApiClient(QObject *parent) :
     CONNECT_PROCESSMSG( Process_GetPositionLimitConfMsg(URMSG::Rpc_GetPositionLimitConfMsg_C2S) );
     CONNECT_PROCESSMSG( Process_ReceiveEmergencyStopSignalMsg(URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C) );
     CONNECT_PROCESSMSG( Process_GetPedalRobotDeviceDataMsg(URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S) );
+    CONNECT_PROCESSMSG( Process_ReceiveUnifiedInformSignalMsg(URMSG::Pptc_ReceiveUnifiedInformSignalMsg_S2C) );
 }
 
 AutoDriveRobotApiClient::~AutoDriveRobotApiClient()
@@ -71,14 +73,35 @@ void AutoDriveRobotApiClient::Send_SwitchToActionMsg(const std::string &actionFi
     m_apiClientWrapper->ThreadSend_SwitchToActionMsg(actionFileContent);
 }
 
-void AutoDriveRobotApiClient::Send_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta)
+void AutoDriveRobotApiClient::Send_SetMonitorActionThetaMsg(const std::vector<int> &actionMethod, const std::vector<int> &actionAxes, const std::vector<double> &actionTheta, const int customVariable)
 {
-    m_apiClientWrapper->ThreadSend_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta);
+    m_apiClientWrapper->ThreadSend_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta, customVariable);
 }
 
 void AutoDriveRobotApiClient::Send_SwitchToIdleStateMsg()
 {
     m_apiClientWrapper->ThreadSend_SwitchToIdleStateMsg();
+}
+
+
+void AutoDriveRobotApiClient::Send_SetPositionLimitConf(const std::vector<double> &positiveLimit, const std::vector<double> &negativeLimit)
+{
+    m_apiClientWrapper->ThreadSend_SetPositionLimitConf(positiveLimit, negativeLimit);
+}
+
+void AutoDriveRobotApiClient::Send_SetReservedParamConf(const std::vector<double> &reservedParam)
+{
+    m_apiClientWrapper->ThreadSend_SetReservedParamConf(reservedParam);
+}
+
+void AutoDriveRobotApiClient::Send_SaveAndSendConfMsg(bool saveFlag, bool sendFlag)
+{
+    m_apiClientWrapper->ThreadSend_SaveAndSendConfMsg(saveFlag, sendFlag);
+}
+
+void AutoDriveRobotApiClient::Send_MessageInformMsg(int informType, double informValue)
+{
+    m_apiClientWrapper->ThreadSend_MessageInformMsg(informType, informValue);
 }
 
 void AutoDriveRobotApiClient::Send_SetPedalRobotDeviceDataMsg(const std::vector<double> &canDataValues)
@@ -192,15 +215,15 @@ void AutoDriveRobotApiClient::SlotProcess_ReceiveEmergencyStopSignalMsg(const UR
 
 void AutoDriveRobotApiClient::SlotProcess_GetPedalRobotDeviceDataMsg(const URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg)
 {
-    //    RobotParams::brakeOpenValue = gprddMsg.candatavalues(0);
-    //    RobotParams::accOpenValue = gprddMsg.candatavalues(1);
-    //    RobotParams::canCarSpeed = gprddMsg.candatavalues(2);
-    //    RobotParams::powerMode = gprddMsg.candatavalues(3);
-    //    RobotParams::pulseCarSpeed = gprddMsg.pulsedatavalue();
+//        RobotParams::brakeOpenValue = gprddMsg.candatavalues(0);
+//        RobotParams::accOpenValue = gprddMsg.candatavalues(1);
+//        RobotParams::canCarSpeed = gprddMsg.candatavalues(2);
+//        RobotParams::powerMode = gprddMsg.candatavalues(3);
+//        RobotParams::pulseCarSpeed = gprddMsg.pulsedatavalue();
 
     Q_UNUSED(gprddMsg);
-//    RobotParams::accOpenValue = RobotParams::angleRealTime[1] * 0.9;
-//    RobotParams::brakeOpenValue = RobotParams::angleRealTime[0] * 0.9;
+    RobotParams::accOpenValue = RobotParams::angleRealTime[1] * 0.9;
+    RobotParams::brakeOpenValue = RobotParams::angleRealTime[0] * 0.9;
 
     const static int num_loop = 6;
     static double angleA[num_loop];
@@ -228,4 +251,16 @@ void AutoDriveRobotApiClient::SlotProcess_GetPedalRobotDeviceDataMsg(const URMSG
     RobotParams::powerMode = 2;
 }
 
+void AutoDriveRobotApiClient::SlotProcess_ReceiveUnifiedInformSignalMsg(const URMSG::Pptc_ReceiveUnifiedInformSignalMsg_S2C &ruisMsg)
+{
+    ShiftClutchParams::shiftclutchState = ruisMsg.intdataarray(0);
+    ShiftClutchParams::shiftState = ruisMsg.intdataarray(1);
+    ShiftClutchParams::clutchState = ruisMsg.intdataarray(2);
 
+    ShiftClutchParams::totalTime = ruisMsg.doubledataarray(0);
+    ShiftClutchParams::partialTime[0] = ruisMsg.doubledataarray(1);
+    ShiftClutchParams::partialTime[1] = ruisMsg.doubledataarray(2);
+    ShiftClutchParams::partialTime[2] = ruisMsg.doubledataarray(3);
+    ShiftClutchParams::partialTime[3] = ruisMsg.doubledataarray(4);
+    ShiftClutchParams::partialTime[4] = ruisMsg.doubledataarray(5);
+}

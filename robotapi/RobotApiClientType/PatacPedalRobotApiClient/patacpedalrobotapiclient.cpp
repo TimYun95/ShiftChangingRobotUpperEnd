@@ -14,7 +14,7 @@ PatacPedalRobotApiClient::~PatacPedalRobotApiClient()
 void PatacPedalRobotApiClient::InitClientMsgHandler()
 {
     UnifiedRobotApiClient::InitClientMsgHandler();
-    REGISTER_MSG_HANDLER(URMSG::Id_Rpc_GetPedalRobotDeviceDataMsg_C2S, PatacPedalRobotApiClient::On_GetPedalRobotDeviceDataMsg);
+    RegisterMsgHandler(URMSG::Id_Rpc_GetPedalRobotDeviceDataMsg_C2S, std::tr1::bind(PatacPedalRobotApiClient::On_GetPedalRobotDeviceDataMsg, this, std::tr1::placeholders::_1));
 }
 
 bool PatacPedalRobotApiClient::Send_SetPedalRobotDeviceDataMsg(const std::vector<double> &canDataValues)
@@ -69,10 +69,13 @@ void PatacPedalRobotApiClient::Process_GetPedalRobotDeviceDataMsg(const URMSG::R
 
 void PatacPedalRobotApiClient::On_GetPedalRobotDeviceDataMsg(const std::__cxx11::string &requestMsg)
 {
-    URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S gprddmsg;
-    PARSE_PROTOBUF_MSG(requestMsg, gprddmsg);
+    URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S gprddMsg;
+    if( !gprddMsg.ParsePartialFromString(requestMsg) ){
+        qDebug()<< __func__ << "Parse Error";
+        return;
+    }
 
-    Process_GetPedalRobotDeviceDataMsg(gprddmsg);
-    emit SignalProcess_GetPedalRobotDeviceDataMsg(gprddmsg);
+    Process_GetPedalRobotDeviceDataMsg(gprddMsg);
+    emit SignalProcess_GetPedalRobotDeviceDataMsg(gprddMsg);
     ReleaseThreadSyncSemaphore();
 }
