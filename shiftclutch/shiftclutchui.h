@@ -74,6 +74,12 @@ public:
 
     void UpdateAnglesForShiftClutch(); // 更新挡位离合相关的角度值
 
+    QString GetCurrentShiftString(int chooseIndex = -1); // 获得当前挡位字符串
+    QString GetCurrentClutchString(int chooseIndex = -1); // 获得当前离合字符串
+
+    bool GetIfAtNullShift(); // 获得当前挡位位置是否在空挡
+    bool SetTempArrivalFile(QVector<QVector<double>> anglelist, int length); // 设置临时到达文件
+
 signals:
     void ReadXMLFromShifting(); // 从挡位界面中读取配置文件
 
@@ -94,12 +100,21 @@ private slots:
 
     void on_pushButton_confirmSC_clicked(); // 确认挡位离合信息
 
-    void on_checkBox_sixshift_stateChanged(int arg1); // 存在六档开关
-    void on_checkBox_backshift_stateChanged(int arg1); // 存在倒档开关
+    void on_checkBox_sixshift_stateChanged(int arg1); // 存在六挡开关
+    void on_checkBox_backshift_stateChanged(int arg1); // 存在倒挡开关
     void on_checkBox_autoset_stateChanged(int arg1); // 自动补齐开关
 
     void on_pushButton_record1_clicked(); // 记录对应挡位信息
     void on_pushButton_reset1_clicked(); // 重置对应挡位信息
+
+    void on_pushButton_motor1plus_pressed(); // 八个槽控制挡位运动
+    void on_pushButton_motor1plus_released();
+    void on_pushButton_motor1minus_pressed();
+    void on_pushButton_motor1minus_released();
+    void on_pushButton_motor2plus_pressed();
+    void on_pushButton_motor2plus_released();
+    void on_pushButton_motor2minus_pressed();
+    void on_pushButton_motor2minus_released();
 
     void on_pushButton_motor3minus_pressed(); // 四个槽控制离合运动
     void on_pushButton_motor3minus_released();
@@ -147,7 +162,6 @@ private:
     void SendEmergencyStopInfo(); // 发送急停位置信息
 
     bool ifPedalAtPositions(bool isbrklow, bool isacclow); // 踏板是否到位置
-    bool SetTempArrivalFile(QVector<QVector<double>> anglelist, int length); // 设置临时到达问文件
     bool ifReachedPositionbyHand(int index); // 手动拉挡位是否到位
 
     QPair<double, double> CalOrthogonalFootOfPoints(QPair<double, double> p1, QPair<double, double> p2, QPair<double, double> pN); // 计算垂足位置
@@ -170,7 +184,7 @@ private:
 
     void RefreshShiftLists(bool enableshift = true, bool enableclutch = true); // 更新挡位相关List控件
     void RefreshShiftComboBox(); // 更新挡位相关ComboBox控件
-    void RefreshShiftSixAndBack(); // 更新是否存在6档和倒档
+    void RefreshShiftSixAndBack(); // 更新是否存在六挡和倒挡
     void RefreshShiftAutoSet(); // 更新挡位示教记录自动补全
     void RefreshClutchSpeed(); // 更新离合速度
     void RefreshShiftClutchTeachPanel(); // 更新挡位离合示教界面

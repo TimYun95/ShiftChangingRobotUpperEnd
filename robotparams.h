@@ -24,7 +24,10 @@ public:
     static const std::string robotFolder; // 默认文件夹名称
 
     static const double singleAxisBtnRatio; // 单轴运动速度比例系数
+    static const double singleAxisBtnRatioS; // 单轴运动速度比例系数 挡位
     static const double singleAxisBtnRatioC; // 单轴运动速度比例系数 离合
+
+    static const int normalMotionAccuracy; // 简单示教运动精度
 
     static double angleRealTime[axisNum]; // 实时各轴角度
     static bool ifGoHome; // 是否已经回原
@@ -40,71 +43,12 @@ public:
     static unsigned int askGoHomeatstartresult; // 在开始询问回原信息的结果 0--还没问 1--回原了 100--没回原
     static bool readyToOrigin; // 准备执行回原文件
 
-//    static int currentshiftindex; // 当前挡位索引
-//    static std::string currentshiftvalue; // 当前挡位值
-//    static int lastshiftindex; // 前次挡位索引
-//    static int aimshiftindex; // 目标挡位索引
-//    static int shiftrunpath[10]; // 换挡路径索引 经过的挡位字符串
-//    static int shiftrunlength; // 换挡路径长度 经过的挡位数目
-//    static int shiftrunpointer; // 换挡路径进行到的状态
+    static int shiftclutchIndex; // 换挡索引
+    static unsigned int shiftIndex; // 挡位索引
+    static unsigned int clutchIndex; // 离合索引
 
-//    static int currentclutchindex; // 当前离合索引
-//    static std::string currentclutchvalue; // 当前挡位值
-//    static int aimclutchindex; // 目标挡位索引
-
-//    static PairData changeshiftlist; // 换挡时刻表
-//    static int checkshiftlist; // 换挡时刻表的初始index
-//    static bool changeshiftstart; // 开始换挡标志位
-//    static bool changeshiftend; // 刚完成换挡
-
-//    static unsigned int round; // 换挡过程控制轮数1
-//    static unsigned int round2; // 换挡过程控制轮数2
-//    static unsigned int changeshiftprocess; // 换挡过程进度控制
-//    static bool startchangeshifttimeflag; // 换挡开始时刻记录标志位
-//    static timeval starttime; // 换挡开始时刻
-//    static timeval stoptime; // 换挡中断时刻
-
-//    // 手动和自动挡位的值
-//    static std::string manulShiftValues[9];
-//    static std::string autoShiftValues[3];
-
-//    static double tempVars[10]; // 预留的变量 含义人为赋值
-
-//    /**
-//     * @brief switchflag 切换标志位
-//     * 0 ---> 切换到曲线运行前的准备状态
-//     * 1 ---> 准备状态下区分等待和执行
-//     * 2 ---> NVH状态
-//     * 3 ---> NVH状态 切换到曲线运行前的准备状态
-//     * 4 ---> NVH状态 准备状态下区分等待和执行
-//     * 5 ---> ACD状态
-//     */
-//    static bool switchflag[10];
-
-//    /**
-//     * @brief NVHcurvestate NVH状态下运行曲线标志位
-//     * 0 ---> Moderate optional
-//     * 1 ---> Moderate required
-//     * 2 ---> Full Pedal
-//     * 3 ---> High Gear
-//     * 4 ---> Ready to Exit
-//     * 9 ---> No State
-//     */
-//    static unsigned int NVHcurvestate;
-
-//    static unsigned int NVHcurvestate3state; //NVH状态3下运行状态标志位
-
-//    static double nvh_P1t; // 目标点1的时间
-//    static double nvh_P1v; // 目标点1的速度
-//    static double nvh_P2t; // 目标点2的时间
-//    static double nvh_P2v; // 目标点2的速度
-
-//    static QTime testingTimes[10]; // 测试用时刻计
-//    static int testingtimenum[10]; // 测试用时刻计数
-
-//    static bool ifCSACD; // 是否在ACD模式下换挡
-//    static bool ifREBA; // 是否在ACD换挡模式下恢复踏板
-//    static bool iffromNto1; // 是否从空挡换到1挡
+    static bool isEmergencyStopNow; // 是否急停
+    static bool isEmergencySuccess; // 急停是否成功
 };
 
 #endif // ROBOTPARAMS_H

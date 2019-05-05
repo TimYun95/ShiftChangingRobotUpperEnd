@@ -24,7 +24,6 @@ SOURCES += main.cpp\
     mylogger/logger.cpp \
     settingui.cpp \
     robotparams.cpp \
-    shiftclutch/syscontrolsc.cpp \
     shiftclutch/shiftclutchui.cpp \
     shiftclutchparams.cpp
 
@@ -41,7 +40,6 @@ HEADERS  += mainwindow.h \
     fileoperation/excel/QVariantListListModel.h \
     mylogger/logger.h \
     settingui.h \
-    shiftclutch/syscontrolsc.h \
     shiftclutch/shiftclutchui.h \
     shiftclutchparams.h
 

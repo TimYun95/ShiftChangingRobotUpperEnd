@@ -264,8 +264,11 @@ int SettingUI::RemoveSettings()
 
 void SettingUI::UpdateAllSetUI()
 {
-    int tempindex = RemoveSettings();
-    ShowSettings(tempindex);
+    if (ifhaveloggedin)
+    {
+        int tempindex = RemoveSettings();
+        ShowSettings(tempindex);
+    }
 
     for(std::map<QListWidgetItem*,SettingBase*>::iterator iter=settingMap.begin(); iter!=settingMap.end(); iter++){
         SettingBase* sb = iter->second;

@@ -36,8 +36,8 @@ const int upperCurve = 2; // 速度上界
 const int lowerCurve =3 ; // 速度下界
 const double minY = -5.0; // 速度下限
 
-PedalRobot::PedalRobot(QCustomPlot *_widget, Configuration *_conf, QCustomPlot *_widgetnvh1, QCustomPlot *_widgetnvh2)
-    :pQCustomPlot(_widget), conf(_conf), plotNVH1(_widgetnvh1), plotNVH2(_widgetnvh2)
+PedalRobot::PedalRobot(QCustomPlot *_widget, Configuration *_conf)
+    :pQCustomPlot(_widget), conf(_conf)
 {
     myLogger = new Logger();
     myLogger->clear();
@@ -152,7 +152,6 @@ void PedalRobot::StartQCustomPlot(const std::__cxx11::string &fileNameARM)
         vp_data_lowerbound.push_back( std::make_pair(lowerTime[i],lowerSpeed[i]) );
     }
 
-
     // 运动时间的记录
     gettimeofday(&actionStartTime, NULL);
     PRINTF(LOG_DEBUG, "%s: actionStartTime=%ld:%ld\n", __func__, actionStartTime.tv_sec, actionStartTime.tv_usec);
@@ -181,6 +180,7 @@ void PedalRobot::StartQCustomPlot(const std::__cxx11::string &fileNameARM)
     PRINTF(LOG_DEBUG, "%s: logger is cleared and ready!\n", __func__);
 
     timeStamp=0;
+    isControlFinished = false;
     isControlling=true;
 }
 
@@ -285,12 +285,27 @@ void PedalRobot::CheckIfSaveLogger()
     }
 }
 
+bool PedalRobot::ifUnderControlling()
+{
+    return isControlling;
+}
+
+bool PedalRobot::ifControllingOver()
+{
+    return isControlFinished;
+}
+
+void PedalRobot::changeOverState()
+{
+    isControlFinished = false;
+}
+
 void PedalRobot::InitParameters()
 {
     vp_data.clear();
     vp_data.reserve(64);
     isControlling=false;
-//    ifFirstToExitNVH = false;
+    isControlFinished = false;
     curveFilePath="";
 }
 
@@ -594,13 +609,14 @@ void PedalRobot::UpdateQCustomPlot()
     }else{
         PRINTF(LOG_DEBUG, "%s: finish this action!. elapsedSeconds/duration=%f/%f\n",
                __func__, elapsedSeconds, actionDurationSecond);
-        FinishQCustomPlot();
+        FinishQCustomPlot(false);
     }
 }
 
 void PedalRobot::FinishQCustomPlot(bool showMessageBox)
 {
     isControlling=false;
+    isControlFinished = true;
     CheckIfSaveLogger();
 
     if(showMessageBox){
@@ -655,21 +671,14 @@ void PedalRobot::LoggerStudySamples()
     myLogger->Customize(mySysControl->GetSysControlMethod()).Customize(" ");
     myLogger->Customize(mySysControl->getconBrake()).Customize(" ");
     myLogger->Customize(mySysControl->getconAcc()).Customize(" ");
-//    myLogger->Customize(RobotParams::angleRealTime[0]).Customize(" ");
-//    myLogger->Customize(RobotParams::angleRealTime[1]).Customize(" ");
-//    myLogger->Customize(QTime::currentTime().toString("hhmmsszzz").toStdString().c_str()).Customize(" ");
-//    QString shiftnow = QString::fromStdString(RobotParams::currentshiftvalue);
-//    if (shiftnow == QString("N_1&2") || shiftnow == QString("N_3&4") || shiftnow == QString("N_5&6"))
-//    {
-//        shiftnow = QString("N");
-//    }
-//    myLogger->Customize(shiftnow.toStdString().c_str()).Customize(" ");
-//    myLogger->Customize(RobotParams::currentclutchvalue.c_str()).Customize(" ");
-
-//    myLogger->Customize(RobotParams::angleRealTime[2]).Customize(" ");
-//    myLogger->Customize(RobotParams::angleRealTime[3]).Customize(" ");
-//    myLogger->Customize(RobotParams::angleRealTime[4]).Customize(" ");
-//    myLogger->Customize(RobotParams::angleRealTime[5]).Customize("\n");
+    myLogger->Customize(RobotParams::angleRealTime[0]).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[1]).Customize(" ");
+    myLogger->Customize(QTime::currentTime().toString("hhmmsszzz").toStdString().c_str()).Customize(" ");
+    myLogger->Customize((int)RobotParams::shiftIndex).Customize(" ");
+    myLogger->Customize((int)RobotParams::clutchIndex).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[2]).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[3]).Customize(" ");
+    myLogger->Customize(RobotParams::angleRealTime[4]).Customize("\n");
 }
 
 double PedalRobot::GetCurrentTargetSpeed()

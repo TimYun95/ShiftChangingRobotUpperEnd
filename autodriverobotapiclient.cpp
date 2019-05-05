@@ -210,7 +210,12 @@ void AutoDriveRobotApiClient::SlotProcess_GetPositionLimitConfMsg(const URMSG::R
 
 void AutoDriveRobotApiClient::SlotProcess_ReceiveEmergencyStopSignalMsg(const URMSG::Pptc_ReceiveEmergencyStopSignalMsg_S2C &ressMsg)
 {
-    Q_UNUSED(ressMsg);
+    RobotParams::isEmergencyStopNow = true;
+    if(ressMsg.has_isstopsuccess()){
+        RobotParams::isEmergencySuccess = true;
+    }else{
+        RobotParams::isEmergencySuccess = false;
+    }
 }
 
 void AutoDriveRobotApiClient::SlotProcess_GetPedalRobotDeviceDataMsg(const URMSG::Rpc_GetPedalRobotDeviceDataMsg_C2S &gprddMsg)
@@ -248,6 +253,8 @@ void AutoDriveRobotApiClient::SlotProcess_GetPedalRobotDeviceDataMsg(const URMSG
     neg = neg*0.005;
 
     if ((RobotParams::canCarSpeed += ((pos-neg) - 0.0001*RobotParams::canCarSpeed)) < 0) RobotParams::canCarSpeed = 0;
+    RobotParams::pulseCarSpeed = RobotParams::canCarSpeed;
+
     RobotParams::powerMode = 2;
 }
 
@@ -256,6 +263,10 @@ void AutoDriveRobotApiClient::SlotProcess_ReceiveUnifiedInformSignalMsg(const UR
     ShiftClutchParams::shiftclutchState = ruisMsg.intdataarray(0);
     ShiftClutchParams::shiftState = ruisMsg.intdataarray(1);
     ShiftClutchParams::clutchState = ruisMsg.intdataarray(2);
+
+    RobotParams::shiftclutchIndex = ruisMsg.intdataarray(0);
+    RobotParams::shiftIndex = ruisMsg.intdataarray(1);
+    RobotParams::clutchIndex = ruisMsg.intdataarray(2);
 
     ShiftClutchParams::totalTime = ruisMsg.doubledataarray(0);
     ShiftClutchParams::partialTime[0] = ruisMsg.doubledataarray(1);

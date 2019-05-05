@@ -24,7 +24,6 @@ const std::string Configuration::sysFilePath = Configuration::mainFolder + "/sys
 
 const std::string Configuration::softStopFilePath = Configuration::sysFilePath + "softStop.txt";
 const std::string Configuration::examsoftStopFilePath = Configuration::sysFilePath + "examsoftStop.txt";
-const std::string Configuration::nvhsoftStopFilePath = Configuration::sysFilePath + "nvhsoftStop.txt";
 
 const std::string Configuration::originFilePath = Configuration::sysFilePath + "origin.txt";
 

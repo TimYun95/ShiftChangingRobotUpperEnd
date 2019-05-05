@@ -40,34 +40,8 @@ private slots:
     void on_pushButton_softStop_clicked(); // “停止”按下
 
     void on_pushButton_softStop_liftPedals_clicked(); // “停止回抬”按下
-//    void on_pushButton_slowlybrake_clicked(); // “缓踩刹车”按下
     void on_pushButton_startAction_clicked(); // “曲线运行”按下
     void on_pushButton_saveLoggerFile_clicked(); // “保存日志”按下
-
-//    void on_pushButton_nvh_start_clicked(); // NVH开始
-//    void on_pushButton_nvh_stop_clicked(); // NVH结束
-//    void on_pushButton_nvh_log_clicked(); // NVH曲线日志保存
-//    void on_comboBox_nvh_mode_currentIndexChanged(int index); // 切换NVH模式
-//    void on_pushButton_confirmaim_clicked(); // 确认目标点
-
-//    void on_pushButton_nvh_run_clicked(); // NVH曲线运行
-//    void on_pushButton_nvh_softstop_clicked(); // NVH曲线停止
-//    void on_pushButton_nvh_slowbrake_clicked(); // NVH曲线停止 缓踩刹车
-
-//    /* <ACD> */
-
-//    void on_pushButton_saveModelSelect_clicked();
-//    void on_pushButton_refresh_clicked();
-//    void on_pushButton_startACD_clicked();
-//    void on_pushButton_stopAndLeft_clicked();
-//    void on_pushButton_startACDonline_clicked();
-//    void on_pushButton_refreshPredef_clicked();
-//    void on_tabWidget_currentChanged(int index);
-//    void on_pushButton_change_clicked();
-
-//    /* </ACD> */
-
-
 
 protected:
     void InitWidgets(); // 初始化界面
@@ -87,7 +61,9 @@ protected:
     void RefreshSoftStopFile(); // 更新softStop.txt
     void RefreshOriginFile(); // 更新origin.txt
 
-    bool RefreshNVHFile(const int index); // 更新NVH文件 包括NVHX和NVHX_ARM
+    bool CheckStatusBeforeCurveRunning(); // 曲线运行前检查挡位等状态
+    void DoWorkCheckStatusBeforeCurveRunning(); // 曲线运行前进行挡位等状态矫正
+    void DoWorkAfterCurveRunning(); // 曲线运行后进行挡位等状态矫正
 
 protected:
     Ui::PedalRobotUI *ui;
@@ -106,6 +82,10 @@ protected:
 
     bool ifSendGoHome; // 是否发送了回原指令
     unsigned int GoHomeRound; // 回原指令发送失效的界面周期轮数
+
+    int pauseflag = 0; // 暂停标志计数器
+    int checkflag = -1; // 曲线运行前检查标志
+    bool checkIsOK = false; // 曲线运行前检查是否通过
 };
 
 #endif // PEDALROBOTUI_H

@@ -43,8 +43,8 @@ public:
     double angleErr_P; // 过程调整电机轴角度容差 相差该角度下认为到达该相应电机轴位置
     double shiftAxisAngles1[11]; // 换挡电机轴1的各挡位角度
     double shiftAxisAngles2[11]; // 换挡电机轴2的各挡位角度
-    bool ifExistSixShift; // 是否存在六档
-    bool ifExistBackShift; // 是否存在倒车档
+    bool ifExistSixShift; // 是否存在六挡
+    bool ifExistBackShift; // 是否存在倒车挡
     double clutchAngles[2]; // 离合电机轴两个位置的角度 踩下和松开
     double clutchUpSpeed; // 离合松开的速度
     double clutchUpSpeedAtDeparture; // 起步时离合松开的速度
@@ -78,7 +78,6 @@ public:
     //                  |
     //                  ---- /softStop.txt                       softStopFilePath
     //                  ---- /examsoftStop.txt               examsoftStopFilePath
-    //                  ---- /nvhsoftStop.txt                  nvhsoftStopFilePath
     //                  ---- /origin.txt                            originFilePath
     //                  ---- /log4qt.properties               logCodeConfPath
     //      |
@@ -102,7 +101,6 @@ public:
 
     static const std::string softStopFilePath;
     static const std::string examsoftStopFilePath;
-    static const std::string nvhsoftStopFilePath;
 
     static const std::string originFilePath;
 

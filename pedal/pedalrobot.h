@@ -22,7 +22,7 @@ class PedalRobot: public QObject
 {
     Q_OBJECT
 public:
-    explicit PedalRobot(QCustomPlot *_widget, Configuration *_conf, QCustomPlot *_widgetnvh1, QCustomPlot *_widgetnvh2);
+    explicit PedalRobot(QCustomPlot *_widget, Configuration *_conf);
     ~PedalRobot();
 
     void SoftStop(); // 退出曲线跟踪 保存日志
@@ -52,6 +52,10 @@ public:
     void SaveLoggerFile(const char* filePath); // 保存日志
     void CheckIfSaveLogger(); // 检查是否要保存日志
 
+    bool ifUnderControlling(); // 是否正在跟踪曲线
+    bool ifControllingOver(); // 是否完成了跟踪曲线
+    void changeOverState(); // 改变完成状态
+
 private:
     void InitParameters(); // 参数初始化
     int ReadListeningTeachFile(const std::string &fileName); // 解析XXX文件 获得目标曲线
@@ -79,8 +83,6 @@ private:
 private:
     QCustomPlot *pQCustomPlot; // 绘布
     Configuration *conf; // 配置文件
-    QCustomPlot *plotNVH1; // NVH绘布1
-    QCustomPlot *plotNVH2; // NVH绘布2
 
     Logger *myLogger; // 日志
     bool autoSaveLogger; // 自动保存日志标志位
@@ -95,6 +97,7 @@ private:
     PairData vp_data_lowerbound; // 曲线下界
 
     bool isControlling; // 是否正在跟踪曲线
+    bool isControlFinished; // 本次曲线跟踪结束
     struct timeval actionStartTime; // 整个工作的起始时间
     double elapsedSeconds; // 当前的工作时间 秒
     double actionDurationSecond; // 整个工作的持续时间 秒

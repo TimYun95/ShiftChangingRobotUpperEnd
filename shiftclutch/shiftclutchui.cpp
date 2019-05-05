@@ -50,9 +50,59 @@ void ShiftClutchUI::ConnectXMLSignalWithSlot(QWidget *stui)
 
 void ShiftClutchUI::UpdateAnglesForShiftClutch()
 {
-    ui->lineEdit_motor1->setText( QString::number(RobotParams::angleRealTime[3], 'g', 4) );
-    ui->lineEdit_motor2->setText( QString::number(RobotParams::angleRealTime[4], 'g', 4) );
-    ui->lineEdit_motor3->setText( QString::number(RobotParams::angleRealTime[2], 'g', 4) );
+    ui->lineEdit_motor1->setText( QString::number(RobotParams::angleRealTime[3], 'f', 2) );
+    ui->lineEdit_motor2->setText( QString::number(RobotParams::angleRealTime[4], 'f', 2) );
+    ui->lineEdit_motor3->setText( QString::number(RobotParams::angleRealTime[2], 'f', 2) );
+}
+
+QString ShiftClutchUI::GetCurrentShiftString(int chooseIndex)
+{
+    if (chooseIndex < 0)
+    {
+        if (Configuration::GetInstance()->ifManualShift)
+        {
+            return ManualShiftStateString[RobotParams::shiftIndex];
+        }
+        else
+        {
+            return AutoShiftStateString[RobotParams::shiftIndex];
+        }
+    }
+    else
+    {
+        if (Configuration::GetInstance()->ifManualShift)
+        {
+            return ManualShiftStateString[chooseIndex];
+        }
+        else
+        {
+            return AutoShiftStateString[chooseIndex];
+        }
+    }
+}
+
+QString ShiftClutchUI::GetCurrentClutchString(int chooseIndex)
+{
+    if (chooseIndex < 0)
+    {
+        return ClutchStateString[RobotParams::clutchIndex];
+    }
+    else
+    {
+        return ClutchStateString[chooseIndex];
+    }
+}
+
+bool ShiftClutchUI::GetIfAtNullShift()
+{
+    if (Configuration::GetInstance()->ifManualShift)
+    {
+        return ifReachedPositionbyHand((int)ManualShiftState::Gear_N);
+    }
+    else
+    {
+        return ifReachedPositionbyHand((int)AutoShiftState::Gear_N);
+    }
 }
 
 void ShiftClutchUI::UpdateShowingDatas()
@@ -109,6 +159,7 @@ void ShiftClutchUI::examtimer_timeout()
             return;
         }
     }
+    else return;
 
     if (ShiftClutchParams::shiftclutchState < 0)
     {
@@ -848,6 +899,99 @@ void ShiftClutchUI::on_pushButton_motor3plus_released()
     AutoDriveRobotApiClient::GetInstance()->Send_StopSingleAxisMsg(stopAxes);
 }
 
+
+void ShiftClutchUI::on_pushButton_motor1plus_pressed()
+{
+    const double speed = 1 * RobotParams::singleAxisBtnRatioS;
+
+    std::vector<int> moveAxes;
+    std::vector<double> moveSpeed;
+    moveAxes.push_back(3);
+    moveSpeed.push_back(speed);
+
+    AutoDriveRobotApiClient::GetInstance()->Send_MoveSingleAxisMsg(moveAxes, moveSpeed);
+}
+
+void ShiftClutchUI::on_pushButton_motor1plus_released()
+{
+    std::vector<int> stopAxes;
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        stopAxes.push_back(i);
+    }
+
+    AutoDriveRobotApiClient::GetInstance()->Send_StopSingleAxisMsg(stopAxes);
+}
+
+void ShiftClutchUI::on_pushButton_motor1minus_pressed()
+{
+    const double speed = -1 * RobotParams::singleAxisBtnRatioS;
+
+    std::vector<int> moveAxes;
+    std::vector<double> moveSpeed;
+    moveAxes.push_back(3);
+    moveSpeed.push_back(speed);
+
+    AutoDriveRobotApiClient::GetInstance()->Send_MoveSingleAxisMsg(moveAxes, moveSpeed);
+}
+
+void ShiftClutchUI::on_pushButton_motor1minus_released()
+{
+    std::vector<int> stopAxes;
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        stopAxes.push_back(i);
+    }
+
+    AutoDriveRobotApiClient::GetInstance()->Send_StopSingleAxisMsg(stopAxes);
+}
+
+void ShiftClutchUI::on_pushButton_motor2plus_pressed()
+{
+    const double speed = 1 * RobotParams::singleAxisBtnRatioS;
+
+    std::vector<int> moveAxes;
+    std::vector<double> moveSpeed;
+    moveAxes.push_back(4);
+    moveSpeed.push_back(speed);
+
+    AutoDriveRobotApiClient::GetInstance()->Send_MoveSingleAxisMsg(moveAxes, moveSpeed);
+}
+
+void ShiftClutchUI::on_pushButton_motor2plus_released()
+{
+    std::vector<int> stopAxes;
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        stopAxes.push_back(i);
+    }
+
+    AutoDriveRobotApiClient::GetInstance()->Send_StopSingleAxisMsg(stopAxes);
+}
+
+void ShiftClutchUI::on_pushButton_motor2minus_pressed()
+{
+    const double speed = -1 * RobotParams::singleAxisBtnRatioS;
+
+    std::vector<int> moveAxes;
+    std::vector<double> moveSpeed;
+    moveAxes.push_back(4);
+    moveSpeed.push_back(speed);
+
+    AutoDriveRobotApiClient::GetInstance()->Send_MoveSingleAxisMsg(moveAxes, moveSpeed);
+}
+
+void ShiftClutchUI::on_pushButton_motor2minus_released()
+{
+    std::vector<int> stopAxes;
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        stopAxes.push_back(i);
+    }
+
+    AutoDriveRobotApiClient::GetInstance()->Send_StopSingleAxisMsg(stopAxes);
+}
+
 void ShiftClutchUI::on_comboBox_clutch_currentIndexChanged(int index)
 {
     Q_UNUSED(index);
@@ -1084,7 +1228,7 @@ void ShiftClutchUI::on_pushButton_stopnow_clicked()
     essf << std::right << std::setw(15) << 0;
     essf << std::right << std::setw(15) << 2000;
     essf << std::right << std::setw(15) << 0;
-    essf << std::right << std::setw(15) << 0 << "\n";
+    essf << std::right << std::setw(15) << RobotParams::normalMotionAccuracy << "\n";
     essf << 'T' << "\n";
     essf << Configuration::GetInstance()->translateSpeed << "\n";
     essf << std::right << std::setw(15) << Configuration::GetInstance()->deathPos[0];
@@ -1514,7 +1658,7 @@ bool ShiftClutchUI::SetTempArrivalFile(QVector<QVector<double>> anglelist, int l
     taf << std::right << std::setw(15) << 0;
     taf << std::right << std::setw(15) << 2000;
     taf << std::right << std::setw(15) << 0;
-    taf << std::right << std::setw(15) << 0 << "\n";
+    taf << std::right << std::setw(15) << RobotParams::normalMotionAccuracy << "\n";
 
     for (int i = 0; i < length; ++i)
     {
@@ -2544,10 +2688,4 @@ void ShiftClutchUI::ResolveAndShowTime(double totaltime, double *partialtime, bo
 
     return;
 }
-
-
-
-
-
-
 
