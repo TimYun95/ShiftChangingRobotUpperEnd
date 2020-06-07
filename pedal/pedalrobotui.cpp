@@ -232,7 +232,7 @@ void PedalRobotUI::on_pushButton_softStop_clicked()
 {
     AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
     pdRobot->SoftStop();
-    pdRobot->FinishQCustomPlot(false);
+    if (pdRobot->ifUnderControlling()) pdRobot->FinishQCustomPlot(false);
 }
 
 void PedalRobotUI::on_pushButton_softStop_liftPedals_clicked()
@@ -263,7 +263,7 @@ void PedalRobotUI::on_pushButton_startAction_clicked()
 
     QElapsedTimer et;
     et.start();
-    while (et.elapsed() < 6000)
+    while (et.elapsed() < 8000)
     {
         if (!checkIsOK) // 等待检查完成
         {
@@ -277,6 +277,7 @@ void PedalRobotUI::on_pushButton_startAction_clicked()
         return;
     }
 
+    AutoDriveRobotApiClient::GetInstance()->Send_SwitchToIdleStateMsg();
     if (QMessageBox::information(
                 NULL,"提示", QObject::tr("点击确认后开始运行曲线!"),
                 QObject::tr("确认"),QObject::tr("取消")) == 1) return;
@@ -418,7 +419,7 @@ void PedalRobotUI::DoWorkCheckStatusBeforeCurveRunning()
 
         if (RobotParams::statusStrIndex != 28)
         {
-            if (pauseflag > 100)
+            if (pauseflag > 150)
             {
                 pauseflag = 0;
                 checkflag = -1;
@@ -527,7 +528,7 @@ void PedalRobotUI::DoWorkAfterCurveRunning()
 
         if (RobotParams::statusStrIndex != 28)
         {
-            if (pauseflag > 100)
+            if (pauseflag > 150)
             {
                 pauseflag = 0;
                 checkflag = -1;
@@ -833,14 +834,14 @@ void PedalRobotUI::RefreshSoftStopFile()
 
     if (Configuration::GetInstance()->ifManualShift)
     {
-        ssf << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[0];
+        ssf << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[(int)scui->ClutchState::Pressed];
         ssf << std::right << std::setw(15) << RobotParams::angleRealTime[3];
         ssf << std::right << std::setw(15) << RobotParams::angleRealTime[4];
         ssf << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";
     }
     else
     {
-        ssf << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[1];
+        ssf << std::right << std::setw(15) << Configuration::GetInstance()->clutchAngles[(int)scui->ClutchState::Released];
         ssf << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles1[1];
         ssf << std::right << std::setw(15) << Configuration::GetInstance()->shiftAxisAngles2[1];
         ssf << std::right << std::setw(15) << RobotParams::angleRealTime[5] << "\n";

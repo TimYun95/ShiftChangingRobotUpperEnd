@@ -153,6 +153,9 @@ private slots:
     void on_pushButton_runtest_accm_pressed(); // 手动控制油门后退
     void on_pushButton_runtest_accm_released(); // 手动控制油门停止后退
 
+    void on_pushButton_readcurve_clicked(); // 导入手动挡曲线
+    void on_pushButton_confirmshiftchangingtime_clicked(); // 确认换挡时刻
+
 private:
     Ui::ShiftClutchUI *ui;
 
@@ -195,7 +198,6 @@ private:
     void RefreshExamPanel(); // 更新换挡测试界面
 
     void RefreshConfirmChangeShiftTimeState(); // 更新确认换挡时刻的状态
-    void RefreshChangeShiftList(); // 更新换挡时刻界面中的List
     void RefreshChangeShiftPlot(); // 更新换挡时刻界面中的曲线绘制框
     void RefreshChangeShiftPanel(); // 更新换挡时刻界面
 
@@ -208,6 +210,9 @@ private:
     void ResolveAndSendCmd(double* cmd); // 解析并发送指令
     void ResolveAndShowTime(double totaltime, double* partialtime, bool ifclutchused = false); // 解析并显示时间
 
+    int ReadCurveFile(const std::string &fileName); // 读手动挡车速曲线 含换挡信息
+    void ShowCurveForSee(); // 显示换挡时刻和曲线
+
 private:
 
     QTimer* examtimer; // 测试用定时器
@@ -215,6 +220,7 @@ private:
 
     bool ifenablewaychangedeventhappen = false; // 是否允许换挡方式的改变
     bool ifenablecomboBoxchangedeventhappen = false; // 是否允许comboBox改变事件发生
+    bool ifenablecheckBoxchangedeventhappen = false; // 是否允许checkBox改变事件发生
 
     int currentclutchindex = 1; // 当前离合状态索引号
     int currentshiftindex = 1; // 当前挡位状态索引号
@@ -246,6 +252,11 @@ private:
     double relativebrk = 0; // 刹车增量
     double relativeacc = 0; // 油门增量
     const double relativevalue = 1; // 增量大小
+
+    typedef std::vector< std::pair<double, double> > TimeSpeed; // pair=<time, speed>
+    TimeSpeed manaulShiftSpeedTable; // 手动换挡速度表
+    typedef std::vector< std::pair<double, int> > TimeIndex; // pair=<time, shiftIndex>
+    TimeIndex manaulShiftIndexTable; // 手动换挡速度表
 
 public:
     bool ifConfirmShiftClutchInfo = false; // 是否确认了挡位离合信息

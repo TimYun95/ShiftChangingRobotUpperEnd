@@ -227,8 +227,9 @@ void SysControl::calCon(double time, double speedNow, double brakeOpen0, double 
                     maxAccRefresh = 1;
                     maxAccRecorder = accOpen*(changepoint1to2+speed[3]/150.0);	//拐点参数1：accRecorder的比例系数
                 }
-                if(linefuSpeed==15&&accOpen>0.25*maxAccRecorder) conAcc=-8;
-                else if(accOpen>maxAccRecorder) conAcc=-4;
+//                if(linefuSpeed==15&&accOpen>0.25*maxAccRecorder) conAcc=-8;
+//                else
+                if(accOpen>maxAccRecorder) conAcc=-4;
                 else conAcc=changeAcc();  //std::max(changeAcc(),0.0);
                 sysControlAnother[0]=-1;
             }
@@ -294,15 +295,15 @@ void SysControl::calCon(double time, double speedNow, double brakeOpen0, double 
             else conAcc = changeAcc();
         }
         else if (lineDv[2] < 0) {//刹车阶段
-            if(linefuDv==0&&linefuSpeed>5){//将再次进入匀速，适度补偿
-                conBrake=-100;
-                if(accOpen<linefuSpeed*0.2) conAcc=changeAcc()+1;
-                else conAcc=0;
-            }
-            else {
+//            if(linefuDv==0&&linefuSpeed>5){//将再次进入匀速，适度补偿
+//                conBrake=-100;
+//                if(accOpen<linefuSpeed*0.2) conAcc=changeAcc()+1;
+//                else conAcc=0;
+//            }
+//            else {
                 conBrake = changeBrake();
                 conAcc=-100;
-            }
+//            }
         }
     }
 

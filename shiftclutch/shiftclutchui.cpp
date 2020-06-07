@@ -264,7 +264,7 @@ void ShiftClutchUI::examtimer_timeout()
 
         if (RobotParams::statusStrIndex != 28)
         {
-            if (pauseflag > 100)
+            if (pauseflag > 150)
             {
                 pauseflag = 0;
                 examflag = -1;
@@ -775,40 +775,47 @@ void ShiftClutchUI::on_pushButton_confirmSC_clicked()
 
 void ShiftClutchUI::on_checkBox_sixshift_stateChanged(int arg1)
 {
-    if (arg1)
-    {
-        Configuration::GetInstance()->ifExistSixShift = true;
-    }
-    else
-    {
-        Configuration::GetInstance()->ifExistSixShift = false;
-    }
 
-    Configuration::GetInstance()->shiftAxisAngles1[9] = 0;
-    Configuration::GetInstance()->shiftAxisAngles2[9] = 0;
+    if (ifenablecheckBoxchangedeventhappen)
+    {
+        if (arg1)
+        {
+            Configuration::GetInstance()->ifExistSixShift = true;
+        }
+        else
+        {
+            Configuration::GetInstance()->ifExistSixShift = false;
+        }
 
-    RefreshShiftMap();
-    RefreshShiftLists(true, false);
-    RefreshShiftComboBox();
+        Configuration::GetInstance()->shiftAxisAngles1[9] = 0;
+        Configuration::GetInstance()->shiftAxisAngles2[9] = 0;
+
+        RefreshShiftMap();
+        RefreshShiftLists(true, false);
+        RefreshShiftComboBox();
+    }
 }
 
 void ShiftClutchUI::on_checkBox_backshift_stateChanged(int arg1)
 {
-    if (arg1)
+    if (ifenablecheckBoxchangedeventhappen)
     {
-        Configuration::GetInstance()->ifExistBackShift = true;
-    }
-    else
-    {
-        Configuration::GetInstance()->ifExistBackShift = false;
-    }
+        if (arg1)
+        {
+            Configuration::GetInstance()->ifExistBackShift = true;
+        }
+        else
+        {
+            Configuration::GetInstance()->ifExistBackShift = false;
+        }
 
-    Configuration::GetInstance()->shiftAxisAngles1[10] = 0;
-    Configuration::GetInstance()->shiftAxisAngles2[10] = 0;
+        Configuration::GetInstance()->shiftAxisAngles1[10] = 0;
+        Configuration::GetInstance()->shiftAxisAngles2[10] = 0;
 
-    RefreshShiftMap();
-    RefreshShiftLists(true, false);
-    RefreshShiftComboBox();
+        RefreshShiftMap();
+        RefreshShiftLists(true, false);
+        RefreshShiftComboBox();
+    }
 }
 
 void ShiftClutchUI::on_checkBox_autoset_stateChanged(int arg1)
@@ -1264,6 +1271,8 @@ void ShiftClutchUI::on_comboBox_shiftaim_currentIndexChanged(int index)
 {
     if (ifenablecomboBoxchangedeventhappen)
     {
+        if (examflag != 0) return;
+
         if (currentshiftindex == GetEnumIndexfromComboBoxIndexofShift(index))
         {
             ui->lineEdit_shifttrace->setText(" ----- ----- ");
@@ -2310,10 +2319,14 @@ void ShiftClutchUI::RefreshShiftComboBox()
 
 void ShiftClutchUI::RefreshShiftSixAndBack()
 {
+    ifenablecheckBoxchangedeventhappen = false;
+
     ui->checkBox_sixshift->setChecked(Configuration::GetInstance()->ifExistSixShift);
     ui->checkBox_backshift->setChecked(Configuration::GetInstance()->ifExistBackShift);
 
     ui->checkBox_sixshift->setEnabled(Configuration::GetInstance()->ifManualShift);
+
+    ifenablecheckBoxchangedeventhappen = true;
 }
 
 void ShiftClutchUI::RefreshShiftAutoSet()
@@ -2464,31 +2477,26 @@ void ShiftClutchUI::RefreshExamPanel()
     ui->tabWidget2->setEnabled(false);
 }
 
-
 void ShiftClutchUI::RefreshConfirmChangeShiftTimeState()
 {
     ui->pushButton_confirmshiftchangingtime->setEnabled(!ifConfirmChangingShiftTime);
 }
 
-void ShiftClutchUI::RefreshChangeShiftList()
-{
-    // 待写
-}
-
 void ShiftClutchUI::RefreshChangeShiftPlot()
 {
     ui->plotwidget->clearGraphs();
-    ui->plotwidget->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes | QCP::iSelectLegend | QCP::iSelectPlottables);
+    ui->plotwidget->clearItems();
+    ui->plotwidget->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes);
     ui->plotwidget->xAxis->setLabel(QObject::tr("时间(s)"));
     ui->plotwidget->yAxis->setLabel(QObject::tr("速度(km/h)"));
     ui->plotwidget->xAxis->setRange(0,1800);
     ui->plotwidget->yAxis->setRange(-5, 140);
+    ui->plotwidget->replot();
 }
 
 void ShiftClutchUI::RefreshChangeShiftPanel()
 {
     RefreshConfirmChangeShiftTimeState();
-    RefreshChangeShiftList();
     RefreshChangeShiftPlot();
     if (Configuration::GetInstance()->ifManualShift)
     {
@@ -2688,4 +2696,191 @@ void ShiftClutchUI::ResolveAndShowTime(double totaltime, double *partialtime, bo
 
     return;
 }
+
+void ShiftClutchUI::on_pushButton_readcurve_clicked()
+{
+    ifConfirmChangingShiftTime = false;
+    RefreshChangeShiftPanel();
+
+    //1) 选择曲线文件
+    QString qstr = QFileDialog::getOpenFileName(NULL, QString("请选择实验曲线文件"), (Configuration::mainFolder+"/stdand_files/").c_str());
+    if(qstr==""){
+        return;
+    }else if( !QFile::exists(qstr) ) {
+        QMessageBox::information(NULL, "Warning", QObject::tr("所选定的文件不存在，请重新选择！")) ;
+        return;
+    }
+    std::string str = qstr.toStdString();
+
+    if( !QFile::exists(str.c_str()) ){
+        QMessageBox::information(NULL, "Warning", QObject::tr("用于机器人控制的文件不存在:\n") + str.c_str());
+        return;
+    }
+
+    if(ReadCurveFile(str) == -1){
+        QMessageBox::information(NULL,"warning",QString("无法读取该目标曲线文件!")+str.c_str());
+        return;
+    }
+
+    ShowCurveForSee();
+}
+
+int ShiftClutchUI::ReadCurveFile(const std::string &fileName)
+{
+    std::ifstream fs(fileName.c_str(), std::fstream::binary);
+    PRINTF(LOG_DEBUG, "%s: read file = %s\n",__func__, fileName.c_str());
+    if(fs.fail()){
+        PRINTF(LOG_DEBUG, "%s: fail to open teach file\n",__func__);
+        return -1;
+    }
+
+    manaulShiftSpeedTable.clear();
+    manaulShiftIndexTable.clear();
+
+    char buf[1024];
+    bool firstLine=true;
+    while(fs.getline(buf,1024)){
+        if(firstLine){
+            firstLine=false;
+            if(strcmp(buf,RobotParams::robotType.c_str()) != 0){//wrong type
+                QMessageBox::information(NULL,"warning",QString("机器人速度曲线文件类型错误!"));
+                PRINTF(LOG_ERR, "%s: robot type is wrong\n",__func__);
+                return -1;
+            }
+            continue;
+        }
+
+        if(strlen(buf) == 1){
+            size_t pointsNum;
+            double time, speed;
+            int index;
+
+            switch(buf[0]){
+            case 'R':
+                fs.getline(buf,1024);//R段的内容对于UI无用
+                break;
+            case 'S':
+                manaulShiftIndexTable.clear();
+                fs>>pointsNum;
+                manaulShiftIndexTable.reserve(pointsNum);
+
+                for (size_t i = 0; i < pointsNum; ++i)
+                {
+                     fs>>time>>index;
+                     manaulShiftIndexTable.push_back( std::make_pair(time, index) );
+                }
+                break;
+            case 'M':
+                manaulShiftSpeedTable.clear();
+                fs>>pointsNum;
+                manaulShiftSpeedTable.reserve(pointsNum);
+
+                while(!fs.eof()){
+                    fs>>time>>speed;
+                    manaulShiftSpeedTable.push_back( std::make_pair(time,speed) );
+                }
+                break;
+            default:
+                PRINTF(LOG_ERR, "%s: (%s) switch default return -1\n",__func__,buf);
+                return -1;
+            }
+        }else{
+            QString s(buf);
+            if(s.length() != s.count(' ')){//空白行不计
+                PRINTF(LOG_ERR, "%s: else return -1\n",__func__);
+                PRINTF(LOG_ERR, "%s: unknown contens=%s\n",__func__,buf);
+                return -1;
+            }
+        }
+    }
+    fs.close();
+    return 0;
+}
+
+void ShiftClutchUI::ShowCurveForSee()
+{
+    ui->plotwidget->clearGraphs();
+    ui->plotwidget->clearItems();
+    ui->plotwidget->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes | QCP::iSelectLegend);
+    ui->plotwidget->xAxis->setLabel(QObject::tr("时间(s)"));
+    ui->plotwidget->yAxis->setLabel(QObject::tr("速度(km/h)"));
+
+    QPen myPen;
+    myPen.setWidth(3);
+    //0) 目标曲线
+    ui->plotwidget->addGraph();
+    myPen.setColor(Qt::red);
+    ui->plotwidget->graph(0)->setPen(myPen);
+    //1) 换挡时刻
+    QCPGraph * scatterGraph = ui->plotwidget->addGraph();
+    scatterGraph->setLineStyle(QCPGraph::lsNone);
+    scatterGraph->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 10));
+    myPen.setColor(Qt::green);
+    ui->plotwidget->graph(1)->setPen(myPen);
+
+    ui->plotwidget->xAxis->setRange(manaulShiftSpeedTable[0].first, manaulShiftSpeedTable[manaulShiftSpeedTable.size() - 1].first);
+    double maxSpeed = -200;
+    double minSpeed = 200;
+    foreach (auto item, manaulShiftSpeedTable) {
+        if (item.second > maxSpeed) maxSpeed = item.second;
+        if (item.second < minSpeed) minSpeed = item.second;
+    }
+    ui->plotwidget->yAxis->setRange(minSpeed-1, maxSpeed+1);
+
+    size_t sz= manaulShiftSpeedTable.size();
+    QVector<double> time, speed;
+    for (size_t i = 0; i < sz;++i)
+    {
+        time.push_back(manaulShiftSpeedTable[i].first);
+        speed.push_back(manaulShiftSpeedTable[i].second);
+    }
+    ui->plotwidget->graph(0)->setData(time, speed);
+
+    size_t sz2= manaulShiftIndexTable.size();
+    QVector<double> time2, indexSpeed;
+    size_t lastIndex = 1;
+    for (size_t i = 0; i < sz2; ++i)
+    {
+        time2.push_back(manaulShiftIndexTable[i].first);
+        for (size_t j = lastIndex; j < sz; ++j)
+        {
+            if (manaulShiftIndexTable[i].first <= manaulShiftSpeedTable[j].first)
+            {
+                indexSpeed.push_back(manaulShiftSpeedTable[j].second);
+                lastIndex = j;
+                break;
+            }
+        }
+
+        QCPItemText *shiftText = new QCPItemText(ui->plotwidget);
+        shiftText->position->setCoords(time2[i], indexSpeed[i] + 7);
+        shiftText->setPositionAlignment(Qt::AlignVCenter|Qt::AlignHCenter);
+        shiftText->setText("[" + QString::number(time2[i]) + "秒]\r\n切" + ManualShiftStateString[manaulShiftIndexTable[i].second] + "挡");
+        shiftText->setFont(QFont(font().family(), 10));
+    }
+    ui->plotwidget->graph(1)->setData(time2, indexSpeed);
+
+    ui->plotwidget->replot();
+}
+
+void ShiftClutchUI::on_pushButton_confirmshiftchangingtime_clicked()
+{
+    int ret = QMessageBox::information(NULL, tr("提示"), tr("请确认换挡时刻信息！"), tr("确认"), tr("取消"));
+    if(ret == 0)
+    {
+        ifConfirmChangingShiftTime = true;
+        RefreshConfirmChangeShiftTimeState();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 

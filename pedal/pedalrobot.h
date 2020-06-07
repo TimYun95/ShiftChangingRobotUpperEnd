@@ -17,6 +17,7 @@
 #include "configuration.h"
 #include "mywidget/qcustomplot.h"
 #include "syscontrol.h"
+#include "shiftclutch/shiftclutchui.h"
 
 class PedalRobot: public QObject
 {
@@ -96,22 +97,26 @@ private:
     PairData vp_data_upperbound; // 曲线上界
     PairData vp_data_lowerbound; // 曲线下界
 
+    typedef std::vector< std::pair<double, int> > TimeIndex; // pair=<time, shiftIndex>
+    TimeIndex manaulShiftIndexTable; // 手动换挡速度表
+
     bool isControlling; // 是否正在跟踪曲线
     bool isControlFinished; // 本次曲线跟踪结束
     struct timeval actionStartTime; // 整个工作的起始时间
     double elapsedSeconds; // 当前的工作时间 秒
     double actionDurationSecond; // 整个工作的持续时间 秒
 
-    struct timeval actionStartTimeSpeed; // 整个工作的起始时间
-    double elapsedSecondsSpeed; // 当前的工作时间 秒
-
     int timeStamp; // 时间戳
 
+    size_t changeShiftIndex; // 换挡索引
 private:
     //控制运动
     void InitControlMethod(); // 初始化系统控制方法
 
     void SendMoveCommandAll(double *values, int *ifABS); // 发送联动命令
+    void SendMotionCmd(const double deltabrk, const double deltaacc, const bool ifshiftmode = false, const bool ifpause = false, const int aimshift = 0, const int aimclutch = (int)ShiftClutchUI::ClutchState::Released, const int howtochangeshift = (int)ShiftClutchUI::ShiftChangingMode::OnlyClutch, const int howtoreleaseclutch = (int)ShiftClutchUI::ClutchReleasingMode::Normal);// 换挡指令
+    void SendMoveCommandAll(QVector<double> values, QVector<int> cmdstate, const int customvariable = 0); // 发送移动指令 供换挡用
+
 };
 
 #endif // PEDAL_H

@@ -182,6 +182,8 @@ void PedalRobot::StartQCustomPlot(const std::__cxx11::string &fileNameARM)
     timeStamp=0;
     isControlFinished = false;
     isControlling=true;
+
+    changeShiftIndex = 0;
 }
 
 void PedalRobot::UpdatePart1()
@@ -202,10 +204,10 @@ void PedalRobot::UpdatePart2()
 
     // 非换挡情况下 执行油门刹车踏板计算
     double values[RobotParams::axisNum];
-    int ifABS[RobotParams::axisNum];
+    //int ifABS[RobotParams::axisNum];
     for (unsigned int i=0; i<RobotParams::axisNum; ++i)
     {
-        values[i] = 0; ifABS[i] = 0;
+        values[i] = 0; //ifABS[i] = 0;
     }
 
     if(conf->pedalRobotUsage == SettingWidgetPedalRobotGetSpeed::NedcControl){//NEDC曲线
@@ -218,7 +220,29 @@ void PedalRobot::UpdatePart2()
     values[0] = mySysControl->getconBrake();
     values[1] = mySysControl->getconAcc();
 
-    SendMoveCommandAll(values, ifABS);
+    if (Configuration::GetInstance()->ifManualShift)
+    {
+        // 检查时间是否到了换挡的时刻
+        if (changeShiftIndex  < manaulShiftIndexTable.size() && elapsedSeconds >= manaulShiftIndexTable[changeShiftIndex].first)
+        {
+            SendMotionCmd(values[0], values[1], true, false,
+                          manaulShiftIndexTable[changeShiftIndex].second,
+                          (int)ShiftClutchUI::ClutchState::Released,
+                          (int)ShiftClutchUI::ShiftChangingMode::ManualShift,
+                          (int)ShiftClutchUI::ClutchReleasingMode::SlowlyWithControl);
+            changeShiftIndex++;
+        }
+        else
+        {
+            SendMotionCmd(values[0], values[1]);
+        }
+    }
+    else
+    {
+        SendMotionCmd(values[0], values[1]);
+    }
+
+    //    SendMoveCommandAll(values, ifABS);
 
     timeStamp++;
 
@@ -334,10 +358,22 @@ int PedalRobot::ReadListeningTeachFile(const std::__cxx11::string &fileName)
         if(strlen(buf) == 1){
             size_t pointsNum;
             double time, speed;
+            int index;
 
             switch(buf[0]){
             case 'R':
-                fs.getline(buf,1024);//R段的内容对于UI无用
+                fs.getline(buf, 1024);//R段的内容对于UI无用
+                break;
+            case 'S':
+                manaulShiftIndexTable.clear();
+                fs>>pointsNum;
+                manaulShiftIndexTable.reserve(pointsNum);
+
+                for (size_t i = 0; i < pointsNum; ++i)
+                {
+                     fs>>time>>index;
+                     manaulShiftIndexTable.push_back( std::make_pair(time, index) );
+                }
                 break;
             case 'M':
                 vp_data.clear();
@@ -721,4 +757,64 @@ void PedalRobot::SendMoveCommandAll(double *values, int *ifABS)
     }
 
     AutoDriveRobotApiClient::GetInstance()->Send_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta);
+}
+
+void PedalRobot::SendMotionCmd(const double deltabrk, const double deltaacc, const bool ifshiftmode, const bool ifpause, const int aimshift, const int aimclutch, const int howtochangeshift, const int howtoreleaseclutch)
+{
+    QVector<double> values(6, 0.0);
+    QVector<int> cmdstate(6, 0);
+
+    if (ifshiftmode)
+    {
+        int stateflag = 0;
+        stateflag += ifshiftmode ? 1 : 0;
+        stateflag += (ifpause ? 1 : 0) * 10;
+        stateflag += howtoreleaseclutch * 100;
+        stateflag += howtochangeshift * 1000;
+
+        values[0] = deltabrk;
+        values[1] = deltaacc;
+
+        cmdstate[2] = aimclutch;
+        cmdstate[3] = aimshift;
+
+        SendMoveCommandAll(values, cmdstate, stateflag);
+    }
+    else
+    {
+        values[0] = deltabrk;
+        values[1] = deltaacc;
+        SendMoveCommandAll(values, cmdstate);
+    }
+}
+
+void PedalRobot::SendMoveCommandAll(QVector<double> values, QVector<int> cmdstate, const int customvariable)
+{
+    std::vector<int> actionMethod;
+    std::vector<int> actionAxes;
+    std::vector<double> actionTheta;
+
+    for (unsigned int i=0; i<RobotParams::axisNum; ++i)
+    {
+        actionAxes.push_back(i);
+        actionTheta.push_back(values[i]);
+
+        if (customvariable == 0)
+        {
+            if (cmdstate[i] == 1)
+            {
+                actionMethod.push_back(AutoDriveRobotApiClient::AbsControlMethod);
+            }
+            else
+            {
+                actionMethod.push_back(AutoDriveRobotApiClient::DeltaControlMethod);
+            }
+        }
+        else
+        {
+            actionMethod.push_back(cmdstate[i]);
+        }
+    }
+
+    AutoDriveRobotApiClient::GetInstance()->Send_SetMonitorActionThetaMsg(actionMethod, actionAxes, actionTheta, customvariable);
 }

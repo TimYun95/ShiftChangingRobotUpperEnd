@@ -358,6 +358,9 @@
            </item>
            <item>
             <widget class="QLineEdit" name="lineEdit_motor1">
+             <property name="text">
+              <string/>
+             </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
              </property>
@@ -438,6 +441,9 @@
            </item>
            <item>
             <widget class="QLineEdit" name="lineEdit_motor2">
+             <property name="text">
+              <string/>
+             </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
              </property>
@@ -1384,7 +1390,7 @@
       <attribute name="title">
        <string> 换 挡 时 刻 </string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_25" stretch="2,1">
+      <layout class="QHBoxLayout" name="horizontalLayout_25" stretch="2">
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,7">
          <item>
@@ -1415,9 +1421,6 @@
           </widget>
          </item>
         </layout>
-       </item>
-       <item>
-        <widget class="QListWidget" name="list3"/>
        </item>
       </layout>
      </widget>

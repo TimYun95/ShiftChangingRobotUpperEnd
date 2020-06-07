@@ -230,29 +230,19 @@ void AutoDriveRobotApiClient::SlotProcess_GetPedalRobotDeviceDataMsg(const URMSG
     RobotParams::accOpenValue = RobotParams::angleRealTime[1] * 0.9;
     RobotParams::brakeOpenValue = RobotParams::angleRealTime[0] * 0.9;
 
-    const static int num_loop = 6;
-    static double angleA[num_loop];
-    static double angleB[num_loop];
-
-    for (int i=0; i<num_loop-1; ++i)
-    {
-        angleA[i] = angleA[i+1];
-        angleB[i] = angleB[i+1];
-    }
-    angleA[num_loop-1] = RobotParams::angleRealTime[1];
-    angleB[num_loop-1] = RobotParams::angleRealTime[0];
-
     if ((RobotParams::accOpenValue = RobotParams::angleRealTime[1] - 1)<0) RobotParams::accOpenValue=0;
     if ((RobotParams::brakeOpenValue = RobotParams::angleRealTime[0] - 1)<0) RobotParams::brakeOpenValue=0;
 
     double pos, neg;
 
-    if ((pos = angleA[0] - 1)<0) pos=0;
-    if ((neg = angleB[0] - 1)<0) neg=0;
+    if ((pos = RobotParams::angleRealTime[1] - 1)<0) pos=0;
+    if ((neg = RobotParams::angleRealTime[0] - 1)<0) neg=0;
     pos = pos*0.005;
-    neg = neg*0.005;
+    neg = neg*0.01;
 
-    if ((RobotParams::canCarSpeed += ((pos-neg) - 0.0001*RobotParams::canCarSpeed)) < 0) RobotParams::canCarSpeed = 0;
+    if ((RobotParams::canCarSpeed += ((pos-neg) - 0.0002*RobotParams::canCarSpeed)) < 0) RobotParams::canCarSpeed = 0;
+    if (RobotParams::canCarSpeed > 140.0) RobotParams::canCarSpeed = 140.0;
+
     RobotParams::pulseCarSpeed = RobotParams::canCarSpeed;
 
     RobotParams::powerMode = 2;
